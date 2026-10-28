@@ -106,6 +106,21 @@ public sealed class GatewayTests(GatewayFactory factory) : IClassFixture<Gateway
         Assert.Contains("frame-ancestors 'none'", yanit.Headers.GetValues("Content-Security-Policy").Single());
     }
 
+    [Theory]
+    [InlineData("/api/auth/login")]
+    [InlineData("/API/Auth/Login/")]
+    public async Task ApiGirisUcu_GatewayUzerindenKapali_404Doner(string yol)
+    {
+        var yanit = await factory.TarayiciClient().PostAsJsonAsync(
+            yol,
+            new { eposta = ApiFactory.SuperAdminEposta, parola = ApiFactory.SuperAdminParola },
+            TestContext.Current.CancellationToken);
+        var govde = await yanit.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, yanit.StatusCode);
+        Assert.DoesNotContain("accessToken", govde);
+    }
+
     private static Task<HttpResponseMessage> GirisAsync(HttpClient client, string parola) =>
         client.PostAsJsonAsync("/bff/giris", new { eposta = ApiFactory.SuperAdminEposta, parola }, TestContext.Current.CancellationToken);
 

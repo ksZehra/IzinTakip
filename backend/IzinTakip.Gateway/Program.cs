@@ -139,6 +139,16 @@ try
     app.UseRateLimiter();
     app.Use(async (context, next) =>
     {
+        if (context.Request.Path.StartsWithSegments("/api/auth/login"))
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        await next(context);
+    });
+    app.Use(async (context, next) =>
+    {
         if ((context.Request.Path.StartsWithSegments("/api") || context.Request.Path.StartsWithSegments("/bff"))
             && context.Request.Headers["X-CSRF"] != "1")
         {
