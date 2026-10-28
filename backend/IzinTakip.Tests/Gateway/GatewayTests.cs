@@ -72,6 +72,24 @@ public sealed class GatewayTests(GatewayFactory factory) : IClassFixture<Gateway
     }
 
     [Fact]
+    public async Task Cikis_KopyalanmisCookieDeGecersizOlur()
+    {
+        var tarayici = factory.TarayiciClient();
+        var giris = await GirisAsync(tarayici, ApiFactory.SuperAdminParola);
+        var cerez = Assert.Single(giris.Headers.GetValues("Set-Cookie")).Split(';')[0];
+        var kopya = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), HandleCookies = false });
+        kopya.DefaultRequestHeaders.Add("X-CSRF", "1");
+        kopya.DefaultRequestHeaders.Add("Cookie", cerez);
+
+        var oncesi = await kopya.GetAsync("/api/auth/ben", TestContext.Current.CancellationToken);
+        await tarayici.PostAsync("/bff/cikis", null, TestContext.Current.CancellationToken);
+        var sonrasi = await kopya.GetAsync("/api/auth/ben", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, oncesi.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, sonrasi.StatusCode);
+    }
+
+    [Fact]
     public async Task KurcalanmisCookie_401Doner()
     {
         var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), HandleCookies = false });

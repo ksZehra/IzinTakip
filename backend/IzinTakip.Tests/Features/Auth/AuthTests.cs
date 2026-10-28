@@ -140,14 +140,33 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
             "/api/auth/parola-degistir",
             new { mevcutParola = TestKimlik.VarsayilanParola, yeniParola = "YeniParola2026" },
             TestContext.Current.CancellationToken);
-        var sonrasi = await client.GetAsync("/test/yetki/rapor", TestContext.Current.CancellationToken);
+        var eskiTokenla = await client.GetAsync("/test/yetki/rapor", TestContext.Current.CancellationToken);
+        var yeniOturum = await TestKimlik.OturumluClientAsync(factory, "yeni@izintakip.test", "YeniParola2026");
+        var sonrasi = await yeniOturum.GetAsync("/test/yetki/rapor", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Forbidden, oncesi.StatusCode);
         Assert.Equal("Devam etmek için önce parolanızı değiştirin.", await DetayAsync(oncesi));
         Assert.Equal(HttpStatusCode.Forbidden, yetkisizUcOncesi.StatusCode);
         Assert.Equal(HttpStatusCode.OK, ben.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, degistir.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, eskiTokenla.StatusCode);
         Assert.Equal(HttpStatusCode.OK, sonrasi.StatusCode);
+    }
+
+    [Fact]
+    public async Task Cikis_VerilmisTokenlarGecersizOlur()
+    {
+        await TestKimlik.KullaniciOlusturAsync(factory, "cikan@izintakip.test", SistemRolleri.Calisan);
+        var birinciCihaz = await TestKimlik.OturumluClientAsync(factory, "cikan@izintakip.test");
+        var ikinciCihaz = await TestKimlik.OturumluClientAsync(factory, "cikan@izintakip.test");
+
+        var cikis = await birinciCihaz.PostAsync("/api/auth/cikis", null, TestContext.Current.CancellationToken);
+        var birinci = await birinciCihaz.GetAsync("/api/auth/ben", TestContext.Current.CancellationToken);
+        var ikinci = await ikinciCihaz.GetAsync("/api/auth/ben", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, cikis.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, birinci.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, ikinci.StatusCode);
     }
 
     [Fact]

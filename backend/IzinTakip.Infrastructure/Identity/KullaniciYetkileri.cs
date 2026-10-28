@@ -5,6 +5,7 @@ namespace IzinTakip.Infrastructure.Identity;
 public sealed record KullaniciYetkileri(
     int KullaniciId,
     string Eposta,
+    string GuvenlikDamgasi,
     int? CalisanId,
     bool Aktif,
     bool ParolaDegistirmeli,

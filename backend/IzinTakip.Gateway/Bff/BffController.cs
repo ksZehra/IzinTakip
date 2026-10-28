@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -31,8 +32,26 @@ public sealed class BffController(IHttpClientFactory httpClientFactory, OturumCe
     }
 
     [HttpPost("cikis")]
-    public IActionResult Cikis()
+    public async Task<IActionResult> Cikis(CancellationToken cancellationToken)
     {
+        if (oturumCerezi.Oku(Request) is { } token)
+        {
+            using var istek = new HttpRequestMessage(HttpMethod.Post, "api/auth/cikis");
+            istek.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            try
+            {
+                using var yanit = await httpClientFactory.CreateClient("api").SendAsync(istek, cancellationToken);
+                if (!yanit.IsSuccessStatusCode)
+                {
+                    logger.LogInformation("Cikista oturum Api'de kapatilamadi {Durum}", (int)yanit.StatusCode);
+                }
+            }
+            catch (HttpRequestException exception)
+            {
+                logger.LogWarning(exception, "Cikista Api'ye ulasilamadi; cookie yine de silindi");
+            }
+        }
+
         oturumCerezi.Sil(Response);
         return NoContent();
     }

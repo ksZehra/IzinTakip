@@ -19,7 +19,7 @@ public sealed class KullaniciYetkiOkuyucu(IzinTakipDbContext db, IMemoryCache ca
         var kullanici = await db.Users
             .AsNoTracking()
             .Where(k => k.Id == kullaniciId)
-            .Select(k => new { k.Email, k.CalisanId, k.Aktif, k.ParolaDegistirmeliMi })
+            .Select(k => new { k.Email, k.SecurityStamp, k.CalisanId, k.Aktif, k.ParolaDegistirmeliMi })
             .SingleOrDefaultAsync(cancellationToken);
 
         KullaniciYetkileri? sonuc = null;
@@ -41,6 +41,7 @@ public sealed class KullaniciYetkiOkuyucu(IzinTakipDbContext db, IMemoryCache ca
             sonuc = new KullaniciYetkileri(
                 kullaniciId,
                 kullanici.Email ?? string.Empty,
+                kullanici.SecurityStamp ?? string.Empty,
                 kullanici.CalisanId,
                 kullanici.Aktif,
                 kullanici.ParolaDegistirmeliMi,

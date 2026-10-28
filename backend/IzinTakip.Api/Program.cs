@@ -109,9 +109,10 @@ try
                     var yetkiler = int.TryParse(context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Sub), out var kullaniciId)
                         ? await okuyucu.OkuAsync(kullaniciId, context.HttpContext.RequestAborted)
                         : null;
-                    if (yetkiler is not { Aktif: true })
+                    if (yetkiler is not { Aktif: true }
+                        || yetkiler.GuvenlikDamgasi != context.Principal?.FindFirstValue(JwtAyarlari.GuvenlikDamgasiClaim))
                     {
-                        context.Fail("Kullanici bulunamadi ya da pasif.");
+                        context.Fail("Kullanici bulunamadi, pasif ya da oturumu kapatilmis.");
                     }
                 }
             };

@@ -65,7 +65,8 @@ public sealed class AuthService(
             [
                 new Claim(JwtRegisteredClaimNames.Sub, kullanici.Id.ToString(CultureInfo.InvariantCulture)),
                 new Claim(JwtRegisteredClaimNames.Email, kullanici.Email ?? string.Empty),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtAyarlari.GuvenlikDamgasiClaim, await userManager.GetSecurityStampAsync(kullanici))
             ]),
             SigningCredentials = new SigningCredentials(jwtAyarlari.ImzaAnahtari(), SecurityAlgorithms.HmacSha256)
         });
@@ -87,10 +88,7 @@ public sealed class AuthService(
 
     public async Task ParolaDegistirAsync(ParolaDegistirRequest request, CancellationToken cancellationToken)
     {
-        var bilgi = await gecerliKullanici.YetkileriAsync(cancellationToken);
-        var kullanici = await userManager.FindByIdAsync(bilgi.KullaniciId.ToString(CultureInfo.InvariantCulture))
-            ?? throw new KimlikDogrulanamadiException("Oturum açmanız gerekiyor.");
-
+        var kullanici = await OturumdakiKullaniciAsync(cancellationToken);
         kullanici.ParolaDegistirmeliMi = false;
         var sonuc = await userManager.ChangePasswordAsync(kullanici, request.MevcutParola, request.YeniParola);
         if (!sonuc.Succeeded)
@@ -100,5 +98,21 @@ public sealed class AuthService(
 
         yetkiOkuyucu.Unut(kullanici.Id);
         logger.LogInformation("Kullanici parolasini degistirdi {KullaniciId}", kullanici.Id);
+    }
+
+    public async Task CikisAsync(CancellationToken cancellationToken)
+    {
+        var kullanici = await OturumdakiKullaniciAsync(cancellationToken);
+        await userManager.UpdateSecurityStampAsync(kullanici);
+
+        yetkiOkuyucu.Unut(kullanici.Id);
+        logger.LogInformation("Kullanici cikis yapti, oturumlari kapatildi {KullaniciId}", kullanici.Id);
+    }
+
+    private async Task<Kullanici> OturumdakiKullaniciAsync(CancellationToken cancellationToken)
+    {
+        var bilgi = await gecerliKullanici.YetkileriAsync(cancellationToken);
+        return await userManager.FindByIdAsync(bilgi.KullaniciId.ToString(CultureInfo.InvariantCulture))
+            ?? throw new KimlikDogrulanamadiException("Oturum açmanız gerekiyor.");
     }
 }

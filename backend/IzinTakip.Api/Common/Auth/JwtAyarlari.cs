@@ -5,6 +5,8 @@ namespace IzinTakip.Api.Common.Auth;
 
 public sealed class JwtAyarlari
 {
+    public const string GuvenlikDamgasiClaim = "stamp";
+
     public string Issuer { get; init; } = string.Empty;
     public string Audience { get; init; } = string.Empty;
     public string SigningKey { get; init; } = string.Empty;

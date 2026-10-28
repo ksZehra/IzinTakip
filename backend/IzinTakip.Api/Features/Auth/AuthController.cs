@@ -32,4 +32,14 @@ public sealed class AuthController(AuthService service) : ControllerBase
         await service.ParolaDegistirAsync(request, cancellationToken);
         return NoContent();
     }
+
+    [HttpPost("cikis")]
+    [Authorize]
+    [EndpointSummary("Kullanıcının bütün oturumlarını kapatır; verilmiş token'lar geçersiz olur")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Cikis(CancellationToken cancellationToken)
+    {
+        await service.CikisAsync(cancellationToken);
+        return NoContent();
+    }
 }
