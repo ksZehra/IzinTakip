@@ -312,6 +312,10 @@ namespace IzinTakip.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CalisanId");
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("CalisanId"), new[] { "Dakika" });
+
                     b.HasIndex("CalisanId", "KidemYili")
                         .IsUnique()
                         .HasFilter("[Kaynak] = 1");

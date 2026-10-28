@@ -14,5 +14,6 @@ public sealed class IzinHakkiConfiguration : IEntityTypeConfiguration<IzinHakki>
         builder.HasIndex(h => new { h.CalisanId, h.KidemYili })
             .IsUnique()
             .HasFilter($"[Kaynak] = {(int)HakKaynagi.Kural}");
+        builder.HasIndex(h => h.CalisanId).IncludeProperties(h => h.Dakika);
     }
 }
