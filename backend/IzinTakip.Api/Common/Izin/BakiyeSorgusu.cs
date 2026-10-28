@@ -21,7 +21,7 @@ public sealed class BakiyeSorgusu(IzinTakipDbContext db)
             .ToDictionaryAsync(x => x.CalisanId, x => x.Dakika, cancellationToken);
         var talepler = await db.IzinTalepleri
             .Where(t => calisanlar.Any(c => c.Id == t.CalisanId)
-                        && t.IzinTuru.BakiyedenDuser
+                        && t.BakiyedenDuser
                         && (t.Durum == IzinDurumu.Onaylandi || t.Durum == IzinDurumu.Beklemede))
             .GroupBy(t => new { t.CalisanId, t.Durum })
             .Select(g => new { g.Key.CalisanId, g.Key.Durum, Dakika = g.Sum(t => t.Dakika) })

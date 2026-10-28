@@ -208,6 +208,28 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
         Assert.Equal(HttpStatusCode.BadRequest, tarih.StatusCode);
     }
 
+    [Fact]
+    public async Task Bakiye_TurunBakiyedenDusmeAyariSonradanDegisirse_EskiTalepEtkilenmez()
+    {
+        var (calisanId, client) = await CalisanKurAsync();
+        var admin = await SuperAdminAsync();
+        var tur = new
+        {
+            ad = $"Mazeret-{Guid.NewGuid():N}"[..20], bakiyedenDuser = false, belgeZorunlu = false, gunHesabi = "IsGunu",
+            tamGunAlinir = true, yarimGunAlinir = false, saatlikAlinir = false, talepBasinaEnFazlaDakika = (int?)null, yillikEnFazlaDakika = (int?)null
+        };
+        var turYaniti = await admin.PostAsJsonAsync("/api/izin-turleri", tur, TestContext.Current.CancellationToken);
+        var turId = (await turYaniti.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken)).GetProperty("id").GetInt32();
+        await TalepAcAsync(client, new { izinTuruId = turId, sureTipi = "TamGun", tarih = Pazartesi, bitisTarihi = Pazartesi.AddDays(1) });
+
+        var degisim = await admin.PutAsJsonAsync($"/api/izin-turleri/{turId}", tur with { bakiyedenDuser = true }, TestContext.Current.CancellationToken);
+        var bakiye = await client.GetFromJsonAsync<JsonElement>($"/api/calisanlar/{calisanId}/bakiye", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, degisim.StatusCode);
+        Assert.Equal(0, bakiye.GetProperty("bekleyenDakika").GetInt32());
+        Assert.Equal("14 gün", bakiye.GetProperty("kullanilabilirMetni").GetString());
+    }
+
     private async Task<(int CalisanId, HttpClient Client)> CalisanKurAsync()
     {
         var admin = await SuperAdminAsync();

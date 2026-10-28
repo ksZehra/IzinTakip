@@ -85,6 +85,15 @@ public sealed class IzinTalebiOlusturTests
     }
 
     [Fact]
+    public void Olustur_BakiyedenDusmeBilgisi_TurdenTalebeKopyalanir()
+    {
+        var ucretsiz = new IzinTuru("Ücretsiz", false, false, GunHesabi.IsGunu, true, true, false, null, null);
+
+        Assert.True(Olustur(Yillik, TamGun(Pazartesi, Pazartesi)).BakiyedenDuser);
+        Assert.False(Olustur(ucretsiz, TamGun(Pazartesi, Pazartesi)).BakiyedenDuser);
+    }
+
+    [Fact]
     public void Olustur_BakiyedenDusmeyenTur_BakiyeyeBakmaz()
     {
         var ucretsiz = new IzinTuru("Ücretsiz", false, false, GunHesabi.IsGunu, true, true, false, null, null);

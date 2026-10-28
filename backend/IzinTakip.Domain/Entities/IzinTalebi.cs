@@ -18,6 +18,7 @@ public sealed class IzinTalebi : Entity
     public DateTime Baslangic { get; private set; }
     public DateTime Bitis { get; private set; }
     public int Dakika { get; private set; }
+    public bool BakiyedenDuser { get; private set; }
     public IzinDurumu Durum { get; private set; }
     public string? Aciklama { get; private set; }
     public int? KararVerenKullaniciId { get; private set; }
@@ -96,6 +97,7 @@ public sealed class IzinTalebi : Entity
             Baslangic = hesap.Aralik.Baslangic,
             Bitis = hesap.Aralik.Bitis,
             Dakika = hesap.Dakika,
+            BakiyedenDuser = tur.BakiyedenDuser,
             Durum = IzinDurumu.Beklemede,
             Aciklama = aciklama
         };
