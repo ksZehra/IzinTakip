@@ -21,6 +21,7 @@ public sealed class IzinTalebi : Entity
     public int? KararVerenKullaniciId { get; private set; }
     public DateTime? KararTarihi { get; private set; }
     public string? KararNotu { get; private set; }
+    public DateOnly? SonHatirlatmaTarihi { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
     public Calisan Calisan { get; private set; } = null!;
     public IzinTuru IzinTuru { get; private set; } = null!;
@@ -134,6 +135,8 @@ public sealed class IzinTalebi : Entity
         Durum = IzinDurumu.IptalEdildi;
         KarariYaz(iptalEdenKullaniciId, not, kararZamani);
     }
+
+    public void HatirlatmaYapildi(DateOnly tarih) => SonHatirlatmaTarihi = tarih;
 
     private void KararVerilebilirMi(int? kararVerenCalisanId, bool superAdmin, string eylem)
     {

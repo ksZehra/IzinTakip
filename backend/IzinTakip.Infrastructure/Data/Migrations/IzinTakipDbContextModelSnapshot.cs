@@ -371,6 +371,9 @@ namespace IzinTakip.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<DateOnly?>("SonHatirlatmaTarihi")
+                        .HasColumnType("date");
+
                     b.Property<int>("SureTipi")
                         .HasColumnType("int");
 

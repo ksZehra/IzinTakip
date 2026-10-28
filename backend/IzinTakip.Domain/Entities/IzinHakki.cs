@@ -33,4 +33,7 @@ public sealed class IzinHakki : Entity
 
         return new IzinHakki(calisanId, kazanimTarihi, dakika, HakKaynagi.Elle, aciklama);
     }
+
+    public static IzinHakki Kural(int calisanId, DateOnly kazanimTarihi, int dakika, string aciklama) =>
+        new(calisanId, kazanimTarihi, dakika, HakKaynagi.Kural, aciklama);
 }

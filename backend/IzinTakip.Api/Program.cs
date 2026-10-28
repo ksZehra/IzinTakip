@@ -142,6 +142,9 @@ try
     builder.Services.AddSingleton<IEmailQueue, ChannelEmailQueue>();
     builder.Services.AddSingleton<IEmailSender, MailKitEmailSender>();
     builder.Services.AddHostedService<EmailGonderimServisi>();
+    builder.Services.AddSingleton(builder.Configuration.GetSection("ArkaPlan").Get<ArkaPlanAyarlari>() ?? new ArkaPlanAyarlari());
+    builder.Services.AddHostedService<YillikHakServisi>();
+    builder.Services.AddHostedService<HatirlatmaServisi>();
     foreach (var serviceTipi in typeof(Program).Assembly.GetTypes().Where(t =>
                  t is { IsClass: true, IsAbstract: false }
                  && t.Name.EndsWith("Service", StringComparison.Ordinal)
