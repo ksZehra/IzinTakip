@@ -12,8 +12,8 @@ public sealed class AuthController(AuthService service) : ControllerBase
     [EndpointSummary("E-posta ve parolayla giriş yapar, JWT access token döner")]
     [ProducesResponseType<GirisResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<GirisResponse>> Giris(GirisRequest request, CancellationToken cancellationToken) =>
-        await service.GirisAsync(request, cancellationToken);
+    public async Task<ActionResult<GirisResponse>> Giris(GirisRequest request) =>
+        await service.GirisAsync(request);
 
     [HttpGet("ben")]
     [Authorize]

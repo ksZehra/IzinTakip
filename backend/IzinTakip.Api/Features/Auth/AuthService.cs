@@ -23,7 +23,7 @@ public sealed class AuthService(
 {
     private const string HataliGiris = "E-posta ya da parola hatalı.";
 
-    public async Task<GirisResponse> GirisAsync(GirisRequest request, CancellationToken cancellationToken)
+    public async Task<GirisResponse> GirisAsync(GirisRequest request)
     {
         var kullanici = await userManager.FindByEmailAsync(request.Eposta)
             ?? throw new KimlikDogrulanamadiException(HataliGiris);

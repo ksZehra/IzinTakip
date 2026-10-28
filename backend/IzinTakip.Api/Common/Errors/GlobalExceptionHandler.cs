@@ -26,7 +26,6 @@ public sealed class GlobalExceptionHandler(
             IsKuraliException e => (StatusCodes.Status422UnprocessableEntity, e.Message),
             KayitBulunamadiException e => (StatusCodes.Status404NotFound, e.Message),
             YetkiYokException e => (StatusCodes.Status403Forbidden, e.Message),
-            CakismaException e => (StatusCodes.Status409Conflict, e.Message),
             DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, CakismaMesaji),
             DbUpdateException { InnerException: SqlException { Number: 2601 or 2627 } } => (StatusCodes.Status409Conflict, TekrarMesaji),
             SqlException { Number: 1205 } or DbUpdateException { InnerException: SqlException { Number: 1205 } } => (StatusCodes.Status409Conflict, EsZamanliIslemMesaji),

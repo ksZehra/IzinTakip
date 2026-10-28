@@ -6,7 +6,7 @@ public sealed record PagedResponse<T>(IReadOnlyList<T> Items, int TotalCount, in
 
 public static class SayfalamaExtensions
 {
-    public const int EnFazlaSayfaBoyutu = 100;
+    private const int EnFazlaSayfaBoyutu = 100;
 
     public static async Task<PagedResponse<T>> SayfalaAsync<T>(
         this IQueryable<T> sorgu,

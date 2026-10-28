@@ -4,7 +4,7 @@ namespace IzinTakip.Api.Features.IzinBelgeleri;
 
 public sealed class IzinBelgesiYukleRequestValidator : AbstractValidator<IzinBelgesiYukleRequest>
 {
-    public const long EnFazlaBoyut = 5 * 1024 * 1024;
+    private const long EnFazlaBoyut = 5 * 1024 * 1024;
 
     public static readonly IReadOnlyDictionary<string, string> IcerikTurleri = new Dictionary<string, string>
     {

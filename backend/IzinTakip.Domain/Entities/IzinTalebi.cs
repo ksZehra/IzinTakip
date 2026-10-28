@@ -28,8 +28,6 @@ public sealed class IzinTalebi : Entity
     public Calisan Calisan { get; private set; } = null!;
     public IzinTuru IzinTuru { get; private set; } = null!;
 
-    public ZamanAraligi Aralik => new(Baslangic, Bitis);
-
     public static IzinTalebi Olustur(
         int calisanId,
         IzinTuru tur,
