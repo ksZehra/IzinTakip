@@ -116,6 +116,8 @@ public sealed class RaporTests(VeritabanliApiFactory factory) : IClassFixture<Ve
         Assert.Equal(Pazartesi.ToDateTime(new TimeOnly(9, 0)), sayfa.Cell(2, 5).GetDateTime());
         Assert.Equal("2 gün", sayfa.Cell(2, 7).GetString());
         Assert.Equal("Onaylandı", sayfa.Cell(2, 8).GetString());
+        Assert.Equal("Karar Veren", sayfa.Cell(1, 10).GetString());
+        Assert.StartsWith("ik-", sayfa.Cell(2, 10).GetString());
     }
 
     private async Task<(int DepartmanId, int AliId, HttpClient Ik)> BakiyeVerisiKurAsync()

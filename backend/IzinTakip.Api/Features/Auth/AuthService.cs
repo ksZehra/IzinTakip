@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Security.Claims;
+using IzinTakip.Api.Common;
 using IzinTakip.Api.Common.Auth;
 using IzinTakip.Domain;
 using IzinTakip.Domain.Exceptions;
@@ -15,6 +16,7 @@ public sealed class AuthService(
     SignInManager<Kullanici> signInManager,
     IGecerliKullanici gecerliKullanici,
     KullaniciYetkiOkuyucu yetkiOkuyucu,
+    KullaniciAdlari kullaniciAdlari,
     JwtAyarlari jwtAyarlari,
     TimeProvider timeProvider,
     ILogger<AuthService> logger)
@@ -71,7 +73,8 @@ public sealed class AuthService(
             ? Yetkiler.Atanabilir.Select(y => y.Kod).Append(Yetkiler.RolYonetimi).ToList()
             : bilgi.Yetkiler.Order().ToList();
 
-        return new BenResponse(bilgi.KullaniciId, bilgi.Eposta, bilgi.CalisanId, bilgi.Roller, yetkiler, bilgi.ParolaDegistirmeli);
+        var gorunenAd = (await kullaniciAdlari.OkuAsync([bilgi.KullaniciId], cancellationToken))[bilgi.KullaniciId];
+        return new BenResponse(bilgi.KullaniciId, bilgi.Eposta, gorunenAd, bilgi.CalisanId, bilgi.Roller, yetkiler, bilgi.ParolaDegistirmeli);
     }
 
     public async Task ParolaDegistirAsync(ParolaDegistirRequest request, CancellationToken cancellationToken)

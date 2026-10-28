@@ -24,6 +24,7 @@ public sealed class IzinTalebiService(
     CalismaTakvimiOkuyucu takvimOkuyucu,
     OnayciBulucu onayciBulucu,
     BildirimYazici bildirimYazici,
+    KullaniciAdlari kullaniciAdlari,
     SirketSaati sirketSaati,
     ILogger<IzinTalebiService> logger)
 {
@@ -116,13 +117,15 @@ public sealed class IzinTalebiService(
             .SingleOrDefaultAsync(cancellationToken)
             ?? throw new KayitBulunamadiException("İzin talebi bulunamadı.");
 
-        return talep with { SureMetni = SureMetni.Olustur(talep.Dakika, await GunlukDakikaAsync(cancellationToken)) };
+        var adlar = await kullaniciAdlari.OkuAsync([talep.OlusturanKullaniciId, talep.KararVerenKullaniciId], cancellationToken);
+        return Tamamla(talep, await GunlukDakikaAsync(cancellationToken), adlar);
     }
 
     public async Task<DosyaResponse> ExcelAsync(IzinTalebiFiltreRequest request, CancellationToken cancellationToken)
     {
         var talepler = await Yansit(Sirala(await FiltreliAsync(request, cancellationToken))).ToListAsync(cancellationToken);
         var gunluk = await GunlukDakikaAsync(cancellationToken);
+        var adlar = await kullaniciAdlari.OkuAsync(talepler.SelectMany(t => new[] { t.OlusturanKullaniciId, t.KararVerenKullaniciId }), cancellationToken);
         const string tarihSaat = "dd.MM.yyyy HH:mm";
 
         var icerik = ExcelYazici.Yaz(
@@ -134,13 +137,15 @@ public sealed class IzinTalebiService(
                 new ExcelKolonu<IzinTalebiResponse>("Biçim", t => BicimAdi(t.SureTipi), 12),
                 new ExcelKolonu<IzinTalebiResponse>("Başlangıç", t => t.Baslangic, 17, tarihSaat),
                 new ExcelKolonu<IzinTalebiResponse>("Bitiş", t => t.Bitis, 17, tarihSaat),
-                new ExcelKolonu<IzinTalebiResponse>("Süre", t => SureMetni.Olustur(t.Dakika, gunluk), 16),
+                new ExcelKolonu<IzinTalebiResponse>("Süre", t => t.SureMetni, 16),
                 new ExcelKolonu<IzinTalebiResponse>("Durum", t => DurumAdi(t.Durum), 13),
                 new ExcelKolonu<IzinTalebiResponse>("Açıklama", t => t.Aciklama, 40),
+                new ExcelKolonu<IzinTalebiResponse>("Karar Veren", t => t.KararVerenAdi, 24),
                 new ExcelKolonu<IzinTalebiResponse>("Karar Notu", t => t.KararNotu, 40),
+                new ExcelKolonu<IzinTalebiResponse>("Talebi Açan", t => t.OlusturanAdi, 24),
                 new ExcelKolonu<IzinTalebiResponse>("Talep Tarihi", t => sirketSaati.Yerel(t.OlusturmaTarihi), 17, tarihSaat)
             ],
-            talepler);
+            talepler.Select(t => Tamamla(t, gunluk, adlar)));
 
         return new DosyaResponse($"izin-talepleri-{sirketSaati.Bugun():yyyyMMdd}.xlsx", ExcelYazici.IcerikTuru, icerik);
     }
@@ -221,7 +226,14 @@ public sealed class IzinTalebiService(
         talepler.Select(t => new IzinTalebiResponse(
             t.Id, t.CalisanId, t.Calisan.Ad + " " + t.Calisan.Soyad, t.Calisan.Departman.Ad, t.IzinTuruId, t.IzinTuru.Ad,
             t.SureTipi, t.Baslangic, t.Bitis, t.Dakika, string.Empty, t.Durum, t.Aciklama, t.OlusturmaTarihi,
-            t.KararVerenKullaniciId, t.KararTarihi, t.KararNotu));
+            t.OlusturanKullaniciId, null, t.KararVerenKullaniciId, null, t.KararTarihi, t.KararNotu));
+
+    private static IzinTalebiResponse Tamamla(IzinTalebiResponse talep, int gunluk, IReadOnlyDictionary<int, string> adlar) => talep with
+    {
+        SureMetni = SureMetni.Olustur(talep.Dakika, gunluk),
+        OlusturanAdi = talep.OlusturanKullaniciId is { } olusturan ? adlar.GetValueOrDefault(olusturan) : null,
+        KararVerenAdi = talep.KararVerenKullaniciId is { } kararVeren ? adlar.GetValueOrDefault(kararVeren) : null
+    };
 
     private static string BicimAdi(SureTipi tip) => tip switch
     {

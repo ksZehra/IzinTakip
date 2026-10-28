@@ -40,6 +40,8 @@ public sealed class IzinOnayTests(VeritabanliApiFactory factory) : IClassFixture
         Assert.Equal(HttpStatusCode.OK, yanit.StatusCode);
         Assert.Equal("Onaylandi", talep.GetProperty("durum").GetString());
         Assert.Equal("İyi tatiller", talep.GetProperty("kararNotu").GetString());
+        Assert.Equal("Yönetici Test", talep.GetProperty("kararVerenAdi").GetString());
+        Assert.Equal("Çalışan Test", talep.GetProperty("olusturanAdi").GetString());
         Assert.Equal("İzin talebiniz onaylandı", bildirim.GetProperty("baslik").GetString());
         Assert.EndsWith("Not: İyi tatiller", bildirim.GetProperty("metin").GetString());
         await factory.EmailSender.BekleAsync(ekip.CalisanEposta, "İzin talebiniz onaylandı");

@@ -73,6 +73,9 @@ public sealed record IzinTalebiResponse(
     IzinDurumu Durum,
     string? Aciklama,
     DateTime OlusturmaTarihi,
+    int? OlusturanKullaniciId,
+    string? OlusturanAdi,
     int? KararVerenKullaniciId,
+    string? KararVerenAdi,
     DateTime? KararTarihi,
     string? KararNotu);

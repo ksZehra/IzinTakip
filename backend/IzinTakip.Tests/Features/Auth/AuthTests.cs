@@ -84,6 +84,7 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
         var govde = await client.GetFromJsonAsync<JsonElement>("/api/auth/ben", TestContext.Current.CancellationToken);
         var yetkiler = govde.GetProperty("yetkiler").EnumerateArray().Select(y => y.GetString()).ToList();
 
+        Assert.Equal(ApiFactory.SuperAdminEposta, govde.GetProperty("gorunenAd").GetString());
         Assert.Contains(SistemRolleri.SuperAdmin, govde.GetProperty("roller").EnumerateArray().Select(r => r.GetString()));
         Assert.Contains(Yetkiler.RolYonetimi, yetkiler);
         Assert.Equal(Yetkiler.Atanabilir.Count + 1, yetkiler.Count);

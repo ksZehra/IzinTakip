@@ -136,6 +136,7 @@ try
     builder.Services.AddScoped<BakiyeSorgusu>();
     builder.Services.AddScoped<CalismaTakvimiOkuyucu>();
     builder.Services.AddScoped<KullaniciKorumasi>();
+    builder.Services.AddScoped<KullaniciAdlari>();
     builder.Services.AddScoped<OnayciBulucu>();
     builder.Services.AddScoped<BildirimYazici>();
 
