@@ -24,9 +24,9 @@ public sealed class EmailGonderimServisi(
                 }
                 catch (Exception exception) when (exception is not OperationCanceledException)
                 {
-                    if (deneme == TekrarBeklemeleri.Length)
+                    if (exception is KaliciEmailHatasiException || deneme == TekrarBeklemeleri.Length)
                     {
-                        logger.LogError(exception, "E-posta gonderilemedi {Konu}", mesaj.Konu);
+                        logger.LogError(exception, "E-posta gonderilemedi, tekrar denenmeyecek {Konu} {Deneme}", mesaj.Konu, deneme + 1);
                         break;
                     }
 
