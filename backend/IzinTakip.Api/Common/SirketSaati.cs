@@ -5,4 +5,6 @@ public sealed class SirketSaati(TimeProvider timeProvider, TimeZoneInfo saatDili
     public DateTime Simdi() => TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), saatDilimi).DateTime;
 
     public DateOnly Bugun() => DateOnly.FromDateTime(Simdi());
+
+    public DateTime Yerel(DateTime utc) => TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), saatDilimi);
 }

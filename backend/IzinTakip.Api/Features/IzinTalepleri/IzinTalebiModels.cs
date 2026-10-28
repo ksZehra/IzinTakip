@@ -23,6 +23,13 @@ public sealed record IzinTalebiOlusturRequest(
     string? Aciklama)
     : SureHesaplaRequest(IzinTuruId, SureTipi, Tarih, BitisTarihi, GunYarisi, BaslangicSaati, BitisSaati);
 
+public record IzinTalebiFiltreRequest(
+    int? CalisanId,
+    IzinDurumu? Durum,
+    int? IzinTuruId,
+    DateOnly? Baslangic,
+    DateOnly? Bitis);
+
 public sealed record IzinTalebiListeRequest(
     int? CalisanId,
     IzinDurumu? Durum,
@@ -30,7 +37,8 @@ public sealed record IzinTalebiListeRequest(
     DateOnly? Baslangic,
     DateOnly? Bitis,
     int Page = 1,
-    int PageSize = 20);
+    int PageSize = 20)
+    : IzinTalebiFiltreRequest(CalisanId, Durum, IzinTuruId, Baslangic, Bitis);
 
 public sealed record IzinTalebiKararRequest(string? Not);
 

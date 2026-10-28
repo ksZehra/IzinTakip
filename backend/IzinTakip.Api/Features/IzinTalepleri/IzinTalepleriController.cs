@@ -32,6 +32,16 @@ public sealed class IzinTalepleriController(IzinTalebiService service, IzinOnayS
         CancellationToken cancellationToken) =>
         await service.ListeleAsync(request, cancellationToken);
 
+    [HttpGet("excel")]
+    [Yetki(Yetkiler.Rapor.Gor)]
+    [EndpointSummary("Kapsamdaki izin taleplerini liste filtreleriyle Excel dosyası olarak indirir")]
+    [ProducesResponseType<Stream>(StatusCodes.Status200OK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    public async Task<IActionResult> Excel([FromQuery] IzinTalebiFiltreRequest request, CancellationToken cancellationToken)
+    {
+        var dosya = await service.ExcelAsync(request, cancellationToken);
+        return File(dosya.Icerik, dosya.IcerikTuru, dosya.DosyaAdi);
+    }
+
     [HttpGet("{id:int}")]
     [EndpointSummary("Kapsamdaki bir izin talebinin detayını döner")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]

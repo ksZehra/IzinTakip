@@ -10,6 +10,7 @@ using IzinTakip.Domain.Enums;
 using IzinTakip.Domain.Exceptions;
 using IzinTakip.Domain.Izin;
 using IzinTakip.Infrastructure.Data;
+using IzinTakip.Infrastructure.Excel;
 using IzinTakip.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -98,37 +99,7 @@ public sealed class IzinTalebiService(
 
     public async Task<PagedResponse<IzinTalebiListeResponse>> ListeleAsync(IzinTalebiListeRequest request, CancellationToken cancellationToken)
     {
-        var calisanlar = await kapsam.CalisanlarAsync(cancellationToken);
-        var sorgu = db.IzinTalepleri.AsNoTracking().Where(t => calisanlar.Any(c => c.Id == t.CalisanId));
-        if (request.CalisanId is not null)
-        {
-            sorgu = sorgu.Where(t => t.CalisanId == request.CalisanId);
-        }
-
-        if (request.Durum is not null)
-        {
-            sorgu = sorgu.Where(t => t.Durum == request.Durum);
-        }
-
-        if (request.IzinTuruId is not null)
-        {
-            sorgu = sorgu.Where(t => t.IzinTuruId == request.IzinTuruId);
-        }
-
-        if (request.Baslangic is { } baslangic)
-        {
-            var sinir = baslangic.ToDateTime(TimeOnly.MinValue);
-            sorgu = sorgu.Where(t => t.Bitis > sinir);
-        }
-
-        if (request.Bitis is { } bitis)
-        {
-            var sinir = bitis.AddDays(1).ToDateTime(TimeOnly.MinValue);
-            sorgu = sorgu.Where(t => t.Baslangic < sinir);
-        }
-
-        var sayfa = await sorgu
-            .OrderByDescending(t => t.Baslangic).ThenByDescending(t => t.Id)
+        var sayfa = await Sirala(await FiltreliAsync(request, cancellationToken))
             .Select(t => new IzinTalebiListeResponse(
                 t.Id, t.CalisanId, t.Calisan.Ad + " " + t.Calisan.Soyad, t.IzinTuru.Ad, t.SureTipi,
                 t.Baslangic, t.Bitis, t.Dakika, string.Empty, t.Durum))
@@ -141,17 +112,37 @@ public sealed class IzinTalebiService(
     public async Task<IzinTalebiResponse> DetayAsync(int id, CancellationToken cancellationToken)
     {
         var calisanlar = await kapsam.CalisanlarAsync(cancellationToken);
-        var talep = await db.IzinTalepleri
-            .AsNoTracking()
-            .Where(t => t.Id == id && calisanlar.Any(c => c.Id == t.CalisanId))
-            .Select(t => new IzinTalebiResponse(
-                t.Id, t.CalisanId, t.Calisan.Ad + " " + t.Calisan.Soyad, t.Calisan.Departman.Ad, t.IzinTuruId, t.IzinTuru.Ad,
-                t.SureTipi, t.Baslangic, t.Bitis, t.Dakika, string.Empty, t.Durum, t.Aciklama, t.OlusturmaTarihi,
-                t.KararVerenKullaniciId, t.KararTarihi, t.KararNotu))
+        var talep = await Yansit(db.IzinTalepleri.AsNoTracking().Where(t => t.Id == id && calisanlar.Any(c => c.Id == t.CalisanId)))
             .SingleOrDefaultAsync(cancellationToken)
             ?? throw new KayitBulunamadiException("İzin talebi bulunamadı.");
 
         return talep with { SureMetni = SureMetni.Olustur(talep.Dakika, await GunlukDakikaAsync(cancellationToken)) };
+    }
+
+    public async Task<DosyaResponse> ExcelAsync(IzinTalebiFiltreRequest request, CancellationToken cancellationToken)
+    {
+        var talepler = await Yansit(Sirala(await FiltreliAsync(request, cancellationToken))).ToListAsync(cancellationToken);
+        var gunluk = await GunlukDakikaAsync(cancellationToken);
+        const string tarihSaat = "dd.MM.yyyy HH:mm";
+
+        var icerik = ExcelYazici.Yaz(
+            "İzin Talepleri",
+            [
+                new ExcelKolonu<IzinTalebiResponse>("Çalışan", t => t.CalisanAdSoyad, 28),
+                new ExcelKolonu<IzinTalebiResponse>("Departman", t => t.DepartmanAdi, 22),
+                new ExcelKolonu<IzinTalebiResponse>("İzin Türü", t => t.IzinTuruAdi, 18),
+                new ExcelKolonu<IzinTalebiResponse>("Biçim", t => BicimAdi(t.SureTipi), 12),
+                new ExcelKolonu<IzinTalebiResponse>("Başlangıç", t => t.Baslangic, 17, tarihSaat),
+                new ExcelKolonu<IzinTalebiResponse>("Bitiş", t => t.Bitis, 17, tarihSaat),
+                new ExcelKolonu<IzinTalebiResponse>("Süre", t => SureMetni.Olustur(t.Dakika, gunluk), 16),
+                new ExcelKolonu<IzinTalebiResponse>("Durum", t => DurumAdi(t.Durum), 13),
+                new ExcelKolonu<IzinTalebiResponse>("Açıklama", t => t.Aciklama, 40),
+                new ExcelKolonu<IzinTalebiResponse>("Karar Notu", t => t.KararNotu, 40),
+                new ExcelKolonu<IzinTalebiResponse>("Talep Tarihi", t => sirketSaati.Yerel(t.OlusturmaTarihi), 17, tarihSaat)
+            ],
+            talepler);
+
+        return new DosyaResponse($"izin-talepleri-{sirketSaati.Bugun():yyyyMMdd}.xlsx", ExcelYazici.IcerikTuru, icerik);
     }
 
     private async Task<int> TalepSahibiAsync(int? istenenCalisanId, KullaniciYetkileri yetkiler, CancellationToken cancellationToken)
@@ -188,6 +179,64 @@ public sealed class IzinTalebiService(
     private async Task<IzinTuru> TurAsync(int izinTuruId, CancellationToken cancellationToken) =>
         await db.IzinTurleri.AsNoTracking().SingleOrDefaultAsync(t => t.Id == izinTuruId, cancellationToken)
         ?? throw new KayitBulunamadiException("İzin türü bulunamadı.");
+
+    private async Task<IQueryable<IzinTalebi>> FiltreliAsync(IzinTalebiFiltreRequest request, CancellationToken cancellationToken)
+    {
+        var calisanlar = await kapsam.CalisanlarAsync(cancellationToken);
+        var sorgu = db.IzinTalepleri.AsNoTracking().Where(t => calisanlar.Any(c => c.Id == t.CalisanId));
+        if (request.CalisanId is not null)
+        {
+            sorgu = sorgu.Where(t => t.CalisanId == request.CalisanId);
+        }
+
+        if (request.Durum is not null)
+        {
+            sorgu = sorgu.Where(t => t.Durum == request.Durum);
+        }
+
+        if (request.IzinTuruId is not null)
+        {
+            sorgu = sorgu.Where(t => t.IzinTuruId == request.IzinTuruId);
+        }
+
+        if (request.Baslangic is { } baslangic)
+        {
+            var sinir = baslangic.ToDateTime(TimeOnly.MinValue);
+            sorgu = sorgu.Where(t => t.Bitis > sinir);
+        }
+
+        if (request.Bitis is { } bitis)
+        {
+            var sinir = bitis.AddDays(1).ToDateTime(TimeOnly.MinValue);
+            sorgu = sorgu.Where(t => t.Baslangic < sinir);
+        }
+
+        return sorgu;
+    }
+
+    private static IQueryable<IzinTalebi> Sirala(IQueryable<IzinTalebi> talepler) =>
+        talepler.OrderByDescending(t => t.Baslangic).ThenByDescending(t => t.Id);
+
+    private static IQueryable<IzinTalebiResponse> Yansit(IQueryable<IzinTalebi> talepler) =>
+        talepler.Select(t => new IzinTalebiResponse(
+            t.Id, t.CalisanId, t.Calisan.Ad + " " + t.Calisan.Soyad, t.Calisan.Departman.Ad, t.IzinTuruId, t.IzinTuru.Ad,
+            t.SureTipi, t.Baslangic, t.Bitis, t.Dakika, string.Empty, t.Durum, t.Aciklama, t.OlusturmaTarihi,
+            t.KararVerenKullaniciId, t.KararTarihi, t.KararNotu));
+
+    private static string BicimAdi(SureTipi tip) => tip switch
+    {
+        SureTipi.TamGun => "Tam gün",
+        SureTipi.YarimGun => "Yarım gün",
+        _ => "Saatlik"
+    };
+
+    private static string DurumAdi(IzinDurumu durum) => durum switch
+    {
+        IzinDurumu.Beklemede => "Beklemede",
+        IzinDurumu.Onaylandi => "Onaylandı",
+        IzinDurumu.Reddedildi => "Reddedildi",
+        _ => "İptal edildi"
+    };
 
     private IQueryable<IzinTalebi> AcikTalepler(int calisanId) =>
         db.IzinTalepleri.Where(t => t.CalisanId == calisanId && (t.Durum == IzinDurumu.Beklemede || t.Durum == IzinDurumu.Onaylandi));

@@ -16,6 +16,7 @@ public sealed class ValidationFilter : IAsyncActionFilter
             context.ModelState,
             StatusCodes.Status400BadRequest,
             detail: "Gönderilen bilgilerde hata var. İşaretli alanları düzeltin.");
+        problem.Errors = problem.Errors.ToDictionary(e => JsonNamingPolicy.CamelCase.ConvertName(e.Key), e => e.Value);
 
         return new BadRequestObjectResult(problem) { ContentTypes = { "application/problem+json" } };
     }
