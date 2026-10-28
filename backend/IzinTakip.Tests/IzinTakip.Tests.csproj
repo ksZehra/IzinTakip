@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\IzinTakip.Domain\IzinTakip.Domain.csproj" />
     <ProjectReference Include="..\IzinTakip.Api\IzinTakip.Api.csproj" />
+    <ProjectReference Include="..\IzinTakip.Gateway\IzinTakip.Gateway.csproj" Aliases="GatewayApp" />
   </ItemGroup>
 
 </Project>

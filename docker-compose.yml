@@ -37,7 +37,7 @@ services:
       Seed__SuperAdmin__Parola: ${SUPERADMIN_PAROLA:-}
       Email__Host: mailpit
       Email__Port: "1025"
-      Uygulama__Adres: http://localhost:${GATEWAY_PORT:-8080}
+      Uygulama__Adres: http://localhost:${GATEWAY_PORT:-8088}
     volumes:
       - api-belgeler:/app/belgeler
       - api-logs:/app/logs
@@ -47,7 +47,25 @@ services:
       mailpit:
         condition: service_started
 
+  gateway:
+    profiles: ["app"]
+    build:
+      context: ./backend
+      dockerfile: IzinTakip.Gateway/Dockerfile
+    environment:
+      Api__Adres: http://api:8080
+    ports:
+      - "127.0.0.1:${GATEWAY_PORT:-8088}:8080"
+    volumes:
+      - gateway-keys:/app/keys
+      - gateway-logs:/app/logs
+    depends_on:
+      api:
+        condition: service_started
+
 volumes:
   sqlserver-data:
   api-belgeler:
   api-logs:
+  gateway-keys:
+  gateway-logs:

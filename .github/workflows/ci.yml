@@ -28,3 +28,6 @@ jobs:
 
       - name: Docker build (api)
         run: docker build -f IzinTakip.Api/Dockerfile .
+
+      - name: Docker build (gateway)
+        run: docker build -f IzinTakip.Gateway/Dockerfile .

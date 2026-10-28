@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 
 # Yuklenen izin belgeleri (yerel dosya deposu)
 belgeler/
+
+# Gateway Data Protection anahtarlari (yerel gelistirme)
+backend/IzinTakip.Gateway/keys/

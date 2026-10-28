@@ -15,13 +15,16 @@ Backend ASP.NET Core Web API (.NET 10), frontend Vue 3 (hazırlanıyor).
 - **Raporlar:** izin takvimi, bakiye raporu, talep listesi; Excel'e aktarım.
 - **Yetki ve kapsam:** çalışan kendini, yönetici ekibini, İK tüm şirketi görür. Rol ve yetki yönetimi yalnız SuperAdmin'dedir.
 - **Tanımlar:** departman, çalışan, izin türü, resmi tatil, hak kuralı ve iş takvimi ayarları arayüzden yönetilir.
+- **Güvenlik:** tarayıcı yalnız gateway ile konuşur (BFF). JWT tarayıcıya gelmez; şifreli, HttpOnly, `SameSite=Strict` cookie'de durur.
+  CSRF başlığı, giriş hız sınırı ve güvenlik başlıkları gateway'dedir.
 
 ## Teknoloji
 
 | Alan | Seçim |
 |---|---|
 | Backend | .NET 10, ASP.NET Core Web API (controller), EF Core 10, SQL Server |
-| Kimlik | ASP.NET Core Identity, JWT |
+| Kimlik | ASP.NET Core Identity, JWT; gateway'de şifreli cookie (Data Protection) |
+| Gateway | YARP (BFF) |
 | Doğrulama ve hata | FluentValidation, ProblemDetails (RFC 9457) |
 | Log | Serilog (konsol + günlük JSON dosya) |
 | E-posta, Excel | MailKit, ClosedXML |
@@ -32,6 +35,7 @@ Backend ASP.NET Core Web API (.NET 10), frontend Vue 3 (hazırlanıyor).
 
 ```
 backend/
+  IzinTakip.Gateway         tarayıcının tek kapısı: giriş/çıkış, cookie → JWT, /api yönlendirme (YARP)
   IzinTakip.Domain          iş kuralları, entity'ler, hesaplayıcılar (paket bağımlılığı yok)
   IzinTakip.Infrastructure  EF Core, Identity, e-posta, dosya deposu, Excel
   IzinTakip.Api             controller'lar, service'ler, doğrulama, arka plan görevleri
@@ -66,17 +70,23 @@ Gerekenler: .NET 10 SDK, Docker.
    dotnet ef database update --project IzinTakip.Infrastructure --startup-project IzinTakip.Api
    dotnet run --project IzinTakip.Api
    ```
+5. Gateway'i ayrı bir terminalde çalıştırın (`http://localhost:5080`):
+   ```bash
+   dotnet run --project IzinTakip.Gateway
+   ```
 
-Development ortamında API dokümanı `/scalar` adresindedir; gönderilen e-postalar `http://127.0.0.1:8026` adresinde görünür.
+Development ortamında API dokümanı `http://localhost:5137/scalar` adresindedir; gönderilen e-postalar `http://127.0.0.1:8026` adresinde görünür.
 İlk açılışta roller, SuperAdmin (`admin@izintakip.local`), varsayılan izin türleri, hak kuralları ve demo verisi oluşur.
 
 ## Docker ile çalıştırma
 
-API container'ı `app` profilindedir. `.env` dosyasında `JWT_SIGNING_KEY` ve `SUPERADMIN_PAROLA` değerlerini doldurun:
+API ve gateway container'ları `app` profilindedir. `.env` dosyasında `JWT_SIGNING_KEY` ve `SUPERADMIN_PAROLA` değerlerini doldurun:
 
 ```bash
 docker compose --profile app up -d --build
 ```
+
+Uygulama `http://localhost:8088` adresinden açılır (port `.env` → `GATEWAY_PORT`). API dışarıya açık değildir; yalnız gateway üzerinden erişilir.
 
 ## Testler
 
