@@ -16,12 +16,14 @@ public sealed class AuthController(AuthService service) : ControllerBase
         await service.GirisAsync(request, cancellationToken);
 
     [HttpGet("ben")]
+    [Authorize]
     [EndpointSummary("Oturumdaki kullanıcının bilgisini, rollerini ve yetkilerini döner")]
     [ProducesResponseType<BenResponse>(StatusCodes.Status200OK)]
     public async Task<ActionResult<BenResponse>> Ben(CancellationToken cancellationToken) =>
         await service.BenAsync(cancellationToken);
 
     [HttpPost("parola-degistir")]
+    [Authorize]
     [EndpointSummary("Oturumdaki kullanıcının parolasını değiştirir")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)]

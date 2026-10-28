@@ -1,4 +1,5 @@
 using IzinTakip.Api.Common;
+using IzinTakip.Api.Common.Auth;
 using IzinTakip.Api.Common.Izin;
 using IzinTakip.Api.Common.Kapsam;
 using IzinTakip.Api.Common.Paging;
@@ -15,6 +16,8 @@ public sealed class CalisanService(
     IzinTakipDbContext db,
     CalisanKapsami kapsam,
     KullaniciYetkiOkuyucu yetkiOkuyucu,
+    IGecerliKullanici gecerliKullanici,
+    KullaniciKorumasi koruma,
     BakiyeSorgusu bakiyeSorgusu,
     SirketSaati sirketSaati,
     ILogger<CalisanService> logger)
@@ -102,6 +105,12 @@ public sealed class CalisanService(
             kullanici = await db.Users.SingleOrDefaultAsync(k => k.CalisanId == id, cancellationToken);
             if (kullanici is not null)
             {
+                await koruma.DokunabilirMiAsync(kullanici.Id, await gecerliKullanici.YetkileriAsync(cancellationToken), cancellationToken);
+                if (await koruma.SonAktifSuperAdminMiAsync(kullanici.Id, cancellationToken))
+                {
+                    throw new IsKuraliException("Bu çalışanın hesabı son aktif SuperAdmin; çalışan pasifleştirilemez.");
+                }
+
                 kullanici.Aktif = false;
             }
         }

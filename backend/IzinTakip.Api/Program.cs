@@ -117,7 +117,7 @@ try
             };
         });
     builder.Services.AddAuthorizationBuilder()
-        .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+        .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().AddRequirements(new YetkiAttribute()).Build());
     builder.Services.AddScoped<IAuthorizationHandler, YetkiAuthorizationHandler>();
     builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, YetkiSonucuHandler>();
 
@@ -135,6 +135,7 @@ try
     builder.Services.AddScoped<CalisanKapsami>();
     builder.Services.AddScoped<BakiyeSorgusu>();
     builder.Services.AddScoped<CalismaTakvimiOkuyucu>();
+    builder.Services.AddScoped<KullaniciKorumasi>();
     builder.Services.AddScoped<OnayciBulucu>();
     builder.Services.AddScoped<BildirimYazici>();
 

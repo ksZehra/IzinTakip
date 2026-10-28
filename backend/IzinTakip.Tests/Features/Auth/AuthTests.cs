@@ -133,6 +133,8 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
         var client = await TestKimlik.OturumluClientAsync(factory, "yeni@izintakip.test");
 
         var oncesi = await client.GetAsync("/test/yetki/rapor", TestContext.Current.CancellationToken);
+        var yetkisizUcOncesi = await client.GetAsync("/api/bildirimler", TestContext.Current.CancellationToken);
+        var ben = await client.GetAsync("/api/auth/ben", TestContext.Current.CancellationToken);
         var degistir = await client.PostAsJsonAsync(
             "/api/auth/parola-degistir",
             new { mevcutParola = TestKimlik.VarsayilanParola, yeniParola = "YeniParola2026" },
@@ -141,6 +143,8 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
 
         Assert.Equal(HttpStatusCode.Forbidden, oncesi.StatusCode);
         Assert.Equal("Devam etmek için önce parolanızı değiştirin.", await DetayAsync(oncesi));
+        Assert.Equal(HttpStatusCode.Forbidden, yetkisizUcOncesi.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, ben.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, degistir.StatusCode);
         Assert.Equal(HttpStatusCode.OK, sonrasi.StatusCode);
     }

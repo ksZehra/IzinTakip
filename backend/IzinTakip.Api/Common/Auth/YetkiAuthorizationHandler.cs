@@ -19,7 +19,7 @@ public sealed class YetkiAuthorizationHandler(IGecerliKullanici gecerliKullanici
             return;
         }
 
-        if (requirement.Kodlar.Any(yetkiler.VarMi))
+        if (requirement.Kodlar.Count == 0 || requirement.Kodlar.Any(yetkiler.VarMi))
         {
             context.Succeed(requirement);
             return;
