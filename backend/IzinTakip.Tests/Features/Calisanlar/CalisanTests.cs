@@ -1,7 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using IzinTakip.Api.Common;
 using IzinTakip.Domain;
+using IzinTakip.Domain.Izin;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace IzinTakip.Tests.Features.Calisanlar;
 
@@ -22,6 +25,28 @@ public sealed class CalisanTests(VeritabanliApiFactory factory) : IClassFixture<
         Assert.Equal(HttpStatusCode.Created, yanit.StatusCode);
         Assert.NotNull(yanit.Headers.Location);
         Assert.Equal("Ar-Ge", govde.GetProperty("departmanAdi").GetString());
+        Assert.Equal(
+            IzinHakkiHesaplayici.IlkHakKidemYili(new DateOnly(2021, 2, 1), factory.Services.GetRequiredService<SirketSaati>().Bugun()),
+            govde.GetProperty("hakBaslangicKidemYili").GetInt32());
+    }
+
+    [Fact]
+    public async Task Guncelle_HakBaslangicYili_VerilirseDegisirVerilmezseKorunur()
+    {
+        var admin = await SuperAdminAsync();
+        var departmanId = await TestVeri.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}");
+        var calisanId = await TestVeri.CalisanEkleAsync(admin, "Selin", departmanId);
+        var govde = new { ad = "Selin", soyad = "Test", departmanId, iseGirisTarihi = "2020-01-06", dogumTarihi = "1990-05-15", hakBaslangicKidemYili = (int?)3 };
+
+        var verilen = await (await admin.PutAsJsonAsync($"/api/calisanlar/{calisanId}", govde, TestContext.Current.CancellationToken))
+            .Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+        var verilmeyen = await (await admin.PutAsJsonAsync($"/api/calisanlar/{calisanId}", govde with { iseGirisTarihi = "2019-12-06", hakBaslangicKidemYili = (int?)null }, TestContext.Current.CancellationToken))
+            .Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+        var gecersiz = await admin.PutAsJsonAsync($"/api/calisanlar/{calisanId}", govde with { hakBaslangicKidemYili = (int?)0 }, TestContext.Current.CancellationToken);
+
+        Assert.Equal(3, verilen.GetProperty("hakBaslangicKidemYili").GetInt32());
+        Assert.Equal(3, verilmeyen.GetProperty("hakBaslangicKidemYili").GetInt32());
+        Assert.Equal(HttpStatusCode.BadRequest, gecersiz.StatusCode);
     }
 
     [Fact]

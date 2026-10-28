@@ -4,7 +4,13 @@ namespace IzinTakip.Api.Features.Calisanlar;
 
 public sealed record CalisanListeRequest(string? Arama, int? DepartmanId, bool? Aktif, int Page = 1, int PageSize = 20);
 
-public sealed record CalisanKaydetRequest(string Ad, string Soyad, int DepartmanId, DateOnly IseGirisTarihi, DateOnly DogumTarihi);
+public sealed record CalisanKaydetRequest(
+    string Ad,
+    string Soyad,
+    int DepartmanId,
+    DateOnly IseGirisTarihi,
+    DateOnly DogumTarihi,
+    int? HakBaslangicKidemYili);
 
 public sealed record IzinHakkiEkleRequest(int Dakika, string Aciklama, DateOnly? KazanimTarihi);
 
@@ -25,6 +31,7 @@ public sealed record CalisanResponse(
     string DepartmanAdi,
     DateOnly IseGirisTarihi,
     DateOnly DogumTarihi,
+    int HakBaslangicKidemYili,
     bool Aktif,
     string? KullaniciEposta);
 
@@ -34,6 +41,7 @@ public sealed record IzinHakkiResponse(
     int Dakika,
     string SureMetni,
     HakKaynagi Kaynak,
+    int? KidemYili,
     string Aciklama);
 
 public sealed record BakiyeResponse(

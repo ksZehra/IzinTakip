@@ -9,9 +9,10 @@ public sealed class IzinHakki : Entity
     {
     }
 
-    private IzinHakki(int calisanId, DateOnly kazanimTarihi, int dakika, HakKaynagi kaynak, string aciklama)
+    private IzinHakki(int calisanId, int? kidemYili, DateOnly kazanimTarihi, int dakika, HakKaynagi kaynak, string aciklama)
     {
         CalisanId = calisanId;
+        KidemYili = kidemYili;
         KazanimTarihi = kazanimTarihi;
         Dakika = dakika;
         Kaynak = kaynak;
@@ -19,6 +20,7 @@ public sealed class IzinHakki : Entity
     }
 
     public int CalisanId { get; private set; }
+    public int? KidemYili { get; private set; }
     public DateOnly KazanimTarihi { get; private set; }
     public int Dakika { get; private set; }
     public HakKaynagi Kaynak { get; private set; }
@@ -31,9 +33,9 @@ public sealed class IzinHakki : Entity
             throw new IsKuraliException("Hak düzeltmesinin süresi sıfır olamaz.");
         }
 
-        return new IzinHakki(calisanId, kazanimTarihi, dakika, HakKaynagi.Elle, aciklama);
+        return new IzinHakki(calisanId, null, kazanimTarihi, dakika, HakKaynagi.Elle, aciklama);
     }
 
-    public static IzinHakki Kural(int calisanId, DateOnly kazanimTarihi, int dakika, string aciklama) =>
-        new(calisanId, kazanimTarihi, dakika, HakKaynagi.Kural, aciklama);
+    public static IzinHakki Kural(int calisanId, int kidemYili, DateOnly kazanimTarihi, int dakika, string aciklama) =>
+        new(calisanId, kidemYili, kazanimTarihi, dakika, HakKaynagi.Kural, aciklama);
 }

@@ -11,7 +11,7 @@ public sealed class IzinHakkiConfiguration : IEntityTypeConfiguration<IzinHakki>
     {
         builder.Property(h => h.Aciklama).HasMaxLength(250);
         builder.HasOne<Calisan>().WithMany().HasForeignKey(h => h.CalisanId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasIndex(h => new { h.CalisanId, h.KazanimTarihi })
+        builder.HasIndex(h => new { h.CalisanId, h.KidemYili })
             .IsUnique()
             .HasFilter($"[Kaynak] = {(int)HakKaynagi.Kural}");
     }

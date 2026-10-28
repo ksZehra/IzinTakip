@@ -157,6 +157,9 @@ namespace IzinTakip.Infrastructure.Data.Migrations
                     b.Property<int?>("GuncelleyenKullaniciId")
                         .HasColumnType("int");
 
+                    b.Property<int>("HakBaslangicKidemYili")
+                        .HasColumnType("int");
+
                     b.Property<DateOnly>("IseGirisTarihi")
                         .HasColumnType("date");
 
@@ -298,6 +301,9 @@ namespace IzinTakip.Infrastructure.Data.Migrations
                     b.Property<DateOnly>("KazanimTarihi")
                         .HasColumnType("date");
 
+                    b.Property<int?>("KidemYili")
+                        .HasColumnType("int");
+
                     b.Property<int?>("OlusturanKullaniciId")
                         .HasColumnType("int");
 
@@ -306,7 +312,7 @@ namespace IzinTakip.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CalisanId", "KazanimTarihi")
+                    b.HasIndex("CalisanId", "KidemYili")
                         .IsUnique()
                         .HasFilter("[Kaynak] = 1");
 

@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using IzinTakip.Api.BackgroundServices;
@@ -30,6 +31,29 @@ public sealed class ArkaPlanGorevleriTests(VeritabanliApiFactory factory) : ICla
         Assert.Equal(14 * 480, hak.GetProperty("dakika").GetInt32());
         Assert.Equal("Kural", hak.GetProperty("kaynak").GetString());
         Assert.Equal("3. yıl hakkı (1–5 yıl)", hak.GetProperty("aciklama").GetString());
+    }
+
+    [Fact]
+    public async Task YillikHak_IseGirisTarihiDuzeltilince_AyniYilTekrarYazilmaz()
+    {
+        var bugun = factory.Services.GetRequiredService<SirketSaati>().Bugun();
+        var admin = await SuperAdminAsync();
+        var departmanId = await TestVeri.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}");
+        var iseGiris = bugun.AddYears(-3).AddDays(10);
+        var calisanId = await TestVeri.CalisanEkleAsync(admin, "Düzeltilen", departmanId, iseGirisTarihi: iseGiris);
+        var gorev = Gorev<YillikHakServisi>();
+        await gorev.CalistirAsync(bugun.AddDays(15), TestContext.Current.CancellationToken);
+
+        var duzeltme = await admin.PutAsJsonAsync(
+            $"/api/calisanlar/{calisanId}",
+            new { ad = "Düzeltilen", soyad = "Test", departmanId, iseGirisTarihi = iseGiris.AddMonths(-1), dogumTarihi = new DateOnly(1990, 5, 15) },
+            TestContext.Current.CancellationToken);
+        await gorev.CalistirAsync(bugun.AddDays(15), TestContext.Current.CancellationToken);
+        var haklar = await HaklarAsync(admin, calisanId);
+
+        Assert.Equal(HttpStatusCode.OK, duzeltme.StatusCode);
+        var hak = Assert.Single(haklar.GetProperty("satirlar").EnumerateArray());
+        Assert.Equal(3, hak.GetProperty("kidemYili").GetInt32());
     }
 
     [Fact]

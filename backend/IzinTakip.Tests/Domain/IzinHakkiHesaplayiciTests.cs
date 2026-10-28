@@ -49,18 +49,28 @@ public sealed class IzinHakkiHesaplayiciTests
     [Theory]
     [InlineData("2027-05-14", 36)]
     [InlineData("2027-05-15", 37)]
-    public void Yas_DogumGunundenOnceVeSonra_DogruHesaplanir(string tarih, int beklenen)
+    public void TamYil_YildonumundenOnceVeSonra_DogruHesaplanir(string tarih, int beklenen)
     {
-        Assert.Equal(beklenen, IzinHakkiHesaplayici.Yas(new DateOnly(1990, 5, 15), DateOnly.Parse(tarih)));
+        Assert.Equal(beklenen, IzinHakkiHesaplayici.TamYil(new DateOnly(1990, 5, 15), DateOnly.Parse(tarih)));
+    }
+
+    [Theory]
+    [InlineData("2020-03-10", "2024-01-01", 4)]
+    [InlineData("2020-03-10", "2024-03-10", 5)]
+    [InlineData("2026-05-01", "2026-04-01", 1)]
+    public void IlkHakKidemYili_KayitTarihindenSonrakiIlkYil(string iseGiris, string kayit, int beklenen)
+    {
+        Assert.Equal(beklenen, IzinHakkiHesaplayici.IlkHakKidemYili(DateOnly.Parse(iseGiris), DateOnly.Parse(kayit)));
     }
 
     [Fact]
-    public void EksikHaklar_KayittanSonrakiYildonumleri_KuralGunuIleYazilir()
+    public void EksikHaklar_BaslangicYilindanItibaren_KuralGunuIleYazilir()
     {
-        var calisan = new Calisan("Ayşe", "Yılmaz", 1, new DateOnly(2020, 3, 10), new DateOnly(1990, 5, 15));
+        var calisan = new Calisan("Ayşe", "Yılmaz", 1, new DateOnly(2020, 3, 10), new DateOnly(1990, 5, 15), 4);
 
-        var haklar = IzinHakkiHesaplayici.EksikHaklar(calisan, new DateOnly(2024, 1, 1), new DateOnly(2026, 3, 10), new HashSet<DateOnly>(), Kurallar, Gunluk);
+        var haklar = IzinHakkiHesaplayici.EksikHaklar(calisan, new DateOnly(2026, 3, 10), new HashSet<int>(), Kurallar, Gunluk);
 
+        Assert.Equal([4, 5, 6], haklar.Select(h => h.KidemYili));
         Assert.Equal([new DateOnly(2024, 3, 10), new DateOnly(2025, 3, 10), new DateOnly(2026, 3, 10)], haklar.Select(h => h.KazanimTarihi));
         Assert.Equal([14 * Gunluk, 14 * Gunluk, 20 * Gunluk], haklar.Select(h => h.Dakika));
         Assert.All(haklar, h => Assert.Equal(HakKaynagi.Kural, h.Kaynak));
@@ -68,13 +78,24 @@ public sealed class IzinHakkiHesaplayiciTests
     }
 
     [Fact]
-    public void EksikHaklar_YazilmisVeKayitGunundekiYildonumu_Atlanir()
+    public void EksikHaklar_YazilmisKidemYili_TekrarYazilmaz()
     {
-        var calisan = new Calisan("Can", "Öz", 1, new DateOnly(2020, 3, 10), new DateOnly(1990, 5, 15));
+        var calisan = new Calisan("Can", "Öz", 1, new DateOnly(2020, 3, 10), new DateOnly(1990, 5, 15), 4);
 
-        var haklar = IzinHakkiHesaplayici.EksikHaklar(
-            calisan, new DateOnly(2024, 3, 10), new DateOnly(2026, 3, 9), new HashSet<DateOnly> { new(2025, 3, 10) }, Kurallar, Gunluk);
+        var haklar = IzinHakkiHesaplayici.EksikHaklar(calisan, new DateOnly(2026, 3, 9), new HashSet<int> { 4, 5 }, Kurallar, Gunluk);
 
         Assert.Empty(haklar);
+    }
+
+    [Theory]
+    [InlineData("2020-04-15", new int[0])]
+    [InlineData("2019-09-15", new[] { 7 })]
+    public void EksikHaklar_IseGirisTarihiOneCekilince_YalnizYeniDolanYilYazilir(string yeniIseGiris, int[] beklenenYillar)
+    {
+        var calisan = new Calisan("Ali", "Ak", 1, DateOnly.Parse(yeniIseGiris), new DateOnly(1990, 5, 15), 4);
+
+        var haklar = IzinHakkiHesaplayici.EksikHaklar(calisan, new DateOnly(2026, 10, 29), new HashSet<int> { 4, 5, 6 }, Kurallar, Gunluk);
+
+        Assert.Equal(beklenenYillar, haklar.Select(h => h.KidemYili!.Value));
     }
 }

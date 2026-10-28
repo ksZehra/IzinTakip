@@ -29,20 +29,14 @@ public sealed class YillikHakServisi(
             .ToListAsync(cancellationToken);
         var yazilmislar = (await db.IzinHaklari
                 .Where(h => h.Kaynak == HakKaynagi.Kural && db.Calisanlar.Any(c => c.Id == h.CalisanId && c.Aktif))
-                .Select(h => new { h.CalisanId, h.KazanimTarihi })
+                .Select(h => new { h.CalisanId, h.KidemYili })
                 .ToListAsync(cancellationToken))
-            .ToLookup(h => h.CalisanId, h => h.KazanimTarihi);
+            .ToLookup(h => h.CalisanId, h => h.KidemYili!.Value);
 
         var toplam = 0;
         foreach (var calisan in calisanlar)
         {
-            var haklar = IzinHakkiHesaplayici.EksikHaklar(
-                calisan,
-                DateOnly.FromDateTime(SirketSaati.Yerel(calisan.OlusturmaTarihi)),
-                bugun,
-                yazilmislar[calisan.Id].ToHashSet(),
-                kurallar,
-                gunluk);
+            var haklar = IzinHakkiHesaplayici.EksikHaklar(calisan, bugun, yazilmislar[calisan.Id].ToHashSet(), kurallar, gunluk);
             db.IzinHaklari.AddRange(haklar);
             toplam += haklar.Count;
         }

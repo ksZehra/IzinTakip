@@ -2,6 +2,7 @@ using System.Security.Claims;
 using IzinTakip.Domain;
 using IzinTakip.Domain.Entities;
 using IzinTakip.Domain.Enums;
+using IzinTakip.Domain.Izin;
 using IzinTakip.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -107,12 +108,16 @@ public sealed class BaslangicVerisi(
         db.Departmanlar.AddRange(ik, yazilim, satis);
         await db.SaveChangesAsync(cancellationToken);
 
-        var ayse = new Calisan("Ayşe", "Yılmaz", ik.Id, new DateOnly(2018, 3, 12), new DateOnly(1985, 6, 20));
-        var mehmet = new Calisan("Mehmet", "Kaya", yazilim.Id, new DateOnly(2015, 9, 1), new DateOnly(1980, 2, 14));
-        var zeynep = new Calisan("Zeynep", "Demir", yazilim.Id, new DateOnly(2022, 1, 10), new DateOnly(1996, 11, 3));
-        var can = new Calisan("Can", "Öztürk", yazilim.Id, new DateOnly(2024, 4, 15), new DateOnly(1999, 7, 22));
-        var elif = new Calisan("Elif", "Şahin", satis.Id, new DateOnly(2012, 5, 7), new DateOnly(1974, 9, 30));
-        var burak = new Calisan("Burak", "Arslan", satis.Id, new DateOnly(2025, 2, 3), new DateOnly(2003, 12, 12));
+        var acilis = new DateOnly(2026, 1, 1);
+        Calisan CalisanOlustur(string ad, string soyad, int departmanId, DateOnly iseGiris, DateOnly dogum) =>
+            new(ad, soyad, departmanId, iseGiris, dogum, IzinHakkiHesaplayici.IlkHakKidemYili(iseGiris, acilis));
+
+        var ayse = CalisanOlustur("Ayşe", "Yılmaz", ik.Id, new DateOnly(2018, 3, 12), new DateOnly(1985, 6, 20));
+        var mehmet = CalisanOlustur("Mehmet", "Kaya", yazilim.Id, new DateOnly(2015, 9, 1), new DateOnly(1980, 2, 14));
+        var zeynep = CalisanOlustur("Zeynep", "Demir", yazilim.Id, new DateOnly(2022, 1, 10), new DateOnly(1996, 11, 3));
+        var can = CalisanOlustur("Can", "Öztürk", yazilim.Id, new DateOnly(2024, 4, 15), new DateOnly(1999, 7, 22));
+        var elif = CalisanOlustur("Elif", "Şahin", satis.Id, new DateOnly(2012, 5, 7), new DateOnly(1974, 9, 30));
+        var burak = CalisanOlustur("Burak", "Arslan", satis.Id, new DateOnly(2025, 2, 3), new DateOnly(2003, 12, 12));
         Calisan[] calisanlar = [ayse, mehmet, zeynep, can, elif, burak];
         db.Calisanlar.AddRange(calisanlar);
         await db.SaveChangesAsync(cancellationToken);
@@ -120,7 +125,7 @@ public sealed class BaslangicVerisi(
         ik.Guncelle(ik.Ad, ayse.Id);
         yazilim.Guncelle(yazilim.Ad, mehmet.Id);
         satis.Guncelle(satis.Ad, elif.Id);
-        db.IzinHaklari.AddRange(calisanlar.Select(c => IzinHakki.Elle(c.Id, new DateOnly(2026, 1, 1), 14 * gunluk, "Açılış bakiyesi")));
+        db.IzinHaklari.AddRange(calisanlar.Select(c => IzinHakki.Elle(c.Id, acilis, 14 * gunluk, "Devreden bakiye")));
         db.ResmiTatiller.AddRange(new[] { 2026, 2027 }.SelectMany(SabitResmiTatiller));
         await db.SaveChangesAsync(cancellationToken);
 

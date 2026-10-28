@@ -6,6 +6,7 @@ using IzinTakip.Api.Common.Paging;
 using IzinTakip.Domain;
 using IzinTakip.Domain.Entities;
 using IzinTakip.Domain.Exceptions;
+using IzinTakip.Domain.Izin;
 using IzinTakip.Infrastructure.Data;
 using IzinTakip.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -59,6 +60,7 @@ public sealed class CalisanService(
                 c.Departman.Ad,
                 c.IseGirisTarihi,
                 c.DogumTarihi,
+                c.HakBaslangicKidemYili,
                 c.Aktif,
                 db.Users.Where(k => k.CalisanId == c.Id).Select(k => k.Email).FirstOrDefault()))
             .SingleOrDefaultAsync(cancellationToken)
@@ -68,7 +70,13 @@ public sealed class CalisanService(
     {
         await DepartmanAktifMiAsync(request.DepartmanId, cancellationToken);
 
-        var calisan = new Calisan(request.Ad.Trim(), request.Soyad.Trim(), request.DepartmanId, request.IseGirisTarihi, request.DogumTarihi);
+        var calisan = new Calisan(
+            request.Ad.Trim(),
+            request.Soyad.Trim(),
+            request.DepartmanId,
+            request.IseGirisTarihi,
+            request.DogumTarihi,
+            request.HakBaslangicKidemYili ?? IzinHakkiHesaplayici.IlkHakKidemYili(request.IseGirisTarihi, sirketSaati.Bugun()));
         db.Calisanlar.Add(calisan);
         await db.SaveChangesAsync(cancellationToken);
 
@@ -84,7 +92,13 @@ public sealed class CalisanService(
             await DepartmanAktifMiAsync(request.DepartmanId, cancellationToken);
         }
 
-        calisan.Guncelle(request.Ad.Trim(), request.Soyad.Trim(), request.DepartmanId, request.IseGirisTarihi, request.DogumTarihi);
+        calisan.Guncelle(
+            request.Ad.Trim(),
+            request.Soyad.Trim(),
+            request.DepartmanId,
+            request.IseGirisTarihi,
+            request.DogumTarihi,
+            request.HakBaslangicKidemYili ?? calisan.HakBaslangicKidemYili);
         await db.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Calisan guncellendi {CalisanId}", id);
@@ -139,7 +153,7 @@ public sealed class CalisanService(
 
         var toplam = satirlar.Sum(h => h.Dakika);
         return new IzinHaklariResponse(
-            satirlar.Select(h => new IzinHakkiResponse(h.Id, h.KazanimTarihi, h.Dakika, SureMetni.Olustur(h.Dakika, gunluk), h.Kaynak, h.Aciklama)).ToList(),
+            satirlar.Select(h => new IzinHakkiResponse(h.Id, h.KazanimTarihi, h.Dakika, SureMetni.Olustur(h.Dakika, gunluk), h.Kaynak, h.KidemYili, h.Aciklama)).ToList(),
             toplam,
             SureMetni.Olustur(toplam, gunluk));
     }

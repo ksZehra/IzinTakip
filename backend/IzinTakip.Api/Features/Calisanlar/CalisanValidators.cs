@@ -17,6 +17,9 @@ public sealed class CalisanKaydetRequestValidator : AbstractValidator<CalisanKay
             .GreaterThan(new DateOnly(1900, 1, 1)).WithMessage("Geçerli bir doğum tarihi girin.")
             .LessThan(r => r.IseGirisTarihi).WithMessage("Doğum tarihi işe giriş tarihinden önce olmalı.");
         RuleFor(r => r.IseGirisTarihi).GreaterThan(new DateOnly(1950, 1, 1)).WithMessage("Geçerli bir işe giriş tarihi girin.");
+        RuleFor(r => r.HakBaslangicKidemYili)
+            .InclusiveBetween(1, 60).When(r => r.HakBaslangicKidemYili is not null)
+            .WithMessage("Otomatik hak başlangıç yılı 1 ile 60 arasında olmalı.");
     }
 }
 
