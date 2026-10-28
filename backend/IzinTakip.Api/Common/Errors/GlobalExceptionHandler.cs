@@ -1,9 +1,12 @@
 using System.Diagnostics;
+using System.Security.Claims;
 using IzinTakip.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Serilog.Context;
 
 namespace IzinTakip.Api.Common.Errors;
 
@@ -33,15 +36,18 @@ public sealed class GlobalExceptionHandler(
         };
 
         string detail;
-        if (bilinenMesaj is not null)
+        using (LogContext.PushProperty("KullaniciId", httpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub)))
         {
-            logger.LogWarning("Istek reddedildi {Durum}: {Mesaj}", status, bilinenMesaj);
-            detail = bilinenMesaj;
-        }
-        else
-        {
-            logger.LogError(exception, "Beklenmeyen hata");
-            detail = $"Beklenmeyen bir hata oluştu. Destek için bu kodu iletin: {TraceId(httpContext)}";
+            if (bilinenMesaj is not null)
+            {
+                logger.LogWarning("Istek reddedildi {Durum}: {Mesaj}", status, bilinenMesaj);
+                detail = bilinenMesaj;
+            }
+            else
+            {
+                logger.LogError(exception, "Beklenmeyen hata");
+                detail = $"Beklenmeyen bir hata oluştu. Destek için bu kodu iletin: {TraceId(httpContext)}";
+            }
         }
 
         httpContext.Response.StatusCode = status;
