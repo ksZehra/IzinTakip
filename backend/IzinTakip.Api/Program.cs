@@ -14,6 +14,7 @@ using IzinTakip.Infrastructure.Data;
 using IzinTakip.Infrastructure.Data.Seed;
 using IzinTakip.Infrastructure.Email;
 using IzinTakip.Infrastructure.Identity;
+using IzinTakip.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -141,6 +142,11 @@ try
     builder.Services.AddSingleton(builder.Configuration.GetSection("Email").Get<EmailAyarlari>() ?? new EmailAyarlari());
     builder.Services.AddSingleton<IEmailQueue, ChannelEmailQueue>();
     builder.Services.AddSingleton<IEmailSender, MailKitEmailSender>();
+    builder.Services.AddSingleton(new DosyaDeposuAyarlari
+    {
+        Klasor = builder.Configuration["DosyaDeposu:Klasor"] ?? Path.Combine(builder.Environment.ContentRootPath, "belgeler")
+    });
+    builder.Services.AddSingleton<IFileStorage, LocalFileStorage>();
     builder.Services.AddHostedService<EmailGonderimServisi>();
     builder.Services.AddSingleton(builder.Configuration.GetSection("ArkaPlan").Get<ArkaPlanAyarlari>() ?? new ArkaPlanAyarlari());
     builder.Services.AddHostedService<YillikHakServisi>();
@@ -158,7 +164,7 @@ try
             options.Filters.Add<ValidationFilter>();
             options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
         })
-        .ConfigureApiBehaviorOptions(options => options.InvalidModelStateResponseFactory = ValidationFilter.HataYaniti)
+        .ConfigureApiBehaviorOptions(options => options.InvalidModelStateResponseFactory = ValidationFilter.BaglamaHataYaniti)
         .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
     builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document, _, _) =>
     {

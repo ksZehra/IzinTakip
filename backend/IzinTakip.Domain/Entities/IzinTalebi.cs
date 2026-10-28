@@ -6,6 +6,8 @@ namespace IzinTakip.Domain.Entities;
 
 public sealed class IzinTalebi : Entity
 {
+    public const int EnFazlaBelge = 5;
+
     private IzinTalebi()
     {
     }
@@ -101,9 +103,21 @@ public sealed class IzinTalebi : Entity
         };
     }
 
-    public void Onayla(int kararVerenKullaniciId, int? kararVerenCalisanId, bool superAdmin, string? not, DateTime kararZamani)
+    public void Onayla(
+        int kararVerenKullaniciId,
+        int? kararVerenCalisanId,
+        bool superAdmin,
+        string? not,
+        DateTime kararZamani,
+        bool belgeZorunlu,
+        int belgeSayisi)
     {
         KararVerilebilirMi(kararVerenCalisanId, superAdmin, "onaylayamazsınız");
+        if (belgeZorunlu && belgeSayisi == 0)
+        {
+            throw new IsKuraliException("Bu izin türü belge ister; talebe belge eklenmeden onaylanamaz.");
+        }
+
         Durum = IzinDurumu.Onaylandi;
         KarariYaz(kararVerenKullaniciId, not, kararZamani);
     }
@@ -137,6 +151,27 @@ public sealed class IzinTalebi : Entity
     }
 
     public void HatirlatmaYapildi(DateOnly tarih) => SonHatirlatmaTarihi = tarih;
+
+    public void BelgeEklemeyiDenetle(int mevcutBelgeSayisi)
+    {
+        if (Durum is not (IzinDurumu.Beklemede or IzinDurumu.Onaylandi))
+        {
+            throw new IsKuraliException("Reddedilmiş ya da iptal edilmiş talebe belge eklenemez.");
+        }
+
+        if (mevcutBelgeSayisi >= EnFazlaBelge)
+        {
+            throw new IsKuraliException($"Bir talebe en çok {EnFazlaBelge} belge eklenebilir.");
+        }
+    }
+
+    public void BelgeSilmeyiDenetle()
+    {
+        if (Durum != IzinDurumu.Beklemede)
+        {
+            throw new IsKuraliException("Belge yalnız beklemedeki talepten silinebilir.");
+        }
+    }
 
     private void KararVerilebilirMi(int? kararVerenCalisanId, bool superAdmin, string eylem)
     {

@@ -1,0 +1,7 @@
+**/bin/
+**/obj/
+**/logs/
+**/belgeler/
+**/.vs/
+**/*.user
+IzinTakip.Tests/

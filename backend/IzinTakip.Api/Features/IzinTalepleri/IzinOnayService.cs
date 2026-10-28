@@ -25,7 +25,14 @@ public sealed class IzinOnayService(
     {
         var yetkiler = await gecerliKullanici.YetkileriAsync(cancellationToken);
         var talep = await KapsamdakiTalepAsync(id, cancellationToken);
-        talep.Onayla(yetkiler.KullaniciId, yetkiler.CalisanId, yetkiler.SuperAdmin, not, timeProvider.GetUtcNow().UtcDateTime);
+        talep.Onayla(
+            yetkiler.KullaniciId,
+            yetkiler.CalisanId,
+            yetkiler.SuperAdmin,
+            not,
+            timeProvider.GetUtcNow().UtcDateTime,
+            talep.IzinTuru.BelgeZorunlu,
+            await db.IzinBelgeleri.CountAsync(b => b.IzinTalebiId == id, cancellationToken));
 
         var ozet = await OzetAsync(talep, cancellationToken);
         bildirimYazici.Ekle(

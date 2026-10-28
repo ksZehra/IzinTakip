@@ -67,6 +67,37 @@ public sealed class HataYonetimiTests(ApiFactory factory) : IClassFixture<ApiFac
     }
 
     [Fact]
+    public async Task BaglamaHatasi_AlanTuruYanlis_TeknikAyrintiVermeden400Doner()
+    {
+        var yanit = await _client.PostAsync(
+            "/test/hata/dogrulama",
+            new StringContent("{\"ad\": {\"ic\": 1}}", System.Text.Encoding.UTF8, "application/json"),
+            TestContext.Current.CancellationToken);
+        var govde = await yanit.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var problem = JsonDocument.Parse(govde).RootElement;
+
+        Assert.Equal(HttpStatusCode.BadRequest, yanit.StatusCode);
+        Assert.Equal("Gönderilen bilgiler okunamadı. Alanların biçimini kontrol edin.", problem.GetProperty("detail").GetString());
+        Assert.Equal("Bu alanın değeri geçersiz.", problem.GetProperty("errors").GetProperty("ad")[0].GetString());
+        Assert.DoesNotContain("JSON", govde, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("System.", govde);
+    }
+
+    [Fact]
+    public async Task BaglamaHatasi_BozukGovde_GenelMesajla400Doner()
+    {
+        var yanit = await _client.PostAsync(
+            "/test/hata/dogrulama",
+            new StringContent("{ bozuk", System.Text.Encoding.UTF8, "application/json"),
+            TestContext.Current.CancellationToken);
+        var govde = await yanit.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, yanit.StatusCode);
+        Assert.Equal("Gönderilen bilgiler okunamadı. Alanların biçimini kontrol edin.", JsonDocument.Parse(govde).RootElement.GetProperty("detail").GetString());
+        Assert.DoesNotContain("JSON", govde, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task BilinmeyenAdres_OturumsuzIstekte401AyniBicimdeDoner()
     {
         var yanit = await _client.GetAsync("/boyle-bir-adres-yok", TestContext.Current.CancellationToken);

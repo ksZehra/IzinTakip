@@ -219,6 +219,54 @@ namespace IzinTakip.Infrastructure.Data.Migrations
                     b.ToTable("Departmanlar");
                 });
 
+            modelBuilder.Entity("IzinTakip.Domain.Entities.IzinBelgesi", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<long>("Boyut")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DepoYolu")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("DosyaAdi")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("GuncellemeTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("GuncelleyenKullaniciId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("IcerikTuru")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("IzinTalebiId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OlusturanKullaniciId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("OlusturmaTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IzinTalebiId");
+
+                    b.ToTable("IzinBelgeleri");
+                });
+
             modelBuilder.Entity("IzinTakip.Domain.Entities.IzinHakki", b =>
                 {
                     b.Property<int>("Id")
@@ -730,6 +778,15 @@ namespace IzinTakip.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("YoneticiId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("IzinTakip.Domain.Entities.IzinBelgesi", b =>
+                {
+                    b.HasOne("IzinTakip.Domain.Entities.IzinTalebi", null)
+                        .WithMany()
+                        .HasForeignKey("IzinTalebiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("IzinTakip.Domain.Entities.IzinHakki", b =>

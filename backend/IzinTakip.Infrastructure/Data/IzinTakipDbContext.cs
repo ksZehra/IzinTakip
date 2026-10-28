@@ -15,6 +15,7 @@ public sealed class IzinTakipDbContext(DbContextOptions<IzinTakipDbContext> opti
     public DbSet<IzinHakkiKurali> IzinHakkiKurallari => Set<IzinHakkiKurali>();
     public DbSet<IzinHakki> IzinHaklari => Set<IzinHakki>();
     public DbSet<IzinTalebi> IzinTalepleri => Set<IzinTalebi>();
+    public DbSet<IzinBelgesi> IzinBelgeleri => Set<IzinBelgesi>();
     public DbSet<Bildirim> Bildirimler => Set<Bildirim>();
     public DbSet<ResmiTatil> ResmiTatiller => Set<ResmiTatil>();
     public DbSet<Ayarlar> Ayarlar => Set<Ayarlar>();

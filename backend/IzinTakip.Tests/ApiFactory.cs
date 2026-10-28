@@ -33,6 +33,7 @@ public class ApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Seed:SuperAdmin:Parola", SuperAdminParola);
         builder.UseSetting("Serilog:MinimumLevel:Default", "Warning");
         builder.UseSetting("LogKlasoru", Path.Combine(Path.GetTempPath(), "IzinTakip.Tests", "logs"));
+        builder.UseSetting("DosyaDeposu:Klasor", Path.Combine(Path.GetTempPath(), "IzinTakip.Tests", "belgeler"));
 
         builder.ConfigureServices(services =>
         {

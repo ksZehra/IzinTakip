@@ -18,7 +18,7 @@ public sealed class IzinTalebiDurumTests
     {
         var talep = YeniTalep();
 
-        talep.Onayla(20, Yonetici, false, "  İyi tatiller  ", KararZamani);
+        talep.Onayla(20, Yonetici, false, "  İyi tatiller  ", KararZamani, false, 0);
 
         Assert.Equal(IzinDurumu.Onaylandi, talep.Durum);
         Assert.Equal(20, talep.KararVerenKullaniciId);
@@ -29,7 +29,7 @@ public sealed class IzinTalebiDurumTests
     [Fact]
     public void Onayla_KendiTalebi_IsKuraliHatasiVerir()
     {
-        var hata = Assert.Throws<IsKuraliException>(() => YeniTalep().Onayla(10, TalepSahibi, false, null, KararZamani));
+        var hata = Assert.Throws<IsKuraliException>(() => YeniTalep().Onayla(10, TalepSahibi, false, null, KararZamani, false, 0));
 
         Assert.Equal("Kendi izin talebinizi onaylayamazsınız.", hata.Message);
     }
@@ -39,7 +39,7 @@ public sealed class IzinTalebiDurumTests
     {
         var talep = YeniTalep();
 
-        talep.Onayla(10, TalepSahibi, true, null, KararZamani);
+        talep.Onayla(10, TalepSahibi, true, null, KararZamani, false, 0);
 
         Assert.Equal(IzinDurumu.Onaylandi, talep.Durum);
         Assert.Null(talep.KararNotu);
@@ -51,9 +51,53 @@ public sealed class IzinTalebiDurumTests
         var talep = YeniTalep();
         talep.Reddet(20, Yonetici, false, "Yoğun dönem", KararZamani);
 
-        var hata = Assert.Throws<IsKuraliException>(() => talep.Onayla(20, Yonetici, false, null, KararZamani));
+        var hata = Assert.Throws<IsKuraliException>(() => talep.Onayla(20, Yonetici, false, null, KararZamani, false, 0));
 
         Assert.Equal("Bu talep artık beklemede değil.", hata.Message);
+    }
+
+    [Fact]
+    public void Onayla_BelgeZorunluTurdeBelgeYok_IsKuraliHatasiVerir()
+    {
+        var hata = Assert.Throws<IsKuraliException>(() => YeniTalep().Onayla(20, Yonetici, false, null, KararZamani, true, 0));
+
+        Assert.Equal("Bu izin türü belge ister; talebe belge eklenmeden onaylanamaz.", hata.Message);
+    }
+
+    [Fact]
+    public void Onayla_BelgeZorunluTurdeBelgeVar_Onaylanir()
+    {
+        var talep = YeniTalep();
+
+        talep.Onayla(20, Yonetici, false, null, KararZamani, true, 1);
+
+        Assert.Equal(IzinDurumu.Onaylandi, talep.Durum);
+    }
+
+    [Fact]
+    public void BelgeEklemeyiDenetle_ReddedilmisTalep_IsKuraliHatasiVerir()
+    {
+        var talep = YeniTalep();
+        talep.Reddet(20, Yonetici, false, "Yoğun dönem", KararZamani);
+
+        Assert.Throws<IsKuraliException>(() => talep.BelgeEklemeyiDenetle(0));
+    }
+
+    [Fact]
+    public void BelgeEklemeyiDenetle_SinirDolu_IsKuraliHatasiVerir()
+    {
+        var hata = Assert.Throws<IsKuraliException>(() => YeniTalep().BelgeEklemeyiDenetle(IzinTalebi.EnFazlaBelge));
+
+        Assert.Equal("Bir talebe en çok 5 belge eklenebilir.", hata.Message);
+    }
+
+    [Fact]
+    public void BelgeSilmeyiDenetle_OnaylanmisTalep_IsKuraliHatasiVerir()
+    {
+        var talep = YeniTalep();
+        talep.Onayla(20, Yonetici, false, null, KararZamani, false, 0);
+
+        Assert.Throws<IsKuraliException>(talep.BelgeSilmeyiDenetle);
     }
 
     [Fact]
@@ -76,7 +120,7 @@ public sealed class IzinTalebiDurumTests
     public void IptalEt_OnaylanmisVeBaslamamis_IptalEdilir()
     {
         var talep = YeniTalep();
-        talep.Onayla(20, Yonetici, false, null, KararZamani);
+        talep.Onayla(20, Yonetici, false, null, KararZamani, false, 0);
 
         talep.IptalEt(10, "Plan değişti", Simdi, KararZamani, false);
 
