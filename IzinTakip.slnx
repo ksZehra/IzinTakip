@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="IzinTakip.Api/IzinTakip.Api.csproj" />
+  <Project Path="IzinTakip.Domain/IzinTakip.Domain.csproj" />
+  <Project Path="IzinTakip.Infrastructure/IzinTakip.Infrastructure.csproj" />
+  <Project Path="IzinTakip.Tests/IzinTakip.Tests.csproj" />
+</Solution>
