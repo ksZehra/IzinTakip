@@ -13,6 +13,7 @@ public sealed class GlobalExceptionHandler(
 {
     private const string CakismaMesaji = "Kayıt başka bir kullanıcı tarafından değiştirildi, sayfayı yenileyip tekrar deneyin.";
     private const string TekrarMesaji = "Aynı bilgilerle bir kayıt zaten var.";
+    private const string EsZamanliIslemMesaji = "İşlem aynı anda yapılan başka bir işlemle çakıştı, tekrar deneyin.";
 
     public static string TraceId(HttpContext httpContext) =>
         Activity.Current?.TraceId.ToString() ?? httpContext.TraceIdentifier;
@@ -28,6 +29,7 @@ public sealed class GlobalExceptionHandler(
             CakismaException e => (StatusCodes.Status409Conflict, e.Message),
             DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, CakismaMesaji),
             DbUpdateException { InnerException: SqlException { Number: 2601 or 2627 } } => (StatusCodes.Status409Conflict, TekrarMesaji),
+            SqlException { Number: 1205 } or DbUpdateException { InnerException: SqlException { Number: 1205 } } => (StatusCodes.Status409Conflict, EsZamanliIslemMesaji),
             _ => (StatusCodes.Status500InternalServerError, null)
         };
 

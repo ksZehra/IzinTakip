@@ -266,6 +266,78 @@ namespace IzinTakip.Infrastructure.Data.Migrations
                     b.ToTable("IzinHakkiKurallari");
                 });
 
+            modelBuilder.Entity("IzinTakip.Domain.Entities.IzinTalebi", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Aciklama")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("Baslangic")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Bitis")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CalisanId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Dakika")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Durum")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("GuncellemeTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("GuncelleyenKullaniciId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IzinTuruId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("KararNotu")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("KararTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("KararVerenKullaniciId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OlusturanKullaniciId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("OlusturmaTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("SureTipi")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IzinTuruId");
+
+                    b.HasIndex("CalisanId", "Baslangic");
+
+                    b.HasIndex("Durum", "Baslangic");
+
+                    b.ToTable("IzinTalepleri");
+                });
+
             modelBuilder.Entity("IzinTakip.Domain.Entities.IzinTuru", b =>
                 {
                     b.Property<int>("Id")
@@ -608,6 +680,25 @@ namespace IzinTakip.Infrastructure.Data.Migrations
                         .HasForeignKey("CalisanId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("IzinTakip.Domain.Entities.IzinTalebi", b =>
+                {
+                    b.HasOne("IzinTakip.Domain.Entities.Calisan", "Calisan")
+                        .WithMany()
+                        .HasForeignKey("CalisanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("IzinTakip.Domain.Entities.IzinTuru", "IzinTuru")
+                        .WithMany()
+                        .HasForeignKey("IzinTuruId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Calisan");
+
+                    b.Navigation("IzinTuru");
                 });
 
             modelBuilder.Entity("IzinTakip.Infrastructure.Identity.Kullanici", b =>

@@ -53,6 +53,12 @@ public sealed class CalisanlarController(CalisanService service) : ControllerBas
     public async Task<ActionResult<IzinHaklariResponse>> Haklar(int id, CancellationToken cancellationToken) =>
         await service.HaklariAsync(id, cancellationToken);
 
+    [HttpGet("{id:int}/bakiye")]
+    [Yetki(Yetkiler.Calisan.Yonet, Yetkiler.IzinTalebi.Yonet, Yetkiler.IzinTalebi.Olustur)]
+    [EndpointSummary("Çalışanın izin bakiyesini döner: hak, kullanılan, bekleyen, kullanılabilir")]
+    public async Task<ActionResult<BakiyeResponse>> Bakiye(int id, CancellationToken cancellationToken) =>
+        await service.BakiyeAsync(id, cancellationToken);
+
     [HttpPost("{id:int}/haklar")]
     [Yetki(Yetkiler.Calisan.Yonet)]
     [EndpointSummary("Çalışana elle hak satırı ekler (açılış bakiyesi ya da düzeltme; süre dakika, eksi olabilir)")]

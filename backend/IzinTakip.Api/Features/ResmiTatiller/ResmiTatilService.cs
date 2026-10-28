@@ -1,3 +1,4 @@
+using IzinTakip.Api.Common;
 using IzinTakip.Domain.Entities;
 using IzinTakip.Domain.Exceptions;
 using IzinTakip.Infrastructure.Data;
@@ -5,11 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IzinTakip.Api.Features.ResmiTatiller;
 
-public sealed class ResmiTatilService(IzinTakipDbContext db, TimeProvider timeProvider, ILogger<ResmiTatilService> logger)
+public sealed class ResmiTatilService(IzinTakipDbContext db, SirketSaati sirketSaati, ILogger<ResmiTatilService> logger)
 {
     public async Task<IReadOnlyList<ResmiTatilResponse>> ListeleAsync(int? yil, CancellationToken cancellationToken)
     {
-        var secilenYil = yil ?? timeProvider.GetLocalNow().Year;
+        var secilenYil = yil ?? sirketSaati.Bugun().Year;
         return await db.ResmiTatiller
             .AsNoTracking()
             .Where(t => t.Tarih.Year == secilenYil)

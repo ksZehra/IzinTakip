@@ -1,3 +1,5 @@
+using IzinTakip.Api.Common;
+using IzinTakip.Api.Common.Izin;
 using IzinTakip.Api.Common.Kapsam;
 using IzinTakip.Api.Common.Paging;
 using IzinTakip.Domain;
@@ -13,7 +15,8 @@ public sealed class CalisanService(
     IzinTakipDbContext db,
     CalisanKapsami kapsam,
     KullaniciYetkiOkuyucu yetkiOkuyucu,
-    TimeProvider timeProvider,
+    BakiyeSorgusu bakiyeSorgusu,
+    SirketSaati sirketSaati,
     ILogger<CalisanService> logger)
 {
     public async Task<PagedResponse<CalisanListeResponse>> ListeleAsync(CalisanListeRequest request, CancellationToken cancellationToken)
@@ -135,12 +138,23 @@ public sealed class CalisanService(
     public async Task<IzinHaklariResponse> HakEkleAsync(int id, IzinHakkiEkleRequest request, CancellationToken cancellationToken)
     {
         await kapsam.BulAsync(id, cancellationToken);
-        var bugun = DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime);
-        db.IzinHaklari.Add(IzinHakki.Elle(id, request.KazanimTarihi ?? bugun, request.Dakika, request.Aciklama.Trim()));
+        db.IzinHaklari.Add(IzinHakki.Elle(id, request.KazanimTarihi ?? sirketSaati.Bugun(), request.Dakika, request.Aciklama.Trim()));
         await db.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Elle hak satiri eklendi {CalisanId} {Dakika}", id, request.Dakika);
         return await HaklariAsync(id, cancellationToken);
+    }
+
+    public async Task<BakiyeResponse> BakiyeAsync(int id, CancellationToken cancellationToken)
+    {
+        await kapsam.BulAsync(id, cancellationToken);
+        var bakiye = await bakiyeSorgusu.HesaplaAsync(id, cancellationToken);
+        var gunluk = (await db.Ayarlar.AsNoTracking().SingleAsync(cancellationToken)).GunlukCalismaDakikasi;
+        return new BakiyeResponse(
+            bakiye.HakDakika, SureMetni.Olustur(bakiye.HakDakika, gunluk),
+            bakiye.KullanilanDakika, SureMetni.Olustur(bakiye.KullanilanDakika, gunluk),
+            bakiye.BekleyenDakika, SureMetni.Olustur(bakiye.BekleyenDakika, gunluk),
+            bakiye.KullanilabilirDakika, SureMetni.Olustur(bakiye.KullanilabilirDakika, gunluk));
     }
 
     private async Task DepartmanAktifMiAsync(int departmanId, CancellationToken cancellationToken)

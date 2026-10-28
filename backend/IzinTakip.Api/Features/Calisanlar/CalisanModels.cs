@@ -36,4 +36,14 @@ public sealed record IzinHakkiResponse(
     HakKaynagi Kaynak,
     string Aciklama);
 
+public sealed record BakiyeResponse(
+    int HakDakika,
+    string HakMetni,
+    int KullanilanDakika,
+    string KullanilanMetni,
+    int BekleyenDakika,
+    string BekleyenMetni,
+    int KullanilabilirDakika,
+    string KullanilabilirMetni);
+
 public sealed record IzinHaklariResponse(IReadOnlyList<IzinHakkiResponse> Satirlar, int ToplamDakika, string ToplamSureMetni);

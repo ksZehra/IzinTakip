@@ -2,8 +2,10 @@ using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using FluentValidation;
+using IzinTakip.Api.Common;
 using IzinTakip.Api.Common.Auth;
 using IzinTakip.Api.Common.Errors;
+using IzinTakip.Api.Common.Izin;
 using IzinTakip.Api.Common.Kapsam;
 using IzinTakip.Api.Common.Validation;
 using IzinTakip.Infrastructure.Data;
@@ -124,7 +126,11 @@ try
     ValidatorOptions.Global.DefaultRuleLevelCascadeMode = CascadeMode.Stop;
     builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
+    var saatDilimi = TimeZoneInfo.FindSystemTimeZoneById(builder.Configuration["Sirket:SaatDilimi"] ?? "Europe/Istanbul");
+    builder.Services.AddSingleton(serviceProvider => new SirketSaati(serviceProvider.GetRequiredService<TimeProvider>(), saatDilimi));
     builder.Services.AddScoped<CalisanKapsami>();
+    builder.Services.AddScoped<BakiyeSorgusu>();
+    builder.Services.AddScoped<CalismaTakvimiOkuyucu>();
     foreach (var serviceTipi in typeof(Program).Assembly.GetTypes().Where(t =>
                  t is { IsClass: true, IsAbstract: false }
                  && t.Name.EndsWith("Service", StringComparison.Ordinal)

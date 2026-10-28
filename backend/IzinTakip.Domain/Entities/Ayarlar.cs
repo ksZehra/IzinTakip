@@ -65,6 +65,6 @@ public sealed class Ayarlar : Entity
         HatirlatmaGunSayisi = hatirlatmaGunSayisi;
     }
 
-    private static int GunlukDakika(TimeOnly mesaiBaslangic, TimeOnly mesaiBitis, TimeOnly ogleArasiBaslangic, TimeOnly ogleArasiBitis) =>
+    public static int GunlukDakika(TimeOnly mesaiBaslangic, TimeOnly mesaiBitis, TimeOnly ogleArasiBaslangic, TimeOnly ogleArasiBitis) =>
         (int)(mesaiBitis - mesaiBaslangic).TotalMinutes - (int)(ogleArasiBitis - ogleArasiBaslangic).TotalMinutes;
 }
