@@ -1,10 +1,12 @@
 using FluentValidation;
 using IzinTakip.Domain.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IzinTakip.Tests.Common;
 
 [ApiController]
+[AllowAnonymous]
 [Route("test/hata")]
 public sealed class HataTestController : ControllerBase
 {

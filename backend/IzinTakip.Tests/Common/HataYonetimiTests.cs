@@ -57,13 +57,13 @@ public sealed class HataYonetimiTests(ApiFactory factory) : IClassFixture<ApiFac
     }
 
     [Fact]
-    public async Task BilinmeyenAdres_404AyniBicimdeDoner()
+    public async Task BilinmeyenAdres_OturumsuzIstekte401AyniBicimdeDoner()
     {
         var yanit = await _client.GetAsync("/boyle-bir-adres-yok", TestContext.Current.CancellationToken);
         var problem = await ProblemOku(yanit);
 
-        Assert.Equal(HttpStatusCode.NotFound, yanit.StatusCode);
-        Assert.Equal(404, problem.GetProperty("status").GetInt32());
+        Assert.Equal(HttpStatusCode.Unauthorized, yanit.StatusCode);
+        Assert.Equal(401, problem.GetProperty("status").GetInt32());
     }
 
     private static async Task<JsonElement> ProblemOku(HttpResponseMessage yanit)

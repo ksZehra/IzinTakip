@@ -16,6 +16,7 @@ public sealed class GlobalExceptionHandler(
     {
         var status = exception switch
         {
+            KimlikDogrulanamadiException => StatusCodes.Status401Unauthorized,
             IsKuraliException => StatusCodes.Status422UnprocessableEntity,
             KayitBulunamadiException => StatusCodes.Status404NotFound,
             YetkiYokException => StatusCodes.Status403Forbidden,
