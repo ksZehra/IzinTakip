@@ -2,6 +2,7 @@ using FluentValidation;
 using IzinTakip.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IzinTakip.Tests.Common;
 
@@ -15,6 +16,9 @@ public sealed class HataTestController : ControllerBase
 
     [HttpGet("bulunamadi")]
     public IActionResult Bulunamadi() => throw new KayitBulunamadiException("İzin talebi bulunamadı.");
+
+    [HttpGet("eszamanlilik")]
+    public IActionResult Eszamanlilik() => throw new DbUpdateConcurrencyException("Gizli teknik ayrinti: RowVersion");
 
     [HttpGet("beklenmeyen")]
     public IActionResult Beklenmeyen() => throw new InvalidOperationException("Gizli teknik ayrinti: Server=db01");

@@ -30,6 +30,16 @@ public sealed class HataYonetimiTests(ApiFactory factory) : IClassFixture<ApiFac
     }
 
     [Fact]
+    public async Task EszamanliGuncellemeCakismasi_409VeAnlasilirMesajDoner()
+    {
+        var yanit = await _client.GetAsync("/test/hata/eszamanlilik", TestContext.Current.CancellationToken);
+        var problem = await ProblemOku(yanit);
+
+        Assert.Equal(HttpStatusCode.Conflict, yanit.StatusCode);
+        Assert.Equal("Kayıt başka bir kullanıcı tarafından değiştirildi, sayfayı yenileyip tekrar deneyin.", problem.GetProperty("detail").GetString());
+    }
+
+    [Fact]
     public async Task BeklenmeyenHata_500VeTeknikAyrintiSizdirmaz()
     {
         var yanit = await _client.GetAsync("/test/hata/beklenmeyen", TestContext.Current.CancellationToken);

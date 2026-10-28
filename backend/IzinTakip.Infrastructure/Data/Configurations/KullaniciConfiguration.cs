@@ -1,3 +1,4 @@
+using IzinTakip.Domain.Entities;
 using IzinTakip.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -10,5 +11,6 @@ public sealed class KullaniciConfiguration : IEntityTypeConfiguration<Kullanici>
     {
         builder.ToTable("Kullanicilar");
         builder.HasIndex(k => k.CalisanId).IsUnique().HasFilter("[CalisanId] IS NOT NULL");
+        builder.HasOne<Calisan>().WithMany().HasForeignKey(k => k.CalisanId).OnDelete(DeleteBehavior.Restrict);
     }
 }

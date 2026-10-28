@@ -2,6 +2,8 @@ using System.Diagnostics;
 using IzinTakip.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace IzinTakip.Api.Common.Errors;
 
@@ -9,26 +11,31 @@ public sealed class GlobalExceptionHandler(
     IProblemDetailsService problemDetailsService,
     ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
+    private const string CakismaMesaji = "Kayıt başka bir kullanıcı tarafından değiştirildi, sayfayı yenileyip tekrar deneyin.";
+    private const string TekrarMesaji = "Aynı bilgilerle bir kayıt zaten var.";
+
     public static string TraceId(HttpContext httpContext) =>
         Activity.Current?.TraceId.ToString() ?? httpContext.TraceIdentifier;
 
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        var status = exception switch
+        var (status, bilinenMesaj) = exception switch
         {
-            KimlikDogrulanamadiException => StatusCodes.Status401Unauthorized,
-            IsKuraliException => StatusCodes.Status422UnprocessableEntity,
-            KayitBulunamadiException => StatusCodes.Status404NotFound,
-            YetkiYokException => StatusCodes.Status403Forbidden,
-            CakismaException => StatusCodes.Status409Conflict,
-            _ => StatusCodes.Status500InternalServerError
+            KimlikDogrulanamadiException e => (StatusCodes.Status401Unauthorized, e.Message),
+            IsKuraliException e => (StatusCodes.Status422UnprocessableEntity, e.Message),
+            KayitBulunamadiException e => (StatusCodes.Status404NotFound, e.Message),
+            YetkiYokException e => (StatusCodes.Status403Forbidden, e.Message),
+            CakismaException e => (StatusCodes.Status409Conflict, e.Message),
+            DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, CakismaMesaji),
+            DbUpdateException { InnerException: SqlException { Number: 2601 or 2627 } } => (StatusCodes.Status409Conflict, TekrarMesaji),
+            _ => (StatusCodes.Status500InternalServerError, null)
         };
 
         string detail;
-        if (exception is IzinTakipException bilinenHata)
+        if (bilinenMesaj is not null)
         {
-            logger.LogWarning("Istek reddedildi {Durum}: {Mesaj}", status, bilinenHata.Message);
-            detail = bilinenHata.Message;
+            logger.LogWarning("Istek reddedildi {Durum}: {Mesaj}", status, bilinenMesaj);
+            detail = bilinenMesaj;
         }
         else
         {

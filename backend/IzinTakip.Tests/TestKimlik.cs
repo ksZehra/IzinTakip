@@ -31,11 +31,18 @@ public static class TestKimlik
         WebApplicationFactory<Program> factory,
         string eposta,
         string rol,
-        bool parolaDegistirmeli = false)
+        bool parolaDegistirmeli = false,
+        int? calisanId = null)
     {
         await using var scope = factory.Services.CreateAsyncScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Kullanici>>();
-        var kullanici = new Kullanici { UserName = eposta, Email = eposta, ParolaDegistirmeliMi = parolaDegistirmeli };
+        var kullanici = new Kullanici
+        {
+            UserName = eposta,
+            Email = eposta,
+            ParolaDegistirmeliMi = parolaDegistirmeli,
+            CalisanId = calisanId
+        };
 
         var sonuc = await userManager.CreateAsync(kullanici, VarsayilanParola);
         Assert.True(sonuc.Succeeded, string.Join(" ", sonuc.Errors.Select(e => e.Description)));

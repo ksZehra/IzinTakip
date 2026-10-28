@@ -10,6 +10,10 @@ public sealed class IzinTakipDbContext(DbContextOptions<IzinTakipDbContext> opti
     : IdentityDbContext<Kullanici, Rol, int>(options)
 {
     public DbSet<Departman> Departmanlar => Set<Departman>();
+    public DbSet<Calisan> Calisanlar => Set<Calisan>();
+    public DbSet<IzinTuru> IzinTurleri => Set<IzinTuru>();
+    public DbSet<IzinHakkiKurali> IzinHakkiKurallari => Set<IzinHakkiKurali>();
+    public DbSet<IzinHakki> IzinHaklari => Set<IzinHakki>();
     public DbSet<ResmiTatil> ResmiTatiller => Set<ResmiTatil>();
     public DbSet<Ayarlar> Ayarlar => Set<Ayarlar>();
 

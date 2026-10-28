@@ -10,5 +10,6 @@ public sealed class DepartmanConfiguration : IEntityTypeConfiguration<Departman>
     {
         builder.Property(d => d.Ad).HasMaxLength(100);
         builder.HasIndex(d => d.Ad).IsUnique();
+        builder.HasOne<Calisan>().WithMany().HasForeignKey(d => d.YoneticiId).OnDelete(DeleteBehavior.Restrict);
     }
 }
