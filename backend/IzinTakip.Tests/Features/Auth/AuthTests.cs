@@ -28,7 +28,7 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
         var yanit = await GirisYapAsync(ApiFactory.SuperAdminEposta, "YanlisParola1");
 
         Assert.Equal(HttpStatusCode.Unauthorized, yanit.StatusCode);
-        Assert.Equal("E-posta ya da parola hatalı.", await DetayAsync(yanit));
+        Assert.Equal("E-posta ya da parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.", await DetayAsync(yanit));
     }
 
     [Fact]
@@ -37,11 +37,11 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
         var yanit = await GirisYapAsync("olmayan@izintakip.test", "YanlisParola1");
 
         Assert.Equal(HttpStatusCode.Unauthorized, yanit.StatusCode);
-        Assert.Equal("E-posta ya da parola hatalı.", await DetayAsync(yanit));
+        Assert.Equal("E-posta ya da parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.", await DetayAsync(yanit));
     }
 
     [Fact]
-    public async Task Giris_BesHataliDenemedenSonra_DogruParolaylaBileKilitliDoner()
+    public async Task Giris_BesHataliDenemedenSonra_DogruParolaylaBileAyniMesajlaReddedilir()
     {
         const string eposta = "kilit@izintakip.test";
         await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
@@ -53,7 +53,7 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
         var yanit = await GirisYapAsync(eposta, TestKimlik.VarsayilanParola);
 
         Assert.Equal(HttpStatusCode.Unauthorized, yanit.StatusCode);
-        Assert.StartsWith("Çok sayıda hatalı deneme yapıldı.", await DetayAsync(yanit));
+        Assert.Equal("E-posta ya da parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.", await DetayAsync(yanit));
     }
 
     [Fact]

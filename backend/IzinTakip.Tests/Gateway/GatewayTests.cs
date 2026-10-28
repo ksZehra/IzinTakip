@@ -33,7 +33,7 @@ public sealed class GatewayTests(GatewayFactory factory) : IClassFixture<Gateway
 
         Assert.Equal(HttpStatusCode.Unauthorized, giris.StatusCode);
         Assert.False(giris.Headers.Contains("Set-Cookie"));
-        Assert.Equal("E-posta ya da parola hatalı.", await DetayAsync(giris));
+        Assert.Equal("E-posta ya da parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.", await DetayAsync(giris));
     }
 
     [Fact]

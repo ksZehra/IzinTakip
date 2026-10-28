@@ -21,21 +21,29 @@ public sealed class AuthService(
     TimeProvider timeProvider,
     ILogger<AuthService> logger)
 {
-    private const string HataliGiris = "E-posta ya da parola hatalı.";
+    private const string HataliGiris = "E-posta ya da parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.";
+
+    private static readonly string SahteParolaOzeti = new PasswordHasher<Kullanici>().HashPassword(new Kullanici(), Guid.NewGuid().ToString());
 
     public async Task<GirisResponse> GirisAsync(GirisRequest request)
     {
-        var kullanici = await userManager.FindByEmailAsync(request.Eposta)
-            ?? throw new KimlikDogrulanamadiException(HataliGiris);
-
-        var sonuc = await signInManager.CheckPasswordSignInAsync(kullanici, request.Parola, lockoutOnFailure: true);
-        if (sonuc.IsLockedOut)
+        var kullanici = await userManager.FindByEmailAsync(request.Eposta);
+        if (kullanici is null)
         {
-            throw new KimlikDogrulanamadiException("Çok sayıda hatalı deneme yapıldı. Birkaç dakika sonra tekrar deneyin.");
+            userManager.PasswordHasher.VerifyHashedPassword(new Kullanici(), SahteParolaOzeti, request.Parola);
+            logger.LogWarning("Basarisiz giris: kullanici bulunamadi");
+            throw new KimlikDogrulanamadiException(HataliGiris);
         }
 
+        var sonuc = await signInManager.CheckPasswordSignInAsync(kullanici, request.Parola, lockoutOnFailure: true);
         if (!sonuc.Succeeded)
         {
+            if (sonuc.IsLockedOut)
+            {
+                userManager.PasswordHasher.VerifyHashedPassword(kullanici, SahteParolaOzeti, request.Parola);
+            }
+
+            logger.LogWarning("Basarisiz giris {KullaniciId} {Kilitli}", kullanici.Id, sonuc.IsLockedOut);
             throw new KimlikDogrulanamadiException(HataliGiris);
         }
 
