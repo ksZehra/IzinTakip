@@ -8,7 +8,7 @@ namespace IzinTakip.Api.Features.IzinTalepleri;
 [ApiController]
 [Route("api/izin-talepleri")]
 [Yetki(Yetkiler.IzinTalebi.Olustur, Yetkiler.IzinTalebi.Yonet)]
-public sealed class IzinTalepleriController(IzinTalebiService service) : ControllerBase
+public sealed class IzinTalepleriController(IzinTalebiService service, IzinOnayService onayService) : ControllerBase
 {
     [HttpPost]
     [EndpointSummary("İzin talebi açar; calisanId boşsa kendi adına, doluysa kapsamdaki çalışan adına")]
@@ -37,4 +37,31 @@ public sealed class IzinTalepleriController(IzinTalebiService service) : Control
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IzinTalebiResponse>> Detay(int id, CancellationToken cancellationToken) =>
         await service.DetayAsync(id, cancellationToken);
+
+    [HttpPost("{id:int}/onayla")]
+    [Yetki(Yetkiler.IzinTalebi.Yonet)]
+    [EndpointSummary("Beklemedeki talebi onaylar; kimse kendi talebini onaylayamaz (SuperAdmin hariç)")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<IzinTalebiResponse>> Onayla(int id, IzinTalebiKararRequest request, CancellationToken cancellationToken)
+    {
+        await onayService.OnaylaAsync(id, request.Not, cancellationToken);
+        return await service.DetayAsync(id, cancellationToken);
+    }
+
+    [HttpPost("{id:int}/reddet")]
+    [Yetki(Yetkiler.IzinTalebi.Yonet)]
+    [EndpointSummary("Beklemedeki talebi gerekçesiyle reddeder")]
+    public async Task<ActionResult<IzinTalebiResponse>> Reddet(int id, IzinTalebiReddetRequest request, CancellationToken cancellationToken)
+    {
+        await onayService.ReddetAsync(id, request.Gerekce, cancellationToken);
+        return await service.DetayAsync(id, cancellationToken);
+    }
+
+    [HttpPost("{id:int}/iptal")]
+    [EndpointSummary("Beklemedeki ya da onaylı talebi başlangıçtan önce iptal eder; başlamış izni yalnız İK iptal edebilir")]
+    public async Task<ActionResult<IzinTalebiResponse>> IptalEt(int id, IzinTalebiKararRequest request, CancellationToken cancellationToken)
+    {
+        await onayService.IptalEtAsync(id, request.Not, cancellationToken);
+        return await service.DetayAsync(id, cancellationToken);
+    }
 }

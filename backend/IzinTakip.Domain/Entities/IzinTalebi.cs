@@ -100,6 +100,61 @@ public sealed class IzinTalebi : Entity
         };
     }
 
+    public void Onayla(int kararVerenKullaniciId, int? kararVerenCalisanId, bool superAdmin, string? not, DateTime kararZamani)
+    {
+        KararVerilebilirMi(kararVerenCalisanId, superAdmin, "onaylayamazsınız");
+        Durum = IzinDurumu.Onaylandi;
+        KarariYaz(kararVerenKullaniciId, not, kararZamani);
+    }
+
+    public void Reddet(int kararVerenKullaniciId, int? kararVerenCalisanId, bool superAdmin, string gerekce, DateTime kararZamani)
+    {
+        if (string.IsNullOrWhiteSpace(gerekce))
+        {
+            throw new IsKuraliException("Red gerekçesi zorunludur.");
+        }
+
+        KararVerilebilirMi(kararVerenCalisanId, superAdmin, "reddedemezsiniz");
+        Durum = IzinDurumu.Reddedildi;
+        KarariYaz(kararVerenKullaniciId, gerekce, kararZamani);
+    }
+
+    public void IptalEt(int iptalEdenKullaniciId, string? not, DateTime simdi, DateTime kararZamani, bool baslamisIzniIptalYetkisi)
+    {
+        if (Durum is not (IzinDurumu.Beklemede or IzinDurumu.Onaylandi))
+        {
+            throw new IsKuraliException("Yalnız beklemedeki ya da onaylanmış talep iptal edilebilir.");
+        }
+
+        if (Baslangic <= simdi && !baslamisIzniIptalYetkisi)
+        {
+            throw new IsKuraliException("Başlamış ya da geçmiş izin iptal edilemez.");
+        }
+
+        Durum = IzinDurumu.IptalEdildi;
+        KarariYaz(iptalEdenKullaniciId, not, kararZamani);
+    }
+
+    private void KararVerilebilirMi(int? kararVerenCalisanId, bool superAdmin, string eylem)
+    {
+        if (Durum != IzinDurumu.Beklemede)
+        {
+            throw new IsKuraliException("Bu talep artık beklemede değil.");
+        }
+
+        if (kararVerenCalisanId == CalisanId && !superAdmin)
+        {
+            throw new IsKuraliException($"Kendi izin talebinizi {eylem}.");
+        }
+    }
+
+    private void KarariYaz(int kullaniciId, string? not, DateTime kararZamani)
+    {
+        KararVerenKullaniciId = kullaniciId;
+        KararNotu = string.IsNullOrWhiteSpace(not) ? null : not.Trim();
+        KararTarihi = kararZamani;
+    }
+
     private static string BicimAdi(SureTipi tip) => tip switch
     {
         SureTipi.TamGun => "tam gün olarak",

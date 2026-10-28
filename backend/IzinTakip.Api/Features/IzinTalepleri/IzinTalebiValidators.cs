@@ -36,6 +36,20 @@ public sealed class SureHesaplaRequestValidator : AbstractValidator<SureHesaplaR
     }
 }
 
+public sealed class IzinTalebiKararRequestValidator : AbstractValidator<IzinTalebiKararRequest>
+{
+    public IzinTalebiKararRequestValidator() =>
+        RuleFor(r => r.Not).MaximumLength(500).WithMessage("Not en çok 500 karakter olabilir.");
+}
+
+public sealed class IzinTalebiReddetRequestValidator : AbstractValidator<IzinTalebiReddetRequest>
+{
+    public IzinTalebiReddetRequestValidator() =>
+        RuleFor(r => r.Gerekce)
+            .NotEmpty().WithMessage("Red gerekçesi zorunludur.")
+            .MaximumLength(500).WithMessage("Gerekçe en çok 500 karakter olabilir.");
+}
+
 public sealed class IzinTalebiOlusturRequestValidator : AbstractValidator<IzinTalebiOlusturRequest>
 {
     public IzinTalebiOlusturRequestValidator()

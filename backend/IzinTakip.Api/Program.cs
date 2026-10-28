@@ -2,14 +2,17 @@ using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using FluentValidation;
+using IzinTakip.Api.BackgroundServices;
 using IzinTakip.Api.Common;
 using IzinTakip.Api.Common.Auth;
+using IzinTakip.Api.Common.Bildirimler;
 using IzinTakip.Api.Common.Errors;
 using IzinTakip.Api.Common.Izin;
 using IzinTakip.Api.Common.Kapsam;
 using IzinTakip.Api.Common.Validation;
 using IzinTakip.Infrastructure.Data;
 using IzinTakip.Infrastructure.Data.Seed;
+using IzinTakip.Infrastructure.Email;
 using IzinTakip.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -131,6 +134,14 @@ try
     builder.Services.AddScoped<CalisanKapsami>();
     builder.Services.AddScoped<BakiyeSorgusu>();
     builder.Services.AddScoped<CalismaTakvimiOkuyucu>();
+    builder.Services.AddScoped<OnayciBulucu>();
+    builder.Services.AddScoped<BildirimYazici>();
+
+    builder.Services.AddSingleton(builder.Configuration.GetSection("Uygulama").Get<UygulamaAyarlari>() ?? new UygulamaAyarlari());
+    builder.Services.AddSingleton(builder.Configuration.GetSection("Email").Get<EmailAyarlari>() ?? new EmailAyarlari());
+    builder.Services.AddSingleton<IEmailQueue, ChannelEmailQueue>();
+    builder.Services.AddSingleton<IEmailSender, MailKitEmailSender>();
+    builder.Services.AddHostedService<EmailGonderimServisi>();
     foreach (var serviceTipi in typeof(Program).Assembly.GetTypes().Where(t =>
                  t is { IsClass: true, IsAbstract: false }
                  && t.Name.EndsWith("Service", StringComparison.Ordinal)

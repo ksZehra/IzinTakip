@@ -1,8 +1,10 @@
 using System.Globalization;
 using FluentValidation;
+using IzinTakip.Infrastructure.Email;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace IzinTakip.Tests;
 
@@ -10,6 +12,8 @@ public class ApiFactory : WebApplicationFactory<Program>
 {
     public const string SuperAdminEposta = "superadmin@izintakip.test";
     public const string SuperAdminParola = "SuperAdmin2026";
+
+    public TestEmailSender EmailSender { get; } = new();
 
     protected virtual string ConnectionString =>
         "Server=127.0.0.1,1;Database=IzinTakipTest;User Id=test;Password=test;TrustServerCertificate=True";
@@ -34,6 +38,8 @@ public class ApiFactory : WebApplicationFactory<Program>
         {
             services.AddControllers().AddApplicationPart(typeof(ApiFactory).Assembly);
             services.AddValidatorsFromAssemblyContaining<ApiFactory>();
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(EmailSender);
         });
     }
 }

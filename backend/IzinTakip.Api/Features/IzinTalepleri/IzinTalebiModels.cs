@@ -32,6 +32,10 @@ public sealed record IzinTalebiListeRequest(
     int Page = 1,
     int PageSize = 20);
 
+public sealed record IzinTalebiKararRequest(string? Not);
+
+public sealed record IzinTalebiReddetRequest(string Gerekce);
+
 public sealed record SureHesaplaResponse(int Dakika, string SureMetni, DateTime Baslangic, DateTime Bitis);
 
 public sealed record IzinTalebiListeResponse(

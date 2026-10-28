@@ -82,6 +82,53 @@ namespace IzinTakip.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("IzinTakip.Domain.Entities.Bildirim", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Baglanti")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Baslik")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("GuncellemeTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("GuncelleyenKullaniciId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("KullaniciId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Metin")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("OkunduMu")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("OlusturanKullaniciId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("OlusturmaTarihi")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KullaniciId", "OkunduMu");
+
+                    b.ToTable("Bildirimler");
+                });
+
             modelBuilder.Entity("IzinTakip.Domain.Entities.Calisan", b =>
                 {
                     b.Property<int>("Id")
@@ -652,6 +699,15 @@ namespace IzinTakip.Infrastructure.Data.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("KullaniciTokenlari", (string)null);
+                });
+
+            modelBuilder.Entity("IzinTakip.Domain.Entities.Bildirim", b =>
+                {
+                    b.HasOne("IzinTakip.Infrastructure.Identity.Kullanici", null)
+                        .WithMany()
+                        .HasForeignKey("KullaniciId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("IzinTakip.Domain.Entities.Calisan", b =>

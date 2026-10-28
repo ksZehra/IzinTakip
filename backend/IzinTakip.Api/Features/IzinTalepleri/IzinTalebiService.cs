@@ -1,5 +1,6 @@
 using System.Data;
 using IzinTakip.Api.Common;
+using IzinTakip.Api.Common.Bildirimler;
 using IzinTakip.Api.Common.Izin;
 using IzinTakip.Api.Common.Kapsam;
 using IzinTakip.Api.Common.Paging;
@@ -20,6 +21,8 @@ public sealed class IzinTalebiService(
     CalisanKapsami kapsam,
     BakiyeSorgusu bakiyeSorgusu,
     CalismaTakvimiOkuyucu takvimOkuyucu,
+    OnayciBulucu onayciBulucu,
+    BildirimYazici bildirimYazici,
     SirketSaati sirketSaati,
     ILogger<IzinTalebiService> logger)
 {
@@ -57,7 +60,29 @@ public sealed class IzinTalebiService(
             yetkiler.VarMi(Yetkiler.IzinTalebi.Duzelt));
         db.IzinTalepleri.Add(talep);
         await db.SaveChangesAsync(cancellationToken);
+
+        var calisanAdi = await db.Calisanlar.Where(c => c.Id == calisanId).Select(c => c.Ad + " " + c.Soyad).SingleAsync(cancellationToken);
+        var ozet = TalepOzeti.Olustur(talep, tur.Ad, takvim.GunlukDakika);
+        var baglanti = $"/izin-talepleri/{talep.Id}";
+        bildirimYazici.Ekle(
+            (await onayciBulucu.OnaycilarAsync(calisanId, cancellationToken)).Where(a => a.KullaniciId != yetkiler.KullaniciId),
+            "Onayınızı bekleyen izin talebi",
+            $"{calisanAdi} izin talebi açtı. {ozet}",
+            baglanti,
+            "Talebi incele");
+        if (calisanId != yetkiler.CalisanId)
+        {
+            bildirimYazici.Ekle(
+                await onayciBulucu.CalisaninKendisiAsync(calisanId, cancellationToken),
+                "Adınıza izin talebi açıldı",
+                ozet,
+                baglanti,
+                "Talebi görüntüle");
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        bildirimYazici.EpostalariKuyrugaAl();
 
         logger.LogInformation("Izin talebi olusturuldu {IzinTalebiId} {CalisanId} {Dakika}", talep.Id, calisanId, talep.Dakika);
         return await DetayAsync(talep.Id, cancellationToken);
