@@ -20,6 +20,10 @@ public sealed class SureHesaplaRequestValidator : AbstractValidator<SureHesaplaR
                 .OverridePropertyName(nameof(SureHesaplaRequest.BitisTarihi));
         });
 
+        RuleFor(r => r.BitisTarihi)
+            .Null().When(r => r.SureTipi != SureTipi.TamGun)
+            .WithMessage("Bitiş tarihi yalnız tam gün izinde girilir.");
+
         When(r => r.SureTipi == SureTipi.YarimGun, () =>
             RuleFor(r => r.GunYarisi)
                 .NotNull().WithMessage("Sabah ya da öğleden sonra seçin.")

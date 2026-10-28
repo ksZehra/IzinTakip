@@ -178,6 +178,24 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
         Assert.Equal("Bitiş saati zorunludur.", govde.GetProperty("errors").GetProperty("bitisSaati")[0].GetString());
     }
 
+    [Theory]
+    [InlineData("YarimGun", "Sabah", null, null)]
+    [InlineData("Saatlik", null, "10:00", "11:00")]
+    public async Task Olustur_TamGunDisindaBitisTarihi_400AlanHatasiDoner(string sureTipi, string? gunYarisi, string? baslangicSaati, string? bitisSaati)
+    {
+        var (_, client) = await CalisanKurAsync();
+        var tur = await TestVeri.IzinTuruIdAsync(client, sureTipi == "Saatlik" ? "Saatlik İzin" : "Yıllık");
+
+        var yanit = await TalepAcAsync(client, new
+        {
+            izinTuruId = tur, sureTipi, tarih = Pazartesi, bitisTarihi = Pazartesi.AddDays(-1), gunYarisi, baslangicSaati, bitisSaati
+        });
+        var govde = await yanit.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, yanit.StatusCode);
+        Assert.Equal("Bitiş tarihi yalnız tam gün izinde girilir.", govde.GetProperty("errors").GetProperty("bitisTarihi")[0].GetString());
+    }
+
     private async Task<(int CalisanId, HttpClient Client)> CalisanKurAsync()
     {
         var admin = await SuperAdminAsync();
