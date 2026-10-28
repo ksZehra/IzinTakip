@@ -548,6 +548,56 @@ namespace IzinTakip.Infrastructure.Data.Migrations
                     b.ToTable("ResmiTatiller");
                 });
 
+            modelBuilder.Entity("IzinTakip.Infrastructure.Denetim.IslemKaydi", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Degisiklikler")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("IlgiliCalisanId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("IlgiliKullaniciId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Islem")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("KayitId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("KullaniciId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Tablo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("Tarih")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IlgiliCalisanId");
+
+                    b.HasIndex("IlgiliKullaniciId");
+
+                    b.HasIndex("KullaniciId");
+
+                    b.HasIndex("Tarih");
+
+                    b.ToTable("IslemKayitlari");
+                });
+
             modelBuilder.Entity("IzinTakip.Infrastructure.Identity.Kullanici", b =>
                 {
                     b.Property<int>("Id")
@@ -828,6 +878,23 @@ namespace IzinTakip.Infrastructure.Data.Migrations
                     b.Navigation("Calisan");
 
                     b.Navigation("IzinTuru");
+                });
+
+            modelBuilder.Entity("IzinTakip.Infrastructure.Denetim.IslemKaydi", b =>
+                {
+                    b.HasOne("IzinTakip.Domain.Entities.Calisan", "IlgiliCalisan")
+                        .WithMany()
+                        .HasForeignKey("IlgiliCalisanId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("IzinTakip.Infrastructure.Identity.Kullanici", "IlgiliKullanici")
+                        .WithMany()
+                        .HasForeignKey("IlgiliKullaniciId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("IlgiliCalisan");
+
+                    b.Navigation("IlgiliKullanici");
                 });
 
             modelBuilder.Entity("IzinTakip.Infrastructure.Identity.Kullanici", b =>

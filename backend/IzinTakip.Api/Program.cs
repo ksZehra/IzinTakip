@@ -12,6 +12,7 @@ using IzinTakip.Api.Common.Kapsam;
 using IzinTakip.Api.Common.Validation;
 using IzinTakip.Infrastructure.Data;
 using IzinTakip.Infrastructure.Data.Seed;
+using IzinTakip.Infrastructure.Denetim;
 using IzinTakip.Infrastructure.Email;
 using IzinTakip.Infrastructure.Identity;
 using IzinTakip.Infrastructure.Storage;
@@ -70,10 +71,13 @@ try
     builder.Services.AddScoped<IGecerliKullanici, HttpGecerliKullanici>();
     builder.Services.AddScoped<KullaniciYetkiOkuyucu>();
     builder.Services.AddScoped<AuditInterceptor>();
+    builder.Services.AddScoped<IslemKaydiInterceptor>();
     builder.Services.AddScoped<BaslangicVerisi>();
     builder.Services.AddDbContext<IzinTakipDbContext>((serviceProvider, options) =>
         options.UseSqlServer(connectionString)
-               .AddInterceptors(serviceProvider.GetRequiredService<AuditInterceptor>()));
+               .AddInterceptors(
+                   serviceProvider.GetRequiredService<AuditInterceptor>(),
+                   serviceProvider.GetRequiredService<IslemKaydiInterceptor>()));
     builder.Services.AddHealthChecks().AddDbContextCheck<IzinTakipDbContext>();
 
     builder.Services.AddIdentityCore<Kullanici>(options =>

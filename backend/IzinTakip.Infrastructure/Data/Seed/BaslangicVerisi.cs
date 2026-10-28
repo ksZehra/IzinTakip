@@ -19,7 +19,7 @@ public sealed class BaslangicVerisi(
     public async Task HazirlaAsync(BaslangicVerisiAyarlari ayarlar, CancellationToken cancellationToken)
     {
         await RolEkleAsync(SistemRolleri.SuperAdmin, korumali: true, []);
-        await RolEkleAsync(SistemRolleri.IK, korumali: true, Yetkiler.Atanabilir.Select(y => y.Kod));
+        await RolEkleAsync(SistemRolleri.IK, korumali: true, Yetkiler.Atanabilir.Select(y => y.Kod).Where(kod => kod != Yetkiler.Denetim.Gor));
         await RolEkleAsync(SistemRolleri.Yonetici, korumali: false, [Yetkiler.IzinTalebi.Olustur, Yetkiler.IzinTalebi.Yonet, Yetkiler.Rapor.Gor]);
         await RolEkleAsync(SistemRolleri.Calisan, korumali: false, [Yetkiler.IzinTalebi.Olustur]);
 

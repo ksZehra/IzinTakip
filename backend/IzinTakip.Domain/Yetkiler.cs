@@ -33,6 +33,11 @@ public static class Yetkiler
         public const string Yonet = "Kullanici.Yonet";
     }
 
+    public static class Denetim
+    {
+        public const string Gor = "Denetim.Gor";
+    }
+
     public static IReadOnlyList<YetkiTanimi> Atanabilir { get; } =
     [
         new(IzinTalebi.Olustur, "Kendi adına izin talebi açma, kendi talebini iptal etme, kendi bakiyesini görme"),
@@ -42,6 +47,7 @@ public static class Yetkiler
         new(Calisan.Yonet, "Çalışan ekleme, düzenleme, pasifleştirme; elle hak satırı ekleme"),
         new(Tanim.Yonet, "Departman, izin türü, resmi tatil, hak kuralı ve iş takvimi tanımları"),
         new(Kullanici.Yonet, "Kullanıcı hesabı açma, pasifleştirme, parola sıfırlama, korumasız rol atama"),
+        new(Denetim.Gor, "İşlem kayıtlarını görme: kim, ne zaman, hangi kaydı nasıl değiştirdi"),
         new(TumSirket, "Kapsamı tüm şirket yapar")
     ];
 }

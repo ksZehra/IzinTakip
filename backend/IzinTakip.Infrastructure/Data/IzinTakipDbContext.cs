@@ -1,4 +1,5 @@
 using IzinTakip.Domain.Entities;
+using IzinTakip.Infrastructure.Denetim;
 using IzinTakip.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -16,6 +17,7 @@ public sealed class IzinTakipDbContext(DbContextOptions<IzinTakipDbContext> opti
     public DbSet<IzinHakki> IzinHaklari => Set<IzinHakki>();
     public DbSet<IzinTalebi> IzinTalepleri => Set<IzinTalebi>();
     public DbSet<IzinBelgesi> IzinBelgeleri => Set<IzinBelgesi>();
+    public DbSet<IslemKaydi> IslemKayitlari => Set<IslemKaydi>();
     public DbSet<Bildirim> Bildirimler => Set<Bildirim>();
     public DbSet<ResmiTatil> ResmiTatiller => Set<ResmiTatil>();
     public DbSet<Ayarlar> Ayarlar => Set<Ayarlar>();
