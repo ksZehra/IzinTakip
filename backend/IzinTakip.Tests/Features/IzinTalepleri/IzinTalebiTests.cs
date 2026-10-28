@@ -196,6 +196,18 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
         Assert.Equal("Bitiş tarihi yalnız tam gün izinde girilir.", govde.GetProperty("errors").GetProperty("bitisTarihi")[0].GetString());
     }
 
+    [Fact]
+    public async Task Liste_AsiriBuyukSayfa200UcTarih400Doner()
+    {
+        var (_, client) = await CalisanKurAsync();
+
+        var sayfa = await client.GetAsync($"/api/izin-talepleri?page={int.MaxValue}", TestContext.Current.CancellationToken);
+        var tarih = await client.GetAsync("/api/izin-talepleri?bitis=9999-12-31", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, sayfa.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, tarih.StatusCode);
+    }
+
     private async Task<(int CalisanId, HttpClient Client)> CalisanKurAsync()
     {
         var admin = await SuperAdminAsync();

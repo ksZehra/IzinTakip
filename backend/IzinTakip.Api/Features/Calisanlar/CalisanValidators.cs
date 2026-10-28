@@ -1,4 +1,5 @@
 using FluentValidation;
+using IzinTakip.Api.Common.Validation;
 
 namespace IzinTakip.Api.Features.Calisanlar;
 
@@ -25,9 +26,14 @@ public sealed class CalisanKaydetRequestValidator : AbstractValidator<CalisanKay
 
 public sealed class IzinHakkiEkleRequestValidator : AbstractValidator<IzinHakkiEkleRequest>
 {
+    private const int BirYilinDakikasi = 366 * 24 * 60;
+
     public IzinHakkiEkleRequestValidator()
     {
-        RuleFor(r => r.Dakika).NotEqual(0).WithMessage("Süre sıfır olamaz.");
+        RuleFor(r => r.Dakika)
+            .NotEqual(0).WithMessage("Süre sıfır olamaz.")
+            .InclusiveBetween(-BirYilinDakikasi, BirYilinDakikasi).WithMessage("Bir hak satırı en çok bir yıllık süre olabilir.");
+        RuleFor(r => r.KazanimTarihi).GecerliTarih();
         RuleFor(r => r.Aciklama)
             .NotEmpty().WithMessage("Açıklama zorunludur.")
             .MaximumLength(250).WithMessage("Açıklama en çok 250 karakter olabilir.");

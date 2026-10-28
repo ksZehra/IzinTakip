@@ -1,4 +1,5 @@
 using FluentValidation;
+using IzinTakip.Api.Common.Validation;
 using IzinTakip.Domain.Enums;
 
 namespace IzinTakip.Api.Features.IzinTalepleri;
@@ -9,8 +10,7 @@ public sealed class SureHesaplaRequestValidator : AbstractValidator<SureHesaplaR
     {
         RuleFor(r => r.IzinTuruId).GreaterThan(0).WithMessage("İzin türü seçin.");
         RuleFor(r => r.SureTipi).IsInEnum().WithMessage("Süre biçimi seçin: tam gün, yarım gün ya da saatlik.");
-        RuleFor(r => r.Tarih)
-            .InclusiveBetween(new DateOnly(2000, 1, 1), new DateOnly(2100, 12, 31)).WithMessage("Geçerli bir tarih girin.");
+        RuleFor(r => r.Tarih).GecerliTarih();
 
         When(r => r.SureTipi == SureTipi.TamGun && r.BitisTarihi is not null, () =>
         {
@@ -38,6 +38,20 @@ public sealed class SureHesaplaRequestValidator : AbstractValidator<SureHesaplaR
                 .WithMessage("Bitiş saati başlangıç saatinden sonra olmalı.");
         });
     }
+}
+
+public sealed class IzinTalebiFiltreRequestValidator : AbstractValidator<IzinTalebiFiltreRequest>
+{
+    public IzinTalebiFiltreRequestValidator()
+    {
+        RuleFor(r => r.Baslangic).GecerliTarih();
+        RuleFor(r => r.Bitis).GecerliTarih();
+    }
+}
+
+public sealed class IzinTalebiListeRequestValidator : AbstractValidator<IzinTalebiListeRequest>
+{
+    public IzinTalebiListeRequestValidator() => Include(new IzinTalebiFiltreRequestValidator());
 }
 
 public sealed class IzinTalebiKararRequestValidator : AbstractValidator<IzinTalebiKararRequest>

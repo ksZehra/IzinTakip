@@ -14,7 +14,7 @@ public static class SayfalamaExtensions
         int pageSize,
         CancellationToken cancellationToken)
     {
-        page = Math.Max(page, 1);
+        page = Math.Clamp(page, 1, int.MaxValue / EnFazlaSayfaBoyutu);
         pageSize = Math.Clamp(pageSize, 1, EnFazlaSayfaBoyutu);
 
         var toplam = await sorgu.CountAsync(cancellationToken);

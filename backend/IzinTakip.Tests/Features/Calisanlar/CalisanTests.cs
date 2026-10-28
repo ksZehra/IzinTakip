@@ -159,6 +159,24 @@ public sealed class CalisanTests(VeritabanliApiFactory factory) : IClassFixture<
         Assert.Equal("13 gün 4 saat", govde.GetProperty("toplamSureMetni").GetString());
     }
 
+    [Fact]
+    public async Task HakEkle_AsiriBuyukSureVeUcTarih_400Doner()
+    {
+        var admin = await SuperAdminAsync();
+        var calisanId = await TestVeri.CalisanEkleAsync(admin, "Sinir", await TestVeri.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}"));
+
+        var buyuk = await admin.PostAsJsonAsync($"/api/calisanlar/{calisanId}/haklar", new { dakika = 2_000_000_000, aciklama = "Deneme" }, TestContext.Current.CancellationToken);
+        var tarih = await admin.PostAsJsonAsync(
+            $"/api/calisanlar/{calisanId}/haklar",
+            new { dakika = 480, aciklama = "Deneme", kazanimTarihi = "9999-12-31" },
+            TestContext.Current.CancellationToken);
+        var govde = await buyuk.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, buyuk.StatusCode);
+        Assert.Equal("Bir hak satırı en çok bir yıllık süre olabilir.", govde.GetProperty("errors").GetProperty("dakika")[0].GetString());
+        Assert.Equal(HttpStatusCode.BadRequest, tarih.StatusCode);
+    }
+
     private Task<HttpClient> SuperAdminAsync() =>
         TestKimlik.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
 }

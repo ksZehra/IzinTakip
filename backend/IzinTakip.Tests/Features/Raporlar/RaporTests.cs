@@ -53,6 +53,16 @@ public sealed class RaporTests(VeritabanliApiFactory factory) : IClassFixture<Ve
     }
 
     [Fact]
+    public async Task Takvim_UcBaslangicTarihi_400Doner()
+    {
+        var ik = await IkAsync();
+
+        var yanit = await ik.GetAsync("/api/raporlar/takvim?baslangic=9999-12-01&bitis=9999-12-31", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, yanit.StatusCode);
+    }
+
+    [Fact]
     public async Task Bakiyeler_Ik_DepartmandakilerinHakKullanimVeBekleyeniniDoner()
     {
         var (departmanId, _, ik) = await BakiyeVerisiKurAsync();
