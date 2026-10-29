@@ -34,14 +34,19 @@ public class GatewayFactory : WebApplicationFactory<GatewayApp::Program>, IAsync
         GC.SuppressFinalize(this);
     }
 
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    public static void TemelAyarlar(IWebHostBuilder builder, string apiAdresi)
     {
         builder.UseEnvironment("Test");
-        builder.UseSetting("Api:Adres", "http://api.test");
-        builder.UseSetting("GirisSiniri:DakikadaDeneme", DakikadaGirisDenemesi.ToString(CultureInfo.InvariantCulture));
+        builder.UseSetting("Api:Adres", apiAdresi);
         builder.UseSetting("DataProtection:Klasor", Path.Combine(Path.GetTempPath(), "IzinTakip.Tests", "gateway-keys"));
         builder.UseSetting("Serilog:MinimumLevel:Default", "Warning");
         builder.UseSetting("LogKlasoru", Path.Combine(Path.GetTempPath(), "IzinTakip.Tests", "logs"));
+    }
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        TemelAyarlar(builder, "http://api.test");
+        builder.UseSetting("GirisSiniri:DakikadaDeneme", DakikadaGirisDenemesi.ToString(CultureInfo.InvariantCulture));
 
         builder.ConfigureServices(services =>
         {
