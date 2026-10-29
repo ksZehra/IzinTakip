@@ -40,3 +40,18 @@ export function saatGoster(deger: string): string {
 export function bugun(): string {
   return apiTarihi(new Date())
 }
+
+const gunBasligiBicimi = new Intl.DateTimeFormat('tr-TR', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+})
+const ayBasligiBicimi = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric' })
+
+export function gunBasligi(deger: string): string {
+  return gunBasligiBicimi.format(tarihNesnesi(deger))
+}
+
+export function ayBasligi(yil: number, ay: number): string {
+  return ayBasligiBicimi.format(new Date(yil, ay, 1))
+}
