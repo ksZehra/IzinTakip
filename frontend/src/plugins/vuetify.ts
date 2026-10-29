@@ -22,6 +22,9 @@ export function createAppVuetify() {
             error: '#C62828',
             info: '#01579B',
           },
+          variables: {
+            'medium-emphasis-opacity': 0.8,
+          },
         },
       },
     },

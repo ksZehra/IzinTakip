@@ -5,6 +5,7 @@ import { ApiHatasi, type AlanHatalari } from '@/common/http/ApiHatasi'
 export function useFormGonder() {
   const gonderiliyor = ref(false)
   const alanHatalari = ref<AlanHatalari>({})
+  const hataMesaji = ref('')
 
   async function gonder<T>(islem: () => Promise<T>): Promise<T | undefined> {
     if (gonderiliyor.value) {
@@ -12,11 +13,13 @@ export function useFormGonder() {
     }
     gonderiliyor.value = true
     alanHatalari.value = {}
+    hataMesaji.value = ''
     try {
       return await islem()
     } catch (hata) {
       if (hata instanceof ApiHatasi) {
         alanHatalari.value = hata.alanHatalari
+        hataMesaji.value = hata.alanHatasiVar ? '' : hata.message
         return undefined
       }
       throw hata
@@ -29,5 +32,5 @@ export function useFormGonder() {
     return alanHatalari.value[alan] ?? []
   }
 
-  return { gonderiliyor, alanHatalari, gonder, alanHatasi }
+  return { gonderiliyor, alanHatalari, hataMesaji, gonder, alanHatasi }
 }

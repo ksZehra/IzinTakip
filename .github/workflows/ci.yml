@@ -70,3 +70,42 @@ jobs:
 
       - name: Build
         run: npx vite build
+
+  e2e:
+    runs-on: ubuntu-24.04
+    needs: [backend, frontend]
+    env:
+      MSSQL_SA_PASSWORD: Ci-Sql-${{ github.run_id }}-Aa1
+      JWT_SIGNING_KEY: ci-jwt-imza-anahtari-${{ github.run_id }}-0123456789abcdef
+      SUPERADMIN_PAROLA: CiAdmin${{ github.run_id }}Aa1
+      DEMO_VERI: "true"
+      DEMO_PAROLA: CiDemo${{ github.run_id }}Aa1
+      E2E_PAROLA: CiDemo${{ github.run_id }}Aa1
+      GIRIS_DAKIKADA_DENEME: "100"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Start stack
+        run: |
+          docker compose --profile app up -d --build
+          timeout 300 sh -c 'until [ "$(curl -s -o /dev/null -w %{http_code} -H X-CSRF:1 http://localhost:8088/api/auth/ben)" = 401 ]; do sleep 3; done'
+
+      - name: Install
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        working-directory: frontend
+        run: npm run test:e2e
+
+      - name: Stack logs
+        if: failure()
+        run: docker compose --profile app logs api gateway
