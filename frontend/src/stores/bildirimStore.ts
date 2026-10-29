@@ -35,6 +35,7 @@ export const useBildirimStore = defineStore('bildirim', () => {
   }
 
   function izlemeyiDurdur() {
+    okunmamisSayisi.value = 0
     clearInterval(zamanlayici)
     zamanlayici = undefined
     document.removeEventListener('visibilitychange', gorunurlukDegisti)

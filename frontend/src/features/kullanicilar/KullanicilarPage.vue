@@ -2,7 +2,6 @@
 import { mdiAccountKey, mdiLockReset, mdiPlus } from '@mdi/js'
 import { computed, onMounted, ref, shallowRef } from 'vue'
 
-import { calisanlariGetir, type CalisanSatiri } from '@/api/calisanlarApi'
 import {
   kullaniciAktifligiDegistir,
   kullaniciEkle,
@@ -15,6 +14,7 @@ import {
   type Rol,
 } from '@/api/kullanicilarApi'
 import { Yetkiler } from '@/common/auth/yetkiler'
+import CalisanSecici from '@/common/components/CalisanSecici.vue'
 import ConfirmDialog from '@/common/components/ConfirmDialog.vue'
 import KayitDialog from '@/common/components/KayitDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
@@ -35,7 +35,6 @@ const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor, yukle } = useS
   varsayilanFiltre,
 )
 const roller = shallowRef<Rol[]>([])
-const calisanlar = shallowRef<CalisanSatiri[]>([])
 const korumaliRolAtayabilir = auth.yetkiVar(Yetkiler.RolYonetimi)
 const atanabilirRoller = computed(() =>
   roller.value.filter((rol) => korumaliRolAtayabilir || !rol.korumali).map((rol) => rol.ad),
@@ -117,10 +116,7 @@ async function aktiflikDegistir(kullanici: Kullanici, aktif: boolean | null) {
 }
 
 onMounted(async () => {
-  ;[roller.value, calisanlar.value] = await Promise.all([
-    rolleriGetir(),
-    calisanlariGetir({ aktif: true, pageSize: 100 }).then((sonuc) => sonuc.items),
-  ])
+  roller.value = await rolleriGetir()
 })
 </script>
 
@@ -204,14 +200,10 @@ onMounted(async () => {
         type="email"
         :error-messages="ekleme.alanHatasi('eposta')"
       />
-      <v-autocomplete
+      <CalisanSecici
         v-model="yeniKullanici.calisanId"
-        :items="calisanlar"
-        :item-title="(calisan: CalisanSatiri) => `${calisan.ad} ${calisan.soyad}`"
-        item-value="id"
-        label="Bağlı çalışan (isteğe bağlı)"
-        clearable
-        :error-messages="ekleme.alanHatasi('calisanId')"
+        etiket="Bağlı çalışan (isteğe bağlı)"
+        :hatalar="ekleme.alanHatasi('calisanId')"
       />
       <v-select
         v-model="yeniKullanici.roller"

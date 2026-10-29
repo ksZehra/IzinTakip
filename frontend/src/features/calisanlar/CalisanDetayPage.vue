@@ -17,6 +17,7 @@ import { departmanlariGetir, type Departman } from '@/api/departmanlarApi'
 import ConfirmDialog from '@/common/components/ConfirmDialog.vue'
 import KayitDialog from '@/common/components/KayitDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
+import { ApiHatasi } from '@/common/http/ApiHatasi'
 import SureInput from '@/common/components/SureInput.vue'
 import { useFormGonder } from '@/common/composables/useFormGonder'
 import { useToast } from '@/common/composables/useToast'
@@ -62,12 +63,20 @@ const hakBasliklari = [
   { title: 'Açıklama', key: 'aciklama' },
 ]
 
+const yuklenemedi = ref(false)
+
 async function yukle() {
-  ;[calisan.value, bakiye.value, haklar.value] = await Promise.all([
-    calisaniGetir(props.id),
-    bakiyeGetir(props.id),
-    haklariGetir(props.id),
-  ])
+  yuklenemedi.value = false
+  try {
+    ;[calisan.value, bakiye.value, haklar.value] = await Promise.all([
+      calisaniGetir(props.id),
+      bakiyeGetir(props.id),
+      haklariGetir(props.id),
+    ])
+  } catch (hata) {
+    if (!(hata instanceof ApiHatasi)) throw hata
+    yuklenemedi.value = true
+  }
 }
 
 async function duzenlemeyiAc() {
@@ -139,7 +148,10 @@ watch(() => props.id, yukle, { immediate: true })
       </v-btn>
     </PageHeader>
 
-    <v-skeleton-loader v-if="!calisan" type="article" />
+    <v-alert v-if="yuklenemedi" type="warning" variant="tonal">
+      Kayıt açılamadı. Silinmiş ya da görme yetkiniz olmayabilir. Çalışan listesinden tekrar seçin.
+    </v-alert>
+    <v-skeleton-loader v-else-if="!calisan" type="article" />
 
     <v-row v-else>
       <v-col cols="12" md="4">

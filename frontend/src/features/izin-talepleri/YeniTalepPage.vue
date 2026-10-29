@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, shallowRef, watch } from 'vue'
+import { computed, onMounted, reactive, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { Ayarlar } from '@/api/ayarlarApi'
-import { calisanlariGetir, type CalisanSatiri } from '@/api/calisanlarApi'
 import {
   talepOlustur,
   type GunYarisi,
@@ -12,6 +11,7 @@ import {
 } from '@/api/izinTalepleriApi'
 import { izinTurleriniGetir, type IzinTuru } from '@/api/izinTurleriApi'
 import { Yetkiler } from '@/common/auth/yetkiler'
+import CalisanSecici from '@/common/components/CalisanSecici.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
 import { useFormGonder } from '@/common/composables/useFormGonder'
 import { useToast } from '@/common/composables/useToast'
@@ -31,8 +31,6 @@ const { gonder, gonderiliyor, alanHatasi } = useFormGonder()
 const baskasiAdinaAcabilir = auth.yetkiVar(Yetkiler.IzinTalebiYonet)
 const izinTurleri = shallowRef<IzinTuru[]>([])
 const ayarlar = shallowRef<Ayarlar | null>(null)
-const calisanlar = shallowRef<CalisanSatiri[]>([])
-const calisanAramasi = ref('')
 
 const form = reactive({
   calisanId: null as number | null,
@@ -75,21 +73,11 @@ watch(izinliBicimler, (bicimler) => {
   }
 })
 
-watch(calisanAramasi, async (arama) => {
-  if (!baskasiAdinaAcabilir) return
-  calisanlar.value = (
-    await calisanlariGetir({ arama: arama ?? '', aktif: true, pageSize: 20 })
-  ).items
-})
-
 onMounted(async () => {
   ;[izinTurleri.value, ayarlar.value] = await Promise.all([
     izinTurleriniGetir(true),
     ayarlarStore.yukle(),
   ])
-  if (baskasiAdinaAcabilir) {
-    calisanlar.value = (await calisanlariGetir({ aktif: true, pageSize: 20 })).items
-  }
 })
 
 function talepIstegi(): SureHesaplaIstegi | null {
@@ -136,19 +124,12 @@ async function gonderTalep() {
     <v-card>
       <v-card-text>
         <v-form class="d-flex flex-column ga-4" @submit.prevent="gonderTalep">
-          <v-autocomplete
+          <CalisanSecici
             v-if="baskasiAdinaAcabilir"
             v-model="form.calisanId"
-            v-model:search="calisanAramasi"
-            :items="calisanlar"
-            :item-title="(calisan: CalisanSatiri) => `${calisan.ad} ${calisan.soyad}`"
-            item-value="id"
-            label="Çalışan"
-            placeholder="Boş bırakırsanız kendi adınıza açılır"
-            persistent-placeholder
-            clearable
-            no-filter
-            :error-messages="alanHatasi('calisanId')"
+            etiket="Çalışan"
+            yer-tutucu="Boş bırakırsanız kendi adınıza açılır"
+            :hatalar="alanHatasi('calisanId')"
           />
 
           <v-select

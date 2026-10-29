@@ -21,5 +21,5 @@ export async function dosyaIndir(
     varsayilanAd,
   )
   baglanti.click()
-  URL.revokeObjectURL(baglanti.href)
+  setTimeout(() => URL.revokeObjectURL(baglanti.href), 1000)
 }

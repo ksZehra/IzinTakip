@@ -1,7 +1,7 @@
 # İzin Takip
 
 Şirket çalışanlarının izin taleplerini açtığı, yöneticilerin onayladığı ve İK'nın raporladığı web uygulaması.
-Backend ASP.NET Core Web API (.NET 10), frontend Vue 3 (hazırlanıyor).
+Backend ASP.NET Core Web API (.NET 10), frontend Vue 3 + TypeScript + Vuetify.
 
 ## Özellikler
 
@@ -14,9 +14,11 @@ Backend ASP.NET Core Web API (.NET 10), frontend Vue 3 (hazırlanıyor).
 - **Bildirim:** uygulama içi bildirim + e-posta (talep, onay, red, iptal, bekleyen talep hatırlatması).
 - **Raporlar:** izin takvimi, bakiye raporu, talep listesi; Excel'e aktarım.
 - **Yetki ve kapsam:** çalışan kendini, yönetici ekibini, İK tüm şirketi görür. Rol ve yetki yönetimi yalnız SuperAdmin'dedir.
+- **İşlem kaydı:** çalışan, hak, tanım, kullanıcı, rol ve yetki değişiklikleri kim, ne zaman, hangi alanı nasıl değiştirdi bilgisiyle kendiliğinden kaydedilir.
 - **Tanımlar:** departman, çalışan, izin türü, resmi tatil, hak kuralı ve iş takvimi ayarları arayüzden yönetilir.
 - **Güvenlik:** tarayıcı yalnız gateway ile konuşur (BFF). JWT tarayıcıya gelmez; şifreli, HttpOnly, `SameSite=Strict` cookie'de durur.
-  CSRF başlığı, giriş hız sınırı ve güvenlik başlıkları gateway'dedir.
+  CSRF başlığı, giriş hız sınırı, CSP ve güvenlik başlıkları gateway'dedir.
+- **Arayüz:** her ekran boyutuna uyan, ekran okuyucuyla kullanılabilen (WCAG 2 AA, axe ile denetlenir) Türkçe arayüz; sayfalar ihtiyaç anında yüklenir.
 
 ## Teknoloji
 
@@ -28,7 +30,8 @@ Backend ASP.NET Core Web API (.NET 10), frontend Vue 3 (hazırlanıyor).
 | Doğrulama ve hata | FluentValidation, ProblemDetails (RFC 9457) |
 | Log | Serilog (konsol + günlük JSON dosya) |
 | E-posta, Excel | MailKit, ClosedXML |
-| Test | xUnit v3, WebApplicationFactory, Testcontainers (SQL Server) |
+| Frontend | Vue 3, TypeScript, Vite, Vuetify, Pinia, Vue Router, axios; API tipleri OpenAPI'den üretilir |
+| Test | xUnit v3, WebApplicationFactory, Testcontainers (SQL Server); Vitest (Node + Chromium), Playwright + axe |
 | Altyapı | Docker Compose, GitHub Actions |
 
 ## Mimari
@@ -40,7 +43,7 @@ backend/
   IzinTakip.Infrastructure  EF Core, Identity, e-posta, dosya deposu, Excel
   IzinTakip.Api             controller'lar, service'ler, doğrulama, arka plan görevleri
   IzinTakip.Tests           birim ve entegrasyon testleri
-frontend/                   Vue 3 arayüzü
+frontend/                   Vue 3 arayüzü: src/features/<ekran>/ (sayfalar), src/api/ (tipli API istemcisi), src/common/ (ortak parçalar)
 docs/                       geliştirme rehberi
 ```
 
@@ -50,7 +53,7 @@ Ayrıntılı kurallar, kararlar ve gerekçeleri: [docs/gelistirme-rehberi.md](do
 
 ## Kurulum
 
-Gerekenler: .NET 10 SDK, Docker.
+Gerekenler: .NET 10 SDK, Node.js 26, Docker.
 
 1. `.env.example` dosyasını `.env` olarak kopyalayın, `MSSQL_SA_PASSWORD` değerini doldurun.
 2. Veritabanı ve e-posta test sunucusu:
@@ -74,6 +77,12 @@ Gerekenler: .NET 10 SDK, Docker.
    ```bash
    dotnet run --project IzinTakip.Gateway
    ```
+6. Arayüzü çalıştırın (Node sürümü `frontend/.nvmrc`'de), `http://localhost:5173` adresinden açılır:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
 
 Development ortamında API dokümanı `http://localhost:5137/scalar` adresindedir; gönderilen e-postalar `http://127.0.0.1:8026` adresinde görünür.
 İlk açılışta roller, SuperAdmin (`admin@izintakip.local`), varsayılan izin türleri, hak kuralları ve demo verisi oluşur.
@@ -95,4 +104,18 @@ Testler gerçek SQL Server'ı Testcontainers ile açar; Docker çalışıyor olm
 ```bash
 cd backend
 dotnet test
+```
+
+Arayüz testleri (`frontend/` içinde; bileşen testleri için bir kez `npx playwright install chromium`):
+
+```bash
+npm run lint
+npm test
+```
+
+Uçtan uca testler Docker yığınına (`http://localhost:8088`) bağlanır. `.env`'de `DEMO_VERI=true`, `DEMO_PAROLA` ve yüksek bir
+`GIRIS_DAKIKADA_DENEME` verilip yığın kurulduktan sonra:
+
+```bash
+E2E_PAROLA=<demo parolası> E2E_ADMIN_PAROLA=<SuperAdmin parolası> npm run test:e2e
 ```

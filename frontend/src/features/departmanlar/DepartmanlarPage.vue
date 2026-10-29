@@ -2,7 +2,6 @@
 import { mdiPencil, mdiPlus } from '@mdi/js'
 import { onMounted, shallowRef } from 'vue'
 
-import { calisanlariGetir, type CalisanSatiri } from '@/api/calisanlarApi'
 import {
   departmanAktifligiDegistir,
   departmanEkle,
@@ -11,6 +10,7 @@ import {
   type Departman,
   type DepartmanKaydetIstegi,
 } from '@/api/departmanlarApi'
+import CalisanSecici from '@/common/components/CalisanSecici.vue'
 import KayitDialog from '@/common/components/KayitDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
 import { useKayitFormu } from '@/common/composables/useKayitFormu'
@@ -18,7 +18,7 @@ import { useToast } from '@/common/composables/useToast'
 
 const toast = useToast()
 const departmanlar = shallowRef<Departman[]>([])
-const calisanlar = shallowRef<CalisanSatiri[]>([])
+const seciliYoneticiAdi = shallowRef<string | null>(null)
 const yukleniyor = shallowRef(false)
 
 async function yukle() {
@@ -35,7 +35,10 @@ const { acik, form, yeniKayit, yeni, duzenle, kaydet, gonderiliyor, alanHatasi }
   DepartmanKaydetIstegi
 >({
   bosForm: () => ({ ad: '', yoneticiId: null }),
-  formaCevir: (departman) => ({ ad: departman.ad, yoneticiId: departman.yoneticiId }),
+  formaCevir: (departman) => {
+    seciliYoneticiAdi.value = departman.yoneticiAdSoyad
+    return { ad: departman.ad, yoneticiId: departman.yoneticiId }
+  },
   ekle: departmanEkle,
   guncelle: departmanGuncelle,
   kaydedildi: yukle,
@@ -55,10 +58,7 @@ const basliklar = [
   { title: '', key: 'islemler', sortable: false, align: 'end' as const },
 ]
 
-onMounted(async () => {
-  await yukle()
-  calisanlar.value = (await calisanlariGetir({ aktif: true, pageSize: 100 })).items
-})
+onMounted(yukle)
 </script>
 
 <template>
@@ -106,14 +106,11 @@ onMounted(async () => {
       @kaydet="kaydet"
     >
       <v-text-field v-model="form.ad" label="Ad" :error-messages="alanHatasi('ad')" />
-      <v-autocomplete
+      <CalisanSecici
         v-model="form.yoneticiId"
-        :items="calisanlar"
-        :item-title="(calisan: CalisanSatiri) => `${calisan.ad} ${calisan.soyad}`"
-        item-value="id"
-        label="Yönetici"
-        clearable
-        :error-messages="alanHatasi('yoneticiId')"
+        etiket="Yönetici"
+        :secili-ad="seciliYoneticiAdi"
+        :hatalar="alanHatasi('yoneticiId')"
       />
     </KayitDialog>
   </v-container>

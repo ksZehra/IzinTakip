@@ -13,6 +13,7 @@ import { Yetkiler } from '@/common/auth/yetkiler'
 import ConfirmDialog from '@/common/components/ConfirmDialog.vue'
 import DurumChip from '@/common/components/DurumChip.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
+import { ApiHatasi } from '@/common/http/ApiHatasi'
 import { useFormGonder } from '@/common/composables/useFormGonder'
 import { useToast } from '@/common/composables/useToast'
 import { sureTipiEtiketleri } from '@/common/utils/etiketler'
@@ -98,8 +99,16 @@ const dialogAcik = computed({
 })
 const secilenIslem = computed(() => (acikIslem.value ? islemler[acikIslem.value] : null))
 
+const yuklenemedi = ref(false)
+
 async function yukle() {
-  talep.value = await talebiGetir(props.id)
+  yuklenemedi.value = false
+  try {
+    talep.value = await talebiGetir(props.id)
+  } catch (hata) {
+    if (!(hata instanceof ApiHatasi)) throw hata
+    yuklenemedi.value = true
+  }
 }
 
 async function islemiCalistir(not: string | null) {
@@ -123,7 +132,10 @@ watch(() => props.id, yukle, { immediate: true })
       </v-btn>
     </PageHeader>
 
-    <v-skeleton-loader v-if="!talep" type="article" />
+    <v-alert v-if="yuklenemedi" type="warning" variant="tonal">
+      Kayıt açılamadı. Silinmiş ya da görme yetkiniz olmayabilir. Talep listesinden tekrar seçin.
+    </v-alert>
+    <v-skeleton-loader v-else-if="!talep" type="article" />
 
     <div v-else class="d-flex flex-column ga-4">
       <v-card>

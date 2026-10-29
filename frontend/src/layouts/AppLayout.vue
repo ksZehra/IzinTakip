@@ -24,7 +24,7 @@ const yonetimOgeleri = computed(() => ogeler.value.filter((oge) => oge.grup === 
 watch(mobile, (mobilMi) => (menuAcik.value = !mobilMi))
 
 watch(
-  () => route.fullPath,
+  () => route.path,
   async () => {
     if (mobile.value) {
       menuAcik.value = false
