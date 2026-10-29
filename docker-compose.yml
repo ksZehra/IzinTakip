@@ -51,8 +51,8 @@ services:
   gateway:
     profiles: ["app"]
     build:
-      context: ./backend
-      dockerfile: IzinTakip.Gateway/Dockerfile
+      context: .
+      dockerfile: backend/IzinTakip.Gateway/Dockerfile
     environment:
       Api__Adres: http://api:8080
     ports:

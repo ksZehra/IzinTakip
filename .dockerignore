@@ -1,0 +1,16 @@
+.git
+.vs
+.env
+docs
+**/bin/
+**/obj/
+**/logs/
+**/keys/
+**/belgeler/
+**/*.user
+**/node_modules/
+**/dist/
+backend/IzinTakip.Tests/
+backend/TestResults/
+frontend/test-results/
+frontend/playwright-report/

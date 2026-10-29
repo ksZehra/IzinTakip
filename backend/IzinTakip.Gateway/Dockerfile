@@ -1,11 +1,21 @@
+FROM node:26.13.0-alpine3.24 AS frontend
+WORKDIR /frontend
+
+COPY frontend/package.json frontend/package-lock.json frontend/.npmrc ./
+RUN npm ci
+
+COPY frontend/ ./
+RUN npm run build
+
 FROM mcr.microsoft.com/dotnet/sdk:10.0.403 AS build
 WORKDIR /src
 
-COPY global.json Directory.Build.props Directory.Packages.props ./
-COPY IzinTakip.Gateway/IzinTakip.Gateway.csproj IzinTakip.Gateway/
+COPY backend/global.json backend/Directory.Build.props backend/Directory.Packages.props ./
+COPY backend/IzinTakip.Gateway/IzinTakip.Gateway.csproj IzinTakip.Gateway/
 RUN dotnet restore IzinTakip.Gateway/IzinTakip.Gateway.csproj
 
-COPY IzinTakip.Gateway/ IzinTakip.Gateway/
+COPY backend/IzinTakip.Gateway/ IzinTakip.Gateway/
+COPY --from=frontend /frontend/dist/ IzinTakip.Gateway/wwwroot/
 RUN dotnet publish IzinTakip.Gateway/IzinTakip.Gateway.csproj -c Release --no-restore -o /app
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0.14 AS runtime

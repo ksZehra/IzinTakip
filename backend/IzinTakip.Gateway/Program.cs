@@ -131,11 +131,23 @@ try
         basliklar.XContentTypeOptions = "nosniff";
         basliklar.XFrameOptions = "DENY";
         basliklar["Referrer-Policy"] = "no-referrer";
+        basliklar["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=(), usb=()";
+        basliklar["Cross-Origin-Opener-Policy"] = "same-origin";
         basliklar.ContentSecurityPolicy =
-            "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'; object-src 'none'; base-uri 'self'";
+            "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; form-action 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'";
+
+        var yol = context.Request.Path;
+        context.Response.OnStarting(() =>
+        {
+            basliklar.CacheControl = yol.StartsWithSegments("/api") || yol.StartsWithSegments("/bff")
+                ? "no-store"
+                : yol.StartsWithSegments("/assets") && context.Response.StatusCode is StatusCodes.Status200OK or StatusCodes.Status304NotModified
+                    ? "public, max-age=31536000, immutable"
+                    : "no-cache";
+            return Task.CompletedTask;
+        });
         await next(context);
     });
-    app.UseStaticFiles();
     app.UseRateLimiter();
     app.Use(async (context, next) =>
     {
@@ -168,6 +180,7 @@ try
         await next(context);
     });
 
+    app.MapStaticAssets();
     app.MapHealthChecks("/health");
     app.MapControllers();
     app.MapReverseProxy();

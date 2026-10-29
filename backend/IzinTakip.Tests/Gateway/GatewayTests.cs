@@ -121,7 +121,32 @@ public sealed class GatewayTests(GatewayFactory factory) : IClassFixture<Gateway
         Assert.Equal(HttpStatusCode.OK, yanit.StatusCode);
         Assert.Equal("nosniff", yanit.Headers.GetValues("X-Content-Type-Options").Single());
         Assert.Equal("DENY", yanit.Headers.GetValues("X-Frame-Options").Single());
-        Assert.Contains("frame-ancestors 'none'", yanit.Headers.GetValues("Content-Security-Policy").Single());
+        Assert.Equal("same-origin", yanit.Headers.GetValues("Cross-Origin-Opener-Policy").Single());
+        Assert.Contains("camera=()", yanit.Headers.GetValues("Permissions-Policy").Single());
+        var icerikPolitikasi = yanit.Headers.GetValues("Content-Security-Policy").Single();
+        Assert.Contains("frame-ancestors 'none'", icerikPolitikasi);
+        Assert.Contains("form-action 'self'", icerikPolitikasi);
+        Assert.Equal("no-cache", yanit.Headers.CacheControl?.ToString());
+    }
+
+    [Fact]
+    public async Task ApiVeBffYanitlari_TarayiciOnbellegineAlinmaz()
+    {
+        var api = await factory.TarayiciClient().GetAsync("/api/auth/ben", TestContext.Current.CancellationToken);
+        var bff = await GirisAsync(factory.TarayiciClient(), "Yanlis1Parola");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, api.StatusCode);
+        Assert.True(api.Headers.CacheControl?.NoStore);
+        Assert.True(bff.Headers.CacheControl?.NoStore);
+    }
+
+    [Fact]
+    public async Task OlmayanStatikDosya_UzunSureliOnbellegeAlinmaz()
+    {
+        var yanit = await factory.TarayiciClient(csrfBasligi: false).GetAsync("/assets/olmayan-dosya.js", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, yanit.StatusCode);
+        Assert.Equal("no-cache", yanit.Headers.CacheControl?.ToString());
     }
 
     [Theory]
