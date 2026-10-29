@@ -1,0 +1,164 @@
+<script setup lang="ts">
+import { mdiPencil, mdiPlus } from '@mdi/js'
+import { onMounted, shallowRef } from 'vue'
+
+import {
+  izinTuruAktifligiDegistir,
+  izinTuruEkle,
+  izinTuruGuncelle,
+  izinTurleriniGetir,
+  type IzinTuru,
+  type IzinTuruKaydetIstegi,
+} from '@/api/izinTurleriApi'
+import KayitDialog from '@/common/components/KayitDialog.vue'
+import PageHeader from '@/common/components/PageHeader.vue'
+import SureInput from '@/common/components/SureInput.vue'
+import { useKayitFormu } from '@/common/composables/useKayitFormu'
+import { useToast } from '@/common/composables/useToast'
+import { gunHesabiEtiketleri, secenekler } from '@/common/utils/etiketler'
+
+const toast = useToast()
+const turler = shallowRef<IzinTuru[]>([])
+
+async function yukle() {
+  turler.value = await izinTurleriniGetir()
+}
+
+const { acik, form, yeniKayit, yeni, duzenle, kaydet, gonderiliyor, alanHatasi } = useKayitFormu<
+  IzinTuru,
+  IzinTuruKaydetIstegi
+>({
+  bosForm: () => ({
+    ad: '',
+    bakiyedenDuser: false,
+    belgeZorunlu: false,
+    gunHesabi: 'IsGunu',
+    tamGunAlinir: true,
+    yarimGunAlinir: false,
+    saatlikAlinir: false,
+    talepBasinaEnFazlaDakika: null,
+    yillikEnFazlaDakika: null,
+  }),
+  formaCevir: ({ id, aktif, talepBasinaEnFazlaMetni, yillikEnFazlaMetni, ...istek }) => istek,
+  ekle: izinTuruEkle,
+  guncelle: izinTuruGuncelle,
+  kaydedildi: yukle,
+})
+
+function bicimler(tur: IzinTuru): string {
+  return [
+    tur.tamGunAlinir && 'Tam gün',
+    tur.yarimGunAlinir && 'Yarım gün',
+    tur.saatlikAlinir && 'Saatlik',
+  ]
+    .filter(Boolean)
+    .join(', ')
+}
+
+async function aktiflikDegistir(tur: IzinTuru, aktif: boolean | null) {
+  await izinTuruAktifligiDegistir(tur.id, aktif ?? false)
+  toast.basariGoster(aktif ? 'İzin türü aktif yapıldı.' : 'İzin türü pasif yapıldı.')
+  await yukle()
+}
+
+const basliklar = [
+  { title: 'Ad', key: 'ad' },
+  { title: 'Biçimler', key: 'bicimler', value: bicimler },
+  {
+    title: 'Bakiyeden düşer',
+    key: 'bakiyedenDuser',
+    value: (t: IzinTuru) => (t.bakiyedenDuser ? 'Evet' : 'Hayır'),
+  },
+  {
+    title: 'Belge',
+    key: 'belgeZorunlu',
+    value: (t: IzinTuru) => (t.belgeZorunlu ? 'Zorunlu' : '—'),
+  },
+  {
+    title: 'Talep başına en çok',
+    key: 'talepBasinaEnFazlaMetni',
+    value: (t: IzinTuru) => t.talepBasinaEnFazlaMetni ?? 'Sınırsız',
+  },
+  {
+    title: 'Yılda en çok',
+    key: 'yillikEnFazlaMetni',
+    value: (t: IzinTuru) => t.yillikEnFazlaMetni ?? 'Sınırsız',
+  },
+  { title: 'Aktif', key: 'aktif', sortable: false },
+  { title: '', key: 'islemler', sortable: false, align: 'end' as const },
+]
+
+onMounted(yukle)
+</script>
+
+<template>
+  <v-container fluid>
+    <PageHeader baslik="İzin Türleri">
+      <v-btn color="primary" :prepend-icon="mdiPlus" @click="yeni">Yeni izin türü</v-btn>
+    </PageHeader>
+
+    <v-card>
+      <v-data-table :headers="basliklar" :items="turler" items-per-page="-1" hide-default-footer>
+        <template #[`item.aktif`]="{ item }">
+          <v-switch
+            :model-value="item.aktif"
+            color="primary"
+            hide-details
+            density="compact"
+            :aria-label="`${item.ad} aktif`"
+            @update:model-value="aktiflikDegistir(item, $event)"
+          />
+        </template>
+        <template #[`item.islemler`]="{ item }">
+          <v-btn
+            :icon="mdiPencil"
+            variant="text"
+            size="small"
+            :aria-label="`${item.ad} düzenle`"
+            @click="duzenle(item)"
+          />
+        </template>
+      </v-data-table>
+    </v-card>
+
+    <KayitDialog
+      v-model="acik"
+      :baslik="yeniKayit ? 'Yeni izin türü' : 'İzin türünü düzenle'"
+      :kaydediliyor="gonderiliyor"
+      @kaydet="kaydet"
+    >
+      <v-text-field v-model="form.ad" label="Ad" :error-messages="alanHatasi('ad')" />
+      <fieldset class="border-0 pa-0">
+        <legend class="text-body-medium">Alınabilir biçimler</legend>
+        <div class="d-flex flex-wrap">
+          <v-checkbox v-model="form.tamGunAlinir" label="Tam gün" hide-details />
+          <v-checkbox v-model="form.yarimGunAlinir" label="Yarım gün" hide-details />
+          <v-checkbox v-model="form.saatlikAlinir" label="Saatlik" hide-details />
+        </div>
+        <v-messages :messages="alanHatasi('tamGunAlinir')" active color="error" />
+      </fieldset>
+      <v-select
+        v-model="form.gunHesabi"
+        :items="secenekler(gunHesabiEtiketleri)"
+        label="Gün hesabı"
+        :error-messages="alanHatasi('gunHesabi')"
+      />
+      <div class="d-flex flex-wrap">
+        <v-checkbox v-model="form.bakiyedenDuser" label="Bakiyeden düşer" hide-details />
+        <v-checkbox v-model="form.belgeZorunlu" label="Belge zorunlu" hide-details />
+      </div>
+      <SureInput
+        v-model="form.talepBasinaEnFazlaDakika"
+        etiket="Talep başına en çok"
+        bos-olabilir
+        :hatalar="alanHatasi('talepBasinaEnFazlaDakika')"
+      />
+      <SureInput
+        v-model="form.yillikEnFazlaDakika"
+        etiket="Takvim yılında en çok"
+        bos-olabilir
+        :hatalar="alanHatasi('yillikEnFazlaDakika')"
+      />
+    </KayitDialog>
+  </v-container>
+</template>

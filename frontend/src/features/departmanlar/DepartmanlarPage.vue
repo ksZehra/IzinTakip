@@ -1,0 +1,120 @@
+<script setup lang="ts">
+import { mdiPencil, mdiPlus } from '@mdi/js'
+import { onMounted, shallowRef } from 'vue'
+
+import { calisanlariGetir, type CalisanSatiri } from '@/api/calisanlarApi'
+import {
+  departmanAktifligiDegistir,
+  departmanEkle,
+  departmanGuncelle,
+  departmanlariGetir,
+  type Departman,
+  type DepartmanKaydetIstegi,
+} from '@/api/departmanlarApi'
+import KayitDialog from '@/common/components/KayitDialog.vue'
+import PageHeader from '@/common/components/PageHeader.vue'
+import { useKayitFormu } from '@/common/composables/useKayitFormu'
+import { useToast } from '@/common/composables/useToast'
+
+const toast = useToast()
+const departmanlar = shallowRef<Departman[]>([])
+const calisanlar = shallowRef<CalisanSatiri[]>([])
+const yukleniyor = shallowRef(false)
+
+async function yukle() {
+  yukleniyor.value = true
+  try {
+    departmanlar.value = await departmanlariGetir()
+  } finally {
+    yukleniyor.value = false
+  }
+}
+
+const { acik, form, yeniKayit, yeni, duzenle, kaydet, gonderiliyor, alanHatasi } = useKayitFormu<
+  Departman,
+  DepartmanKaydetIstegi
+>({
+  bosForm: () => ({ ad: '', yoneticiId: null }),
+  formaCevir: (departman) => ({ ad: departman.ad, yoneticiId: departman.yoneticiId }),
+  ekle: departmanEkle,
+  guncelle: departmanGuncelle,
+  kaydedildi: yukle,
+})
+
+async function aktiflikDegistir(departman: Departman, aktif: boolean | null) {
+  await departmanAktifligiDegistir(departman.id, aktif ?? false)
+  toast.basariGoster(aktif ? 'Departman aktif yapıldı.' : 'Departman pasif yapıldı.')
+  await yukle()
+}
+
+const basliklar = [
+  { title: 'Ad', key: 'ad' },
+  { title: 'Yönetici', key: 'yoneticiAdSoyad' },
+  { title: 'Aktif çalışan', key: 'aktifCalisanSayisi' },
+  { title: 'Aktif', key: 'aktif', sortable: false },
+  { title: '', key: 'islemler', sortable: false, align: 'end' as const },
+]
+
+onMounted(async () => {
+  await yukle()
+  calisanlar.value = (await calisanlariGetir({ aktif: true, pageSize: 100 })).items
+})
+</script>
+
+<template>
+  <v-container>
+    <PageHeader baslik="Departmanlar">
+      <v-btn color="primary" :prepend-icon="mdiPlus" @click="yeni">Yeni departman</v-btn>
+    </PageHeader>
+
+    <v-card>
+      <v-data-table
+        :headers="basliklar"
+        :items="departmanlar"
+        :loading="yukleniyor"
+        items-per-page="-1"
+        hide-default-footer
+        no-data-text="Departman yok."
+      >
+        <template #[`item.yoneticiAdSoyad`]="{ item }">{{ item.yoneticiAdSoyad ?? '—' }}</template>
+        <template #[`item.aktif`]="{ item }">
+          <v-switch
+            :model-value="item.aktif"
+            color="primary"
+            hide-details
+            density="compact"
+            :aria-label="`${item.ad} aktif`"
+            @update:model-value="aktiflikDegistir(item, $event)"
+          />
+        </template>
+        <template #[`item.islemler`]="{ item }">
+          <v-btn
+            :icon="mdiPencil"
+            variant="text"
+            size="small"
+            :aria-label="`${item.ad} düzenle`"
+            @click="duzenle(item)"
+          />
+        </template>
+      </v-data-table>
+    </v-card>
+
+    <KayitDialog
+      v-model="acik"
+      :baslik="yeniKayit ? 'Yeni departman' : 'Departmanı düzenle'"
+      :kaydediliyor="gonderiliyor"
+      @kaydet="kaydet"
+    >
+      <v-text-field v-model="form.ad" label="Ad" :error-messages="alanHatasi('ad')" />
+      <v-autocomplete
+        v-model="form.yoneticiId"
+        :items="calisanlar"
+        :item-title="(calisan: CalisanSatiri) => `${calisan.ad} ${calisan.soyad}`"
+        item-value="id"
+        label="Yönetici"
+        clearable
+        :error-messages="alanHatasi('yoneticiId')"
+      />
+    </KayitDialog>
+  </v-container>
+</template>

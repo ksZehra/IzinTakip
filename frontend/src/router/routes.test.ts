@@ -14,5 +14,6 @@ describe('routes', () => {
     expect(router.resolve('/giris').name).toBe('giris')
     expect(router.resolve('/izin-talepleri/42').name).toBe('izin-talebi')
     expect(router.resolve('/izin-talepleri/yeni').name).toBe('yeni-izin-talebi')
+    expect(router.resolve('/calisanlar/7').name).toBe('calisan')
   })
 })

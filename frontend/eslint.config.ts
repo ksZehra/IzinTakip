@@ -28,6 +28,7 @@ export default defineConfigWithVueTs(
     name: 'app/rules',
     rules: {
       'no-console': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
       'vue/no-v-html': 'error',
       'vue/component-api-style': ['error', ['script-setup']],
       'vue/block-lang': ['error', { script: { lang: 'ts' } }],
