@@ -108,7 +108,9 @@ public sealed class AuditLogInterceptor(TimeProvider timeProvider, ICurrentUser 
     {
         if (alan.Metadata.Name == nameof(Kullanici.PasswordHash))
         {
-            return durum == EntityState.Modified ? new AlanDegisikligi("Parola", null, "değiştirildi") : null;
+            return durum == EntityState.Modified && !Equals(alan.OriginalValue, alan.CurrentValue)
+                ? new AlanDegisikligi("Parola", null, "değiştirildi")
+                : null;
         }
 
         return new AlanDegisikligi(
