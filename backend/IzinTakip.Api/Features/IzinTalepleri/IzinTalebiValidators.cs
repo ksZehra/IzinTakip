@@ -37,6 +37,9 @@ public sealed class SureHesaplaRequestValidator : AbstractValidator<SureHesaplaR
                 .GreaterThan(r => r.BaslangicSaati).When(r => r.BaslangicSaati is not null)
                 .WithMessage("Bitiş saati başlangıç saatinden sonra olmalı.");
         });
+
+        RuleFor(r => r.BaslangicSaati).TamDakika();
+        RuleFor(r => r.BitisSaati).TamDakika();
     }
 }
 

@@ -76,6 +76,18 @@ public sealed class TanimTests(VeritabanliApiFactory factory) : IClassFixture<Ve
     }
 
     [Fact]
+    public async Task Ayarlar_SaniyeliMesaiSaati_400Doner()
+    {
+        var client = await SuperAdminAsync();
+
+        var yanit = await client.PutAsJsonAsync("/api/ayarlar", Ayarlar("09:00:15", "18:00", "12:30", "13:30"), TestContext.Current.CancellationToken);
+        var govde = await yanit.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, yanit.StatusCode);
+        Assert.Equal("Saati saniyesiz girin (ör. 10:30).", govde.GetProperty("errors").GetProperty("mesaiBaslangic")[0].GetString());
+    }
+
+    [Fact]
     public async Task Ayarlar_OgleArasiMesaiDisinda_422Doner()
     {
         var client = await SuperAdminAsync();

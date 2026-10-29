@@ -178,6 +178,19 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
         Assert.Equal("Bitiş saati zorunludur.", govde.GetProperty("errors").GetProperty("bitisSaati")[0].GetString());
     }
 
+    [Fact]
+    public async Task Olustur_SaniyeliSaat_400AlanHatasiDoner()
+    {
+        var (_, client) = await CalisanKurAsync();
+        var saatlik = await TestVeri.IzinTuruIdAsync(client, "Saatlik İzin");
+
+        var yanit = await TalepAcAsync(client, new { izinTuruId = saatlik, sureTipi = "Saatlik", tarih = Pazartesi, baslangicSaati = "10:00:30", bitisSaati = "11:00" });
+        var govde = await yanit.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, yanit.StatusCode);
+        Assert.Equal("Saati saniyesiz girin (ör. 10:30).", govde.GetProperty("errors").GetProperty("baslangicSaati")[0].GetString());
+    }
+
     [Theory]
     [InlineData("YarimGun", "Sabah", null, null)]
     [InlineData("Saatlik", null, "10:00", "11:00")]
