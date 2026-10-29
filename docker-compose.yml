@@ -2,6 +2,7 @@ name: izintakip
 
 services:
   sqlserver:
+    container_name: izintakip-sqlserver
     image: mcr.microsoft.com/mssql/server:2022-CU27-ubuntu-22.04
     environment:
       ACCEPT_EULA: "Y"
@@ -19,12 +20,14 @@ services:
       start_period: 20s
 
   mailpit:
+    container_name: izintakip-mailpit
     image: axllent/mailpit:v1.32
     ports:
       - "127.0.0.1:${MAILPIT_SMTP_PORT:-1026}:1025"
       - "127.0.0.1:${MAILPIT_UI_PORT:-8026}:8025"
 
   api:
+    container_name: izintakip-api
     profiles: ["app"]
     build:
       context: ./backend
@@ -51,6 +54,7 @@ services:
         condition: service_started
 
   gateway:
+    container_name: izintakip-gateway
     profiles: ["app"]
     build:
       context: .
