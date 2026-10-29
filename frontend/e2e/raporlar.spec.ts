@@ -7,7 +7,7 @@ test('İK bakiye raporunu görür', async ({ page }) => {
   await page.goto('/raporlar/bakiyeler')
 
   await expect(page.getByRole('heading', { level: 1, name: 'Bakiye Raporu' })).toBeVisible()
-  await expect(page.getByRole('cell', { name: 'Zeynep Demir' })).toBeVisible()
+  await expect(page.getByText('Zeynep Demir', { exact: true })).toBeVisible()
   await erisilebilirlikDenetle(page)
 })
 

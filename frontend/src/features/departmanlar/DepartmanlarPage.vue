@@ -11,6 +11,7 @@ import {
   type DepartmanKaydetIstegi,
 } from '@/api/departmanlarApi'
 import CalisanSecici from '@/common/components/CalisanSecici.vue'
+import AktiflikAnahtari from '@/common/components/AktiflikAnahtari.vue'
 import KayitDialog from '@/common/components/KayitDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
 import { useKayitFormu } from '@/common/composables/useKayitFormu'
@@ -44,8 +45,8 @@ const { acik, form, yeniKayit, yeni, duzenle, kaydet, gonderiliyor, alanHatasi }
   kaydedildi: yukle,
 })
 
-async function aktiflikDegistir(departman: Departman, aktif: boolean | null) {
-  await departmanAktifligiDegistir(departman.id, aktif ?? false)
+async function aktiflikDegistir(departman: Departman, aktif: boolean) {
+  await departmanAktifligiDegistir(departman.id, aktif)
   toast.basariGoster(aktif ? 'Departman aktif yapıldı.' : 'Departman pasif yapıldı.')
   await yukle()
 }
@@ -78,13 +79,10 @@ onMounted(yukle)
       >
         <template #[`item.yoneticiAdSoyad`]="{ item }">{{ item.yoneticiAdSoyad ?? '—' }}</template>
         <template #[`item.aktif`]="{ item }">
-          <v-switch
-            :model-value="item.aktif"
-            color="primary"
-            hide-details
-            density="compact"
-            :aria-label="`${item.ad} aktif`"
-            @update:model-value="aktiflikDegistir(item, $event)"
+          <AktiflikAnahtari
+            :aktif="item.aktif"
+            :etiket="`${item.ad} aktif`"
+            :degistir="(aktif) => aktiflikDegistir(item, aktif)"
           />
         </template>
         <template #[`item.islemler`]="{ item }">

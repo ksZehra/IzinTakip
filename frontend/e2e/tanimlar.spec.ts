@@ -47,8 +47,8 @@ test('İK resmi tatil ekler ve siler', async ({ page }) => {
   await dialog.getByLabel('Ad').fill(ad)
   await dialog.getByRole('button', { name: 'Kaydet' }).click()
 
-  await expect(page.getByRole('cell', { name: ad, exact: true })).toBeVisible()
+  await expect(page.getByText(ad, { exact: true })).toBeVisible()
   await page.getByRole('button', { name: `${ad} sil` }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Sil' }).click()
-  await expect(page.getByRole('cell', { name: ad, exact: true })).toHaveCount(0)
+  await expect(page.getByText(ad, { exact: true })).toHaveCount(0)
 })

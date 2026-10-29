@@ -9,6 +9,7 @@ import {
   belgeYukle,
   type IzinBelgesi,
 } from '@/api/belgelerApi'
+import ConfirmDialog from '@/common/components/ConfirmDialog.vue'
 import { useFormGonder } from '@/common/composables/useFormGonder'
 import { useToast } from '@/common/composables/useToast'
 
@@ -19,6 +20,9 @@ const toast = useToast()
 const { gonder, gonderiliyor, alanHatasi } = useFormGonder()
 const belgeler = shallowRef<IzinBelgesi[]>([])
 const secilenDosya = ref<File | null>(null)
+const silinecek = ref<IzinBelgesi | null>(null)
+const silmeAcik = ref(false)
+const silme = useFormGonder()
 
 async function yukle() {
   belgeler.value = await belgeleriGetir(props.talepId)
@@ -38,8 +42,20 @@ async function dosyayiYukle() {
   emit('degisti')
 }
 
-async function sil(belge: IzinBelgesi) {
-  await belgeSil(props.talepId, belge.id)
+function silmeyiSor(belge: IzinBelgesi) {
+  silinecek.value = belge
+  silmeAcik.value = true
+}
+
+async function sil() {
+  const belge = silinecek.value
+  if (!belge) return
+  const basarili = await silme.gonder(async () => {
+    await belgeSil(props.talepId, belge.id)
+    return true
+  })
+  if (!basarili) return
+  silmeAcik.value = false
   toast.basariGoster('Belge silindi.')
   await yukle()
   emit('degisti')
@@ -77,7 +93,7 @@ onMounted(yukle)
               size="small"
               color="error"
               :aria-label="`${belge.dosyaAdi} dosyasını sil`"
-              @click="sil(belge)"
+              @click="silmeyiSor(belge)"
             />
           </template>
         </v-list-item>
@@ -104,5 +120,15 @@ onMounted(yukle)
         </v-btn>
       </v-form>
     </v-card-text>
+
+    <ConfirmDialog
+      v-model="silmeAcik"
+      baslik="Belgeyi sil"
+      :metin="`${silinecek?.dosyaAdi ?? ''} kalıcı olarak silinecek.`"
+      onay-metni="Sil"
+      onay-rengi="error"
+      :calisiyor="silme.gonderiliyor.value"
+      @onay="sil"
+    />
   </v-card>
 </template>

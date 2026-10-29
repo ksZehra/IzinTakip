@@ -10,6 +10,7 @@ import {
   type HakKurali,
   type HakKuraliKaydetIstegi,
 } from '@/api/tanimlarApi'
+import AktiflikAnahtari from '@/common/components/AktiflikAnahtari.vue'
 import KayitDialog from '@/common/components/KayitDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
 import { useKayitFormu } from '@/common/composables/useKayitFormu'
@@ -49,8 +50,8 @@ const aralik = (en: number | null, cok: number | null, birim: string) =>
         ? `en çok ${cok} ${birim}`
         : `${en}–${cok} ${birim}`
 
-async function aktiflikDegistir(kural: HakKurali, aktif: boolean | null) {
-  await hakKuraliAktifligiDegistir(kural.id, aktif ?? false)
+async function aktiflikDegistir(kural: HakKurali, aktif: boolean) {
+  await hakKuraliAktifligiDegistir(kural.id, aktif)
   toast.basariGoster(aktif ? 'Kural aktif yapıldı.' : 'Kural pasif yapıldı.')
   await yukle()
 }
@@ -83,13 +84,10 @@ onMounted(yukle)
     <v-card>
       <v-data-table :headers="basliklar" :items="kurallar" items-per-page="-1" hide-default-footer>
         <template #[`item.aktif`]="{ item }">
-          <v-switch
-            :model-value="item.aktif"
-            color="primary"
-            hide-details
-            density="compact"
-            :aria-label="`${item.ad} aktif`"
-            @update:model-value="aktiflikDegistir(item, $event)"
+          <AktiflikAnahtari
+            :aktif="item.aktif"
+            :etiket="`${item.ad} aktif`"
+            :degistir="(aktif) => aktiflikDegistir(item, aktif)"
           />
         </template>
         <template #[`item.islemler`]="{ item }">

@@ -15,6 +15,7 @@ import {
 } from '@/api/kullanicilarApi'
 import { Yetkiler } from '@/common/auth/yetkiler'
 import CalisanSecici from '@/common/components/CalisanSecici.vue'
+import AktiflikAnahtari from '@/common/components/AktiflikAnahtari.vue'
 import ConfirmDialog from '@/common/components/ConfirmDialog.vue'
 import KayitDialog from '@/common/components/KayitDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
@@ -36,6 +37,11 @@ const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor, yukle } = useS
 )
 const roller = shallowRef<Rol[]>([])
 const korumaliRolAtayabilir = auth.yetkiVar(Yetkiler.RolYonetimi)
+const korumaliRoller = computed(() =>
+  roller.value.filter((rol) => rol.korumali).map((rol) => rol.ad),
+)
+const dokunulamaz = (kullanici: Kullanici) =>
+  !korumaliRolAtayabilir && kullanici.roller.some((rol) => korumaliRoller.value.includes(rol))
 const atanabilirRoller = computed(() =>
   roller.value.filter((rol) => korumaliRolAtayabilir || !rol.korumali).map((rol) => rol.ad),
 )
@@ -109,8 +115,8 @@ async function sifirla() {
   await yukle()
 }
 
-async function aktiflikDegistir(kullanici: Kullanici, aktif: boolean | null) {
-  await kullaniciAktifligiDegistir(kullanici.id, aktif ?? false)
+async function aktiflikDegistir(kullanici: Kullanici, aktif: boolean) {
+  await kullaniciAktifligiDegistir(kullanici.id, aktif)
   toast.basariGoster(aktif ? 'Kullanıcı aktif yapıldı.' : 'Kullanıcı pasif yapıldı.')
   await yukle()
 }
@@ -160,13 +166,11 @@ onMounted(async () => {
           <v-chip v-for="rol in item.roller" :key="rol" size="small" class="mr-1">{{ rol }}</v-chip>
         </template>
         <template #[`item.aktif`]="{ item }">
-          <v-switch
-            :model-value="item.aktif"
-            color="primary"
-            hide-details
-            density="compact"
-            :aria-label="`${item.eposta} aktif`"
-            @update:model-value="aktiflikDegistir(item, $event)"
+          <AktiflikAnahtari
+            :aktif="item.aktif"
+            :etiket="`${item.eposta} aktif`"
+            :kilitli="dokunulamaz(item)"
+            :degistir="(aktif) => aktiflikDegistir(item, aktif)"
           />
         </template>
         <template #[`item.islemler`]="{ item }">
@@ -175,6 +179,7 @@ onMounted(async () => {
             variant="text"
             size="small"
             :aria-label="`${item.eposta} rollerini düzenle`"
+            :disabled="dokunulamaz(item)"
             @click="rolleriAc(item)"
           />
           <v-btn
@@ -182,6 +187,7 @@ onMounted(async () => {
             variant="text"
             size="small"
             :aria-label="`${item.eposta} parolasını sıfırla`"
+            :disabled="dokunulamaz(item)"
             @click="sifirlamayiSor(item)"
           />
         </template>

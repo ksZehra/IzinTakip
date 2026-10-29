@@ -10,6 +10,7 @@ import {
   type IzinTuru,
   type IzinTuruKaydetIstegi,
 } from '@/api/izinTurleriApi'
+import AktiflikAnahtari from '@/common/components/AktiflikAnahtari.vue'
 import KayitDialog from '@/common/components/KayitDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
 import SureInput from '@/common/components/SureInput.vue'
@@ -55,8 +56,8 @@ function bicimler(tur: IzinTuru): string {
     .join(', ')
 }
 
-async function aktiflikDegistir(tur: IzinTuru, aktif: boolean | null) {
-  await izinTuruAktifligiDegistir(tur.id, aktif ?? false)
+async function aktiflikDegistir(tur: IzinTuru, aktif: boolean) {
+  await izinTuruAktifligiDegistir(tur.id, aktif)
   toast.basariGoster(aktif ? 'İzin türü aktif yapıldı.' : 'İzin türü pasif yapıldı.')
   await yukle()
 }
@@ -100,13 +101,10 @@ onMounted(yukle)
     <v-card>
       <v-data-table :headers="basliklar" :items="turler" items-per-page="-1" hide-default-footer>
         <template #[`item.aktif`]="{ item }">
-          <v-switch
-            :model-value="item.aktif"
-            color="primary"
-            hide-details
-            density="compact"
-            :aria-label="`${item.ad} aktif`"
-            @update:model-value="aktiflikDegistir(item, $event)"
+          <AktiflikAnahtari
+            :aktif="item.aktif"
+            :etiket="`${item.ad} aktif`"
+            :degistir="(aktif) => aktiflikDegistir(item, aktif)"
           />
         </template>
         <template #[`item.islemler`]="{ item }">

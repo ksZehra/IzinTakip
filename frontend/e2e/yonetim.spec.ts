@@ -17,9 +17,7 @@ test('İK kullanıcıları yönetir ama rolleri açamaz', async ({ page }) => {
   await page.goto('/kullanicilar')
 
   await expect(page.getByRole('heading', { level: 1, name: 'Kullanıcılar' })).toBeVisible()
-  await expect(
-    page.getByRole('cell', { name: 'calisan@izintakip.local', exact: true }),
-  ).toBeVisible()
+  await expect(page.getByText('calisan@izintakip.local', { exact: true })).toBeVisible()
   await erisilebilirlikDenetle(page)
 
   await page.goto('/roller')

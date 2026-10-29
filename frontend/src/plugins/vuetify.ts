@@ -6,6 +6,7 @@ import { createVuetify } from 'vuetify'
 import { aliases, mdi } from 'vuetify/iconsets/mdi-svg'
 import { tr } from 'vuetify/locale'
 
+const tabloVarsayilanlari = { mobile: null, mobileBreakpoint: 'sm' }
 const formAlaniVarsayilanlari = { variant: 'outlined', density: 'comfortable', hideDetails: 'auto' }
 
 export function createAppVuetify() {
@@ -32,6 +33,8 @@ export function createAppVuetify() {
     date: { locale: { tr: 'tr-TR' } },
     icons: { defaultSet: 'mdi', aliases, sets: { mdi } },
     defaults: {
+      VDataTable: tabloVarsayilanlari,
+      VDataTableServer: tabloVarsayilanlari,
       VTextField: formAlaniVarsayilanlari,
       VTextarea: formAlaniVarsayilanlari,
       VSelect: formAlaniVarsayilanlari,
