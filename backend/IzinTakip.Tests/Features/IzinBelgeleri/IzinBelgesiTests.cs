@@ -96,6 +96,42 @@ public sealed class IzinBelgesiTests(VeritabanliApiFactory factory) : IClassFixt
     }
 
     [Fact]
+    public async Task Yukle_SinirdaAyniAndaUcYukleme_YalnizBiriKabulEdilir()
+    {
+        var ekip = await EkipKurAsync();
+        var talepId = await TalepAcAsync(ekip.Calisan, "Yıllık");
+        for (var i = 0; i < 4; i++)
+        {
+            (await YukleAsync(ekip.Calisan, talepId, Pdf, $"{i}.pdf", "application/pdf")).EnsureSuccessStatusCode();
+        }
+
+        var yanitlar = await Task.WhenAll(Enumerable.Range(0, 3).Select(i => YukleAsync(ekip.Calisan, talepId, Pdf, $"ayni-anda-{i}.pdf", "application/pdf")));
+        var belgeler = await ekip.Calisan.GetFromJsonAsync<JsonElement>($"/api/izin-talepleri/{talepId}/belgeler", TestContext.Current.CancellationToken);
+
+        Assert.Single(yanitlar, y => y.StatusCode == HttpStatusCode.Created);
+        Assert.All(yanitlar.Where(y => y.StatusCode != HttpStatusCode.Created), y =>
+            Assert.Contains(y.StatusCode, new[] { HttpStatusCode.Conflict, HttpStatusCode.UnprocessableEntity }));
+        Assert.Equal(5, belgeler.GetArrayLength());
+    }
+
+    [Fact]
+    public async Task OnayVeBelgeSilme_AyniAnda_IkisiBirlikteBasariliOlmaz()
+    {
+        var ekip = await EkipKurAsync();
+        var talepId = await TalepAcAsync(ekip.Calisan, "Rapor");
+        var belge = (await YukleAsync(ekip.Calisan, talepId, Pdf, "rapor.pdf", "application/pdf")).Headers.Location;
+
+        var onayGorevi = OnaylaAsync(ekip.Yonetici, talepId);
+        var silmeGorevi = ekip.Calisan.DeleteAsync(belge, TestContext.Current.CancellationToken);
+        await Task.WhenAll(onayGorevi, silmeGorevi);
+        var (onay, silme) = (await onayGorevi, await silmeGorevi);
+        var belgeler = await ekip.Calisan.GetFromJsonAsync<JsonElement>($"/api/izin-talepleri/{talepId}/belgeler", TestContext.Current.CancellationToken);
+
+        Assert.False(onay.IsSuccessStatusCode && silme.IsSuccessStatusCode);
+        Assert.Equal(silme.IsSuccessStatusCode ? 0 : 1, belgeler.GetArrayLength());
+    }
+
+    [Fact]
     public async Task Yukle_BaskasininTalebine_404Doner()
     {
         var ekip = await EkipKurAsync();

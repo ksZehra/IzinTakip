@@ -37,6 +37,7 @@ public sealed class IzinBelgesiService(
             IzinBelgesiYukleRequestValidator.IcerikTurleri[uzanti],
             dosya.Length);
         db.IzinBelgeleri.Add(belge);
+        RowVersionIleKoru(talep);
         try
         {
             await db.SaveChangesAsync(cancellationToken);
@@ -65,6 +66,7 @@ public sealed class IzinBelgesiService(
         var belge = await BelgeAsync(talepId, id, cancellationToken);
 
         db.IzinBelgeleri.Remove(belge);
+        RowVersionIleKoru(talep);
         await db.SaveChangesAsync(cancellationToken);
         await fileStorage.SilAsync(belge.DepoYolu, cancellationToken);
 
@@ -75,10 +77,11 @@ public sealed class IzinBelgesiService(
     {
         var calisanlar = await kapsam.CalisanlarAsync(cancellationToken);
         return await db.IzinTalepleri
-            .AsNoTracking()
             .SingleOrDefaultAsync(t => t.Id == talepId && calisanlar.Any(c => c.Id == t.CalisanId), cancellationToken)
             ?? throw new KayitBulunamadiException("İzin talebi bulunamadı.");
     }
+
+    private void RowVersionIleKoru(IzinTalebi talep) => db.Entry(talep).State = EntityState.Modified;
 
     private async Task<IzinBelgesi> BelgeAsync(int talepId, int id, CancellationToken cancellationToken) =>
         await db.IzinBelgeleri.SingleOrDefaultAsync(b => b.Id == id && b.IzinTalebiId == talepId, cancellationToken)
