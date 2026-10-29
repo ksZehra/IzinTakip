@@ -5,15 +5,15 @@ namespace IzinTakip.Tests;
 
 public sealed class TestEmailSender : IEmailSender
 {
-    private readonly ConcurrentQueue<EmailMesaji> _gonderilenler = new();
+    private readonly ConcurrentQueue<EmailMessage> _gonderilenler = new();
 
-    public Task SendAsync(EmailMesaji mesaj, CancellationToken cancellationToken)
+    public Task SendAsync(EmailMessage mesaj, CancellationToken cancellationToken)
     {
         _gonderilenler.Enqueue(mesaj);
         return Task.CompletedTask;
     }
 
-    public async Task<EmailMesaji> BekleAsync(string alici, string konu)
+    public async Task<EmailMessage> BekleAsync(string alici, string konu)
     {
         for (var deneme = 0; deneme < 50; deneme++)
         {

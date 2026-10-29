@@ -14,10 +14,10 @@ namespace IzinTakip.Api.Features.Auth;
 public sealed class AuthService(
     UserManager<Kullanici> userManager,
     SignInManager<Kullanici> signInManager,
-    IGecerliKullanici gecerliKullanici,
-    KullaniciYetkiOkuyucu yetkiOkuyucu,
-    KullaniciAdlari kullaniciAdlari,
-    JwtAyarlari jwtAyarlari,
+    ICurrentUser gecerliKullanici,
+    KullaniciYetkiProvider yetkiOkuyucu,
+    KullaniciAdlariProvider kullaniciAdlari,
+    JwtOptions jwtAyarlari,
     TimeProvider timeProvider,
     ILogger<AuthService> logger)
 {
@@ -32,7 +32,7 @@ public sealed class AuthService(
         {
             userManager.PasswordHasher.VerifyHashedPassword(new Kullanici(), SahteParolaOzeti, request.Parola);
             logger.LogWarning("Basarisiz giris: kullanici bulunamadi");
-            throw new KimlikDogrulanamadiException(HataliGiris);
+            throw new UnauthorizedException(HataliGiris);
         }
 
         var sonuc = await signInManager.CheckPasswordSignInAsync(kullanici, request.Parola, lockoutOnFailure: true);
@@ -44,18 +44,18 @@ public sealed class AuthService(
             }
 
             logger.LogWarning("Basarisiz giris {KullaniciId} {Kilitli}", kullanici.Id, sonuc.IsLockedOut);
-            throw new KimlikDogrulanamadiException(HataliGiris);
+            throw new UnauthorizedException(HataliGiris);
         }
 
         if (!kullanici.Aktif)
         {
-            throw new KimlikDogrulanamadiException("Hesabınız pasif durumda. İK ile görüşün.");
+            throw new UnauthorizedException("Hesabınız pasif durumda. İK ile görüşün.");
         }
 
         var simdi = timeProvider.GetUtcNow().UtcDateTime;
         if (kullanici.GeciciParolaBitis <= simdi)
         {
-            throw new KimlikDogrulanamadiException("Geçici parolanızın süresi doldu. Parolanızı yeniden sıfırlaması için İK ile görüşün.");
+            throw new UnauthorizedException("Geçici parolanızın süresi doldu. Parolanızı yeniden sıfırlaması için İK ile görüşün.");
         }
 
         var sureBitis = simdi.AddHours(jwtAyarlari.SureSaat);
@@ -71,7 +71,7 @@ public sealed class AuthService(
                 new Claim(JwtRegisteredClaimNames.Sub, kullanici.Id.ToString(CultureInfo.InvariantCulture)),
                 new Claim(JwtRegisteredClaimNames.Email, kullanici.Email ?? string.Empty),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtAyarlari.GuvenlikDamgasiClaim, await userManager.GetSecurityStampAsync(kullanici))
+                new Claim(JwtOptions.GuvenlikDamgasiClaim, await userManager.GetSecurityStampAsync(kullanici))
             ]),
             SigningCredentials = new SigningCredentials(jwtAyarlari.ImzaAnahtari(), SecurityAlgorithms.HmacSha256)
         });
@@ -80,7 +80,7 @@ public sealed class AuthService(
         return new GirisResponse(token, sureBitis, kullanici.ParolaDegistirmeliMi);
     }
 
-    public async Task<BenResponse> BenAsync(CancellationToken cancellationToken)
+    public async Task<CurrentUserResponse> BenAsync(CancellationToken cancellationToken)
     {
         var bilgi = await gecerliKullanici.YetkileriAsync(cancellationToken);
         var yetkiler = bilgi.SuperAdmin
@@ -88,7 +88,7 @@ public sealed class AuthService(
             : bilgi.Yetkiler.Order().ToList();
 
         var gorunenAd = (await kullaniciAdlari.OkuAsync([bilgi.KullaniciId], cancellationToken))[bilgi.KullaniciId];
-        return new BenResponse(bilgi.KullaniciId, bilgi.Eposta, gorunenAd, bilgi.CalisanId, bilgi.Roller, yetkiler, bilgi.ParolaDegistirmeli);
+        return new CurrentUserResponse(bilgi.KullaniciId, bilgi.Eposta, gorunenAd, bilgi.CalisanId, bilgi.Roller, yetkiler, bilgi.ParolaDegistirmeli);
     }
 
     public async Task ParolaDegistirAsync(ParolaDegistirRequest request, CancellationToken cancellationToken)
@@ -98,14 +98,14 @@ public sealed class AuthService(
         if (!kontrol.Succeeded)
         {
             logger.LogWarning("Parola degistirmede hatali mevcut parola {KullaniciId} {Kilitli}", kullanici.Id, kontrol.IsLockedOut);
-            throw new IsKuraliException(kontrol.IsLockedOut
+            throw new BusinessRuleException(kontrol.IsLockedOut
                 ? "Çok fazla hatalı deneme yapıldı. Birkaç dakika sonra tekrar deneyin."
                 : "Mevcut parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.");
         }
 
         kullanici.ParolaDegistirmeliMi = false;
         kullanici.GeciciParolaBitis = null;
-        IdentitySonucu.Dogrula(await userManager.ChangePasswordAsync(kullanici, request.MevcutParola, request.YeniParola));
+        await userManager.ChangePasswordAsync(kullanici, request.MevcutParola, request.YeniParola).DogrulaAsync();
 
         yetkiOkuyucu.Unut(kullanici.Id);
         logger.LogInformation("Kullanici parolasini degistirdi {KullaniciId}", kullanici.Id);
@@ -124,6 +124,6 @@ public sealed class AuthService(
     {
         var bilgi = await gecerliKullanici.YetkileriAsync(cancellationToken);
         return await userManager.FindByIdAsync(bilgi.KullaniciId.ToString(CultureInfo.InvariantCulture))
-            ?? throw new KimlikDogrulanamadiException("Oturum açmanız gerekiyor.");
+            ?? throw new UnauthorizedException("Oturum açmanız gerekiyor.");
     }
 }

@@ -19,7 +19,7 @@ public sealed class ResmiTatillerController(ResmiTatilService service) : Control
         await service.DetayAsync(id, cancellationToken);
 
     [HttpPost]
-    [Yetki(Yetkiler.Tanim.Yonet)]
+    [Permission(Yetkiler.Tanim.Yonet)]
     [EndpointSummary("Resmi tatil ekler; yarimGun = true arife gibi öğleden sonrası tatil olan günlerdir")]
     [ProducesResponseType<ResmiTatilResponse>(StatusCodes.Status201Created)]
     public async Task<ActionResult<ResmiTatilResponse>> Olustur(ResmiTatilKaydetRequest request, CancellationToken cancellationToken)
@@ -29,13 +29,13 @@ public sealed class ResmiTatillerController(ResmiTatilService service) : Control
     }
 
     [HttpPut("{id:int}")]
-    [Yetki(Yetkiler.Tanim.Yonet)]
+    [Permission(Yetkiler.Tanim.Yonet)]
     [EndpointSummary("Resmi tatili günceller")]
     public async Task<ActionResult<ResmiTatilResponse>> Guncelle(int id, ResmiTatilKaydetRequest request, CancellationToken cancellationToken) =>
         await service.GuncelleAsync(id, request, cancellationToken);
 
     [HttpDelete("{id:int}")]
-    [Yetki(Yetkiler.Tanim.Yonet)]
+    [Permission(Yetkiler.Tanim.Yonet)]
     [EndpointSummary("Resmi tatili siler")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Sil(int id, CancellationToken cancellationToken)

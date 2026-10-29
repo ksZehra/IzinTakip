@@ -6,14 +6,14 @@ import type { Ayarlar } from '@/api/ayarlarApi'
 import {
   talepOlustur,
   type GunYarisi,
-  type SureHesaplaIstegi,
+  type SureHesaplaRequest,
   type SureTipi,
 } from '@/api/izinTalepleriApi'
 import { izinTurleriniGetir, type IzinTuru } from '@/api/izinTurleriApi'
 import { Yetkiler } from '@/common/auth/yetkiler'
-import CalisanSecici from '@/common/components/CalisanSecici.vue'
+import CalisanSelect from '@/common/components/CalisanSelect.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
-import { useFormGonder } from '@/common/composables/useFormGonder'
+import { useFormSubmit } from '@/common/composables/useFormSubmit'
 import { useToast } from '@/common/composables/useToast'
 import { gunYarisiEtiketleri, secenekler, sureTipiEtiketleri } from '@/common/utils/etiketler'
 import { saatGoster } from '@/common/utils/tarih'
@@ -26,7 +26,7 @@ const auth = useAuthStore()
 const ayarlarStore = useAyarlarStore()
 const router = useRouter()
 const toast = useToast()
-const { gonder, gonderiliyor, alanHatasi } = useFormGonder()
+const { gonder, gonderiliyor, alanHatasi } = useFormSubmit()
 
 const baskasiAdinaAcabilir = auth.yetkiVar(Yetkiler.IzinTalebiYonet)
 const izinTurleri = shallowRef<IzinTuru[]>([])
@@ -56,7 +56,7 @@ const izinliBicimler = computed(() =>
 )
 const saatAdimiSaniye = computed(() => (ayarlar.value?.saatlikIzinAdimDakika ?? 30) * 60)
 
-const onizlemeIstegi = computed<SureHesaplaIstegi | null>(() => {
+const onizlemeIstegi = computed<SureHesaplaRequest | null>(() => {
   const istek = talepIstegi()
   if (!istek) return null
   const eksik =
@@ -80,7 +80,7 @@ onMounted(async () => {
   ])
 })
 
-function talepIstegi(): SureHesaplaIstegi | null {
+function talepIstegi(): SureHesaplaRequest | null {
   if (!form.izinTuruId || !form.sureTipi || !form.tarih) return null
   return {
     izinTuruId: form.izinTuruId,
@@ -124,7 +124,7 @@ async function gonderTalep() {
     <v-card>
       <v-card-text>
         <v-form class="d-flex flex-column ga-4" @submit.prevent="gonderTalep">
-          <CalisanSecici
+          <CalisanSelect
             v-if="baskasiAdinaAcabilir"
             v-model="form.calisanId"
             etiket="Çalışan"

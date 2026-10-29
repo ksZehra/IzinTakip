@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { erisilebilirlikDenetle, girisYap, kullanicilar } from './yardimcilar'
+import { erisilebilirlikDenetle, girisYap, kullanicilar } from './helpers'
 
 const sayfalar = [
   ['/departmanlar', 'Departmanlar'],

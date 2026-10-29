@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { parolaDegistir } from '@/api/authApi'
-import { useFormGonder } from '@/common/composables/useFormGonder'
+import { useFormSubmit } from '@/common/composables/useFormSubmit'
 import CenteredLayout from '@/layouts/CenteredLayout.vue'
 import { useToast } from '@/common/composables/useToast'
 import { useAuthStore } from '@/stores/authStore'
@@ -11,7 +11,7 @@ import { useAuthStore } from '@/stores/authStore'
 const auth = useAuthStore()
 const router = useRouter()
 const toast = useToast()
-const { gonder, gonderiliyor, alanHatasi } = useFormGonder()
+const { gonder, gonderiliyor, alanHatasi } = useFormSubmit()
 
 const mevcutParola = ref('')
 const yeniParola = ref('')

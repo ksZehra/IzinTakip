@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-import { ayarlariGuncelle, type AyarlarGuncelleIstegi } from '@/api/ayarlarApi'
+import { ayarlariGuncelle, type AyarlarGuncelleRequest } from '@/api/ayarlarApi'
 import PageHeader from '@/common/components/PageHeader.vue'
-import { useFormGonder } from '@/common/composables/useFormGonder'
+import { useFormSubmit } from '@/common/composables/useFormSubmit'
 import { useToast } from '@/common/composables/useToast'
 import { haftaGunuEtiketleri, secenekler } from '@/common/utils/etiketler'
 import { saatGoster } from '@/common/utils/tarih'
@@ -11,8 +11,8 @@ import { useAyarlarStore } from '@/stores/ayarlarStore'
 
 const ayarlarStore = useAyarlarStore()
 const toast = useToast()
-const { gonder, gonderiliyor, alanHatasi } = useFormGonder()
-const form = ref<AyarlarGuncelleIstegi | null>(null)
+const { gonder, gonderiliyor, alanHatasi } = useFormSubmit()
+const form = ref<AyarlarGuncelleRequest | null>(null)
 const gunlukSure = ref('')
 const adimlar = [15, 30, 60].map((dakika) => ({ title: `${dakika} dakika`, value: dakika }))
 

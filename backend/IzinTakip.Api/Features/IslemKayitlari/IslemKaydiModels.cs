@@ -1,4 +1,4 @@
-using IzinTakip.Infrastructure.Denetim;
+using IzinTakip.Infrastructure.Audit;
 
 namespace IzinTakip.Api.Features.IslemKayitlari;
 

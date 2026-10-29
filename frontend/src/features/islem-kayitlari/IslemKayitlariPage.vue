@@ -2,19 +2,19 @@
 import {
   islemKayitlariniGetir,
   type IslemKaydi,
-  type IslemKaydiFiltresi,
+  type IslemKaydiFilter,
 } from '@/api/kullanicilarApi'
 import PageHeader from '@/common/components/PageHeader.vue'
-import { useSayfaliListe } from '@/common/composables/useSayfaliListe'
+import { usePagedList } from '@/common/composables/usePagedList'
 import { tarihSaatGoster } from '@/common/utils/tarih'
 
-const varsayilanFiltre: IslemKaydiFiltresi = {
+const varsayilanFiltre: IslemKaydiFilter = {
   tablo: null,
   baslangic: null,
   bitis: null,
   sadeceKendiKaydi: false,
 }
-const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor } = useSayfaliListe(
+const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor } = usePagedList(
   islemKayitlariniGetir,
   varsayilanFiltre,
 )

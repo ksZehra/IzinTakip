@@ -1,6 +1,6 @@
-import type { Calisan, CalisanKaydetIstegi } from '@/api/calisanlarApi'
+import type { Calisan, CalisanKaydetRequest } from '@/api/calisanlarApi'
 
-export function bosCalisanFormu(): CalisanKaydetIstegi {
+export function bosCalisanFormu(): CalisanKaydetRequest {
   return {
     ad: '',
     soyad: '',
@@ -11,7 +11,7 @@ export function bosCalisanFormu(): CalisanKaydetIstegi {
   }
 }
 
-export function calisanFormaCevir(calisan: Calisan): CalisanKaydetIstegi {
+export function calisanFormaCevir(calisan: Calisan): CalisanKaydetRequest {
   return {
     ad: calisan.ad,
     soyad: calisan.soyad,

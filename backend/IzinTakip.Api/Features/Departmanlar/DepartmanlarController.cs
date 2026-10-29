@@ -21,7 +21,7 @@ public sealed class DepartmanlarController(DepartmanService service) : Controlle
         await service.DetayAsync(id, cancellationToken);
 
     [HttpPost]
-    [Yetki(Yetkiler.Tanim.Yonet)]
+    [Permission(Yetkiler.Tanim.Yonet)]
     [EndpointSummary("Yeni departman ekler")]
     [ProducesResponseType<DepartmanResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
@@ -32,13 +32,13 @@ public sealed class DepartmanlarController(DepartmanService service) : Controlle
     }
 
     [HttpPut("{id:int}")]
-    [Yetki(Yetkiler.Tanim.Yonet)]
+    [Permission(Yetkiler.Tanim.Yonet)]
     [EndpointSummary("Departmanın adını ve yöneticisini günceller")]
     public async Task<ActionResult<DepartmanResponse>> Guncelle(int id, DepartmanKaydetRequest request, CancellationToken cancellationToken) =>
         await service.GuncelleAsync(id, request, cancellationToken);
 
     [HttpPut("{id:int}/aktiflik")]
-    [Yetki(Yetkiler.Tanim.Yonet)]
+    [Permission(Yetkiler.Tanim.Yonet)]
     [EndpointSummary("Departmanı aktif ya da pasif yapar")]
     public async Task<ActionResult<DepartmanResponse>> AktiflikDegistir(int id, AktiflikRequest request, CancellationToken cancellationToken) =>
         await service.AktiflikDegistirAsync(id, request.Aktif, cancellationToken);

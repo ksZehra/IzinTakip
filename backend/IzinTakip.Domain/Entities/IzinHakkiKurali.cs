@@ -26,12 +26,12 @@ public sealed class IzinHakkiKurali : Entity
     {
         if (maxKidemYil < minKidemYil)
         {
-            throw new IsKuraliException("En çok kıdem, en az kıdemden küçük olamaz.");
+            throw new BusinessRuleException("En çok kıdem, en az kıdemden küçük olamaz.");
         }
 
         if (maxYas < minYas)
         {
-            throw new IsKuraliException("En çok yaş, en az yaştan küçük olamaz.");
+            throw new BusinessRuleException("En çok yaş, en az yaştan küçük olamaz.");
         }
 
         Ad = ad;

@@ -2,7 +2,7 @@ import process from 'node:process'
 
 import { expect, test } from '@playwright/test'
 
-import { erisilebilirlikDenetle, girisYap, kullanicilar } from './yardimcilar'
+import { erisilebilirlikDenetle, girisYap, kullanicilar } from './helpers'
 
 function yoneticiParolasi(): string {
   const parola = process.env.E2E_ADMIN_PAROLA

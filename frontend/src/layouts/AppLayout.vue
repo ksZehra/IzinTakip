@@ -8,8 +8,8 @@ import { routes } from '@/router/routes'
 import { useAuthStore } from '@/stores/authStore'
 import { useBildirimStore } from '@/stores/bildirimStore'
 
-import BildirimZili from './BildirimZili.vue'
-import KullaniciMenusu from './KullaniciMenusu.vue'
+import NotificationBell from './NotificationBell.vue'
+import UserMenu from './UserMenu.vue'
 
 const auth = useAuthStore()
 const bildirimler = useBildirimStore()
@@ -50,8 +50,8 @@ onUnmounted(() => bildirimler.izlemeyiDurdur())
       @click="menuAcik = !menuAcik"
     />
     <v-app-bar-title>IzinTakip</v-app-bar-title>
-    <BildirimZili />
-    <KullaniciMenusu />
+    <NotificationBell />
+    <UserMenu />
   </v-app-bar>
 
   <v-navigation-drawer v-model="menuAcik" :permanent="!mobile" :temporary="mobile">

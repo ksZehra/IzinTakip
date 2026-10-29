@@ -5,7 +5,7 @@ import * as authApi from '@/api/authApi'
 import type { Oturum } from '@/api/authApi'
 import type { Yetki } from '@/common/auth/yetkiler'
 import { useToast } from '@/common/composables/useToast'
-import { ApiHatasi } from '@/common/http/ApiHatasi'
+import { ApiError } from '@/common/http/ApiError'
 
 export const useAuthStore = defineStore('auth', () => {
   const oturum = ref<Oturum | null>(null)
@@ -22,7 +22,7 @@ export const useAuthStore = defineStore('auth', () => {
       oturum.value = await authApi.oturumuGetir()
       yuklendi.value = true
     } catch (hata) {
-      if (!(hata instanceof ApiHatasi)) {
+      if (!(hata instanceof ApiError)) {
         throw hata
       }
       oturum.value = null

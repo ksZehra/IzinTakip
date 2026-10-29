@@ -1,5 +1,5 @@
 using IzinTakip.Domain.Entities;
-using IzinTakip.Infrastructure.Denetim;
+using IzinTakip.Infrastructure.Audit;
 using IzinTakip.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -36,8 +36,8 @@ public sealed class IzinTakipDbContext(DbContextOptions<IzinTakipDbContext> opti
 
         foreach (var entityTipi in modelBuilder.Model.GetEntityTypes().Where(tip => tip.ClrType.IsAssignableTo(typeof(Entity))).ToList())
         {
-            modelBuilder.Entity(entityTipi.ClrType).Property(nameof(Entity.OlusturmaTarihi)).HasConversion<UtcZamanDonusturucu>();
-            modelBuilder.Entity(entityTipi.ClrType).Property(nameof(Entity.GuncellemeTarihi)).HasConversion<UtcZamanDonusturucu>();
+            modelBuilder.Entity(entityTipi.ClrType).Property(nameof(Entity.OlusturmaTarihi)).HasConversion<UtcDateTimeConverter>();
+            modelBuilder.Entity(entityTipi.ClrType).Property(nameof(Entity.GuncellemeTarihi)).HasConversion<UtcDateTimeConverter>();
         }
     }
 }

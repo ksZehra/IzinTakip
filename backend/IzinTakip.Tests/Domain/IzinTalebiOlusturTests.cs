@@ -26,7 +26,7 @@ public sealed class IzinTalebiOlusturTests
     [Fact]
     public void Olustur_BicimTurdeKapali_IsKuraliHatasiVerir()
     {
-        var hata = Assert.Throws<IsKuraliException>(() =>
+        var hata = Assert.Throws<BusinessRuleException>(() =>
             Olustur(Yillik, new SureIstegi(SureTipi.Saatlik, Pazartesi, null, null, new(10, 0), new(11, 0))));
 
         Assert.Equal("Yıllık türünde izin saatlik olarak alınamaz.", hata.Message);
@@ -37,7 +37,7 @@ public sealed class IzinTalebiOlusturTests
     {
         var evlilik = new IzinTuru("Evlilik", false, false, GunHesabi.IsGunu, true, false, false, 3 * 480, null);
 
-        var hata = Assert.Throws<IsKuraliException>(() => Olustur(evlilik, TamGun(Pazartesi, Pazartesi.AddDays(3))));
+        var hata = Assert.Throws<BusinessRuleException>(() => Olustur(evlilik, TamGun(Pazartesi, Pazartesi.AddDays(3))));
 
         Assert.Equal("Evlilik türünde bir talepte en çok 3 gün izin alınabilir; talep 4 gün.", hata.Message);
     }
@@ -47,7 +47,7 @@ public sealed class IzinTalebiOlusturTests
     {
         var mazeret = new IzinTuru("Mazeret", false, false, GunHesabi.IsGunu, true, true, false, null, 2 * 480);
 
-        Assert.Throws<IsKuraliException>(() =>
+        Assert.Throws<BusinessRuleException>(() =>
             Olustur(mazeret, TamGun(Pazartesi, Pazartesi), turunYilIcindeKullanimi: 720));
     }
 
@@ -56,7 +56,7 @@ public sealed class IzinTalebiOlusturTests
     {
         var mazeret = new IzinTuru("Mazeret", false, false, GunHesabi.IsGunu, true, true, false, null, 5 * 480);
 
-        var hata = Assert.Throws<IsKuraliException>(() => Olustur(mazeret, TamGun(new(2026, 12, 30), new(2027, 1, 5))));
+        var hata = Assert.Throws<BusinessRuleException>(() => Olustur(mazeret, TamGun(new(2026, 12, 30), new(2027, 1, 5))));
 
         Assert.Equal("Mazeret türünde yıllık sınır olduğu için talep yıl sonunu aşamaz. Talebi 31 Aralık'a kadar ve yeni yıl için iki ayrı talep olarak açın.", hata.Message);
     }
@@ -83,7 +83,7 @@ public sealed class IzinTalebiOlusturTests
     {
         var mevcut = new ZamanAraligi(Pazartesi.ToDateTime(new(9, 0)), Pazartesi.ToDateTime(new(12, 30)));
 
-        Assert.Throws<IsKuraliException>(() => Olustur(Yillik, TamGun(Pazartesi, Pazartesi), acikTalepler: [mevcut]));
+        Assert.Throws<BusinessRuleException>(() => Olustur(Yillik, TamGun(Pazartesi, Pazartesi), acikTalepler: [mevcut]));
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public sealed class IzinTalebiOlusturTests
         var eskiMesaiyleTamGun = IzinTalebi.CakismaAraligi(
             SureTipi.TamGun, new ZamanAraligi(Pazartesi.ToDateTime(new(10, 0)), Pazartesi.ToDateTime(new(19, 0))));
 
-        Assert.Throws<IsKuraliException>(() =>
+        Assert.Throws<BusinessRuleException>(() =>
             Olustur(Saatlik, new SureIstegi(SureTipi.Saatlik, Pazartesi, null, null, new(9, 0), new(10, 0)), acikTalepler: [eskiMesaiyleTamGun]));
     }
 
@@ -101,7 +101,7 @@ public sealed class IzinTalebiOlusturTests
     {
         var eskiMesaiyleSaatlik = new ZamanAraligi(Pazartesi.ToDateTime(new(18, 0)), Pazartesi.ToDateTime(new(19, 0)));
 
-        Assert.Throws<IsKuraliException>(() => Olustur(Yillik, TamGun(Pazartesi, Pazartesi), acikTalepler: [eskiMesaiyleSaatlik]));
+        Assert.Throws<BusinessRuleException>(() => Olustur(Yillik, TamGun(Pazartesi, Pazartesi), acikTalepler: [eskiMesaiyleSaatlik]));
     }
 
     [Fact]
@@ -126,7 +126,7 @@ public sealed class IzinTalebiOlusturTests
     [Fact]
     public void Olustur_BakiyeYetersiz_KullanilabilirVeTalebiSoyler()
     {
-        var hata = Assert.Throws<IsKuraliException>(() =>
+        var hata = Assert.Throws<BusinessRuleException>(() =>
             Olustur(Yillik, TamGun(Pazartesi, Pazartesi.AddDays(4)), bakiye: new Bakiye(3 * 480 + 240, 0, 0)));
 
         Assert.Equal("Bakiye yetersiz: kullanılabilir 3 gün 4 saat, talep 5 gün.", hata.Message);
@@ -135,7 +135,7 @@ public sealed class IzinTalebiOlusturTests
     [Fact]
     public void Olustur_BekleyenTalepBakiyeyiBlokeEder()
     {
-        Assert.Throws<IsKuraliException>(() =>
+        Assert.Throws<BusinessRuleException>(() =>
             Olustur(Yillik, TamGun(Pazartesi, Pazartesi.AddDays(1)), bakiye: new Bakiye(14 * 480, 10 * 480, 3 * 480)));
     }
 
@@ -161,7 +161,7 @@ public sealed class IzinTalebiOlusturTests
     [Fact]
     public void Olustur_GecmisTarihYetkisiz_IsKuraliHatasiVerir()
     {
-        var hata = Assert.Throws<IsKuraliException>(() =>
+        var hata = Assert.Throws<BusinessRuleException>(() =>
             Olustur(Yillik, TamGun(Pazartesi, Pazartesi), simdi: new DateTime(2026, 3, 2, 10, 0, 0)));
 
         Assert.Equal("Geçmiş tarihli izin talebi açılamaz.", hata.Message);
@@ -181,7 +181,7 @@ public sealed class IzinTalebiOlusturTests
         var pasif = new IzinTuru("Eski Tür", false, false, GunHesabi.IsGunu, true, false, false, null, null);
         pasif.AktiflikDegistir(false);
 
-        Assert.Throws<IsKuraliException>(() => Olustur(pasif, TamGun(Pazartesi, Pazartesi)));
+        Assert.Throws<BusinessRuleException>(() => Olustur(pasif, TamGun(Pazartesi, Pazartesi)));
     }
 
     private static SureIstegi TamGun(DateOnly baslangic, DateOnly bitis) => new(SureTipi.TamGun, baslangic, bitis, null, null, null);

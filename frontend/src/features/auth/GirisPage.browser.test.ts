@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 
 import * as authApi from '@/api/authApi'
-import { ApiHatasi } from '@/common/http/ApiHatasi'
+import { ApiError } from '@/common/http/ApiError'
 import { renderWithPlugins } from '@/testing/renderWithPlugins'
 
 import GirisPage from './GirisPage.vue'
@@ -32,7 +32,7 @@ describe('GirisPage', () => {
 
   it('hatalı girişte sunucunun mesajını formda gösterir', async () => {
     vi.mocked(authApi.girisYap).mockRejectedValue(
-      new ApiHatasi({ durum: 401, mesaj: 'E-posta ya da parola hatalı.' }),
+      new ApiError({ durum: 401, mesaj: 'E-posta ya da parola hatalı.' }),
     )
     const { screen } = await renderWithPlugins(GirisPage, { yol: '/giris' })
 

@@ -11,7 +11,7 @@ namespace IzinTakip.Api.Features.Calisanlar;
 public sealed class CalisanlarController(CalisanService service) : ControllerBase
 {
     [HttpGet]
-    [Yetki(Yetkiler.Calisan.Yonet, Yetkiler.IzinTalebi.Yonet)]
+    [Permission(Yetkiler.Calisan.Yonet, Yetkiler.IzinTalebi.Yonet)]
     [EndpointSummary("Kapsamdaki çalışanları arama, departman ve aktiflik filtresiyle sayfalı listeler")]
     public async Task<ActionResult<PagedResponse<CalisanListeResponse>>> Listele(
         [FromQuery] CalisanListeRequest request,
@@ -19,14 +19,14 @@ public sealed class CalisanlarController(CalisanService service) : ControllerBas
         await service.ListeleAsync(request, cancellationToken);
 
     [HttpGet("{id:int}")]
-    [Yetki(Yetkiler.Calisan.Yonet, Yetkiler.IzinTalebi.Yonet, Yetkiler.IzinTalebi.Olustur)]
+    [Permission(Yetkiler.Calisan.Yonet, Yetkiler.IzinTalebi.Yonet, Yetkiler.IzinTalebi.Olustur)]
     [EndpointSummary("Kapsamdaki bir çalışanın detayını döner")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CalisanResponse>> Detay(int id, CancellationToken cancellationToken) =>
         await service.DetayAsync(id, cancellationToken);
 
     [HttpPost]
-    [Yetki(Yetkiler.Calisan.Yonet)]
+    [Permission(Yetkiler.Calisan.Yonet)]
     [EndpointSummary("Yeni çalışan ekler")]
     [ProducesResponseType<CalisanResponse>(StatusCodes.Status201Created)]
     public async Task<ActionResult<CalisanResponse>> Olustur(CalisanKaydetRequest request, CancellationToken cancellationToken)
@@ -36,31 +36,31 @@ public sealed class CalisanlarController(CalisanService service) : ControllerBas
     }
 
     [HttpPut("{id:int}")]
-    [Yetki(Yetkiler.Calisan.Yonet)]
+    [Permission(Yetkiler.Calisan.Yonet)]
     [EndpointSummary("Çalışan bilgilerini günceller")]
     public async Task<ActionResult<CalisanResponse>> Guncelle(int id, CalisanKaydetRequest request, CancellationToken cancellationToken) =>
         await service.GuncelleAsync(id, request, cancellationToken);
 
     [HttpPut("{id:int}/aktiflik")]
-    [Yetki(Yetkiler.Calisan.Yonet)]
+    [Permission(Yetkiler.Calisan.Yonet)]
     [EndpointSummary("Çalışanı aktif ya da pasif yapar; pasifleşen çalışanın kullanıcı hesabı da kapanır")]
     public async Task<ActionResult<CalisanResponse>> AktiflikDegistir(int id, AktiflikRequest request, CancellationToken cancellationToken) =>
         await service.AktiflikDegistirAsync(id, request.Aktif, cancellationToken);
 
     [HttpGet("{id:int}/haklar")]
-    [Yetki(Yetkiler.Calisan.Yonet, Yetkiler.IzinTalebi.Yonet, Yetkiler.IzinTalebi.Olustur)]
+    [Permission(Yetkiler.Calisan.Yonet, Yetkiler.IzinTalebi.Yonet, Yetkiler.IzinTalebi.Olustur)]
     [EndpointSummary("Çalışanın hak satırlarını ve toplam hakkını döner")]
     public async Task<ActionResult<IzinHaklariResponse>> Haklar(int id, CancellationToken cancellationToken) =>
         await service.HaklariAsync(id, cancellationToken);
 
     [HttpGet("{id:int}/bakiye")]
-    [Yetki(Yetkiler.Calisan.Yonet, Yetkiler.IzinTalebi.Yonet, Yetkiler.IzinTalebi.Olustur)]
+    [Permission(Yetkiler.Calisan.Yonet, Yetkiler.IzinTalebi.Yonet, Yetkiler.IzinTalebi.Olustur)]
     [EndpointSummary("Çalışanın izin bakiyesini döner: hak, kullanılan, bekleyen, kullanılabilir")]
     public async Task<ActionResult<BakiyeResponse>> Bakiye(int id, CancellationToken cancellationToken) =>
         await service.BakiyeAsync(id, cancellationToken);
 
     [HttpPost("{id:int}/haklar")]
-    [Yetki(Yetkiler.Calisan.Yonet)]
+    [Permission(Yetkiler.Calisan.Yonet)]
     [EndpointSummary("Çalışana elle hak satırı ekler (açılış bakiyesi ya da düzeltme; süre dakika, eksi olabilir)")]
     public async Task<ActionResult<IzinHaklariResponse>> HakEkle(int id, IzinHakkiEkleRequest request, CancellationToken cancellationToken) =>
         await service.HakEkleAsync(id, request, cancellationToken);

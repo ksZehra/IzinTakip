@@ -2,7 +2,7 @@ import axios, { isAxiosError } from 'axios'
 
 import { useToast } from '@/common/composables/useToast'
 
-import type { ApiHatasi } from './ApiHatasi'
+import type { ApiError } from './ApiError'
 import { apiHatasinaCevir } from './apiHatasinaCevir'
 
 declare module 'axios' {
@@ -31,7 +31,7 @@ httpClient.interceptors.response.use(undefined, async (hata: unknown) => {
   throw apiHatasi
 })
 
-function hatayiBildir(hata: ApiHatasi) {
+function hatayiBildir(hata: ApiError) {
   if (hata.durum === 401) {
     oturumDustugunde()
     return

@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { useToast } from '@/common/composables/useToast'
 
-import { ApiHatasi } from './ApiHatasi'
+import { ApiError } from './ApiError'
 import { SUNUCUYA_ULASILAMIYOR } from './apiHatasinaCevir'
 import { httpClient, oturumDustugundeCalistir } from './httpClient'
 
@@ -20,13 +20,13 @@ function hataDonen(durum: number, govde: unknown): AxiosAdapter {
     )
 }
 
-async function hatayiYakala(istek: Promise<unknown>): Promise<ApiHatasi> {
+async function hatayiYakala(istek: Promise<unknown>): Promise<ApiError> {
   try {
     await istek
   } catch (hata) {
-    if (hata instanceof ApiHatasi) return hata
+    if (hata instanceof ApiError) return hata
   }
-  throw new Error('ApiHatasi bekleniyordu')
+  throw new Error('ApiError bekleniyordu')
 }
 
 describe('httpClient', () => {

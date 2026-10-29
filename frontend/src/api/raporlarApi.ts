@@ -1,13 +1,13 @@
 import { dosyaIndir } from '@/common/http/dosyaIndir'
 import { httpClient } from '@/common/http/httpClient'
-import type { ListeSorgusu, Sayfa } from '@/common/composables/useSayfaliListe'
+import type { ListQuery, Page } from '@/common/composables/usePagedList'
 
 import type { Schema } from './types'
 
 export type TakvimKaydi = Schema<'TakvimKaydiResponse'>
 export type BakiyeSatiri = Schema<'BakiyeRaporuResponse'>
 
-export interface BakiyeFiltresi extends Record<string, number | null> {
+export interface BakiyeFilter extends Record<string, number | null> {
   departmanId: number | null
 }
 
@@ -21,16 +21,16 @@ export async function takvimiGetir(sorgu: {
 }
 
 export async function bakiyeleriGetir(
-  sorgu: ListeSorgusu<BakiyeFiltresi>,
+  sorgu: ListQuery<BakiyeFilter>,
   signal?: AbortSignal,
-): Promise<Sayfa<BakiyeSatiri>> {
-  const { data } = await httpClient.get<Sayfa<BakiyeSatiri>>('/api/raporlar/bakiyeler', {
+): Promise<Page<BakiyeSatiri>> {
+  const { data } = await httpClient.get<Page<BakiyeSatiri>>('/api/raporlar/bakiyeler', {
     params: sorgu,
     signal,
   })
   return data
 }
 
-export function bakiyeleriExceleAktar(filtre: BakiyeFiltresi): Promise<void> {
+export function bakiyeleriExceleAktar(filtre: BakiyeFilter): Promise<void> {
   return dosyaIndir('/api/raporlar/bakiyeler/excel', filtre, 'bakiyeler.xlsx')
 }

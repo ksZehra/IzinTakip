@@ -1,13 +1,13 @@
 using System.Text.Json;
 using IzinTakip.Api.Common;
 using IzinTakip.Api.Common.Paging;
+using IzinTakip.Infrastructure.Audit;
 using IzinTakip.Infrastructure.Data;
-using IzinTakip.Infrastructure.Denetim;
 using Microsoft.EntityFrameworkCore;
 
 namespace IzinTakip.Api.Features.IslemKayitlari;
 
-public sealed class IslemKaydiService(IzinTakipDbContext db, KullaniciAdlari kullaniciAdlari, SirketSaati sirketSaati)
+public sealed class IslemKaydiService(IzinTakipDbContext db, KullaniciAdlariProvider kullaniciAdlari, SirketSaati sirketSaati)
 {
     public async Task<PagedResponse<IslemKaydiResponse>> ListeleAsync(IslemKaydiListeRequest request, CancellationToken cancellationToken)
     {

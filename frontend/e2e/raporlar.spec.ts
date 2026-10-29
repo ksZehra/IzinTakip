@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { erisilebilirlikDenetle, girisYap, kullanicilar } from './yardimcilar'
+import { erisilebilirlikDenetle, girisYap, kullanicilar } from './helpers'
 
 test('İK bakiye raporunu görür', async ({ page }) => {
   await girisYap(page, kullanicilar.ik)

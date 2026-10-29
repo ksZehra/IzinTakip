@@ -55,7 +55,7 @@ public sealed class ResmiTatilService(IzinTakipDbContext db, SirketSaati sirketS
 
     private async Task<ResmiTatil> BulAsync(int id, CancellationToken cancellationToken) =>
         await db.ResmiTatiller.SingleOrDefaultAsync(t => t.Id == id, cancellationToken)
-        ?? throw new KayitBulunamadiException("Resmi tatil bulunamadı.");
+        ?? throw new NotFoundException("Resmi tatil bulunamadı.");
 
     private static ResmiTatilResponse Yanit(ResmiTatil tatil) => new(tatil.Id, tatil.Tarih, tatil.Ad, tatil.YarimGun);
 
@@ -63,7 +63,7 @@ public sealed class ResmiTatilService(IzinTakipDbContext db, SirketSaati sirketS
     {
         if (await db.ResmiTatiller.AnyAsync(t => t.Tarih == tarih && t.Id != id, cancellationToken))
         {
-            throw new IsKuraliException("Bu tarihte zaten bir resmi tatil kayıtlı.");
+            throw new BusinessRuleException("Bu tarihte zaten bir resmi tatil kayıtlı.");
         }
     }
 }

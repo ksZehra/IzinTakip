@@ -15,11 +15,11 @@ import {
 } from '@/api/calisanlarApi'
 import { departmanlariGetir, type Departman } from '@/api/departmanlarApi'
 import ConfirmDialog from '@/common/components/ConfirmDialog.vue'
-import KayitDialog from '@/common/components/KayitDialog.vue'
+import FormDialog from '@/common/components/FormDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
-import { ApiHatasi } from '@/common/http/ApiHatasi'
+import { ApiError } from '@/common/http/ApiError'
 import SureInput from '@/common/components/SureInput.vue'
-import { useFormGonder } from '@/common/composables/useFormGonder'
+import { useFormSubmit } from '@/common/composables/useFormSubmit'
 import { useToast } from '@/common/composables/useToast'
 import { tarihGoster } from '@/common/utils/tarih'
 
@@ -29,9 +29,9 @@ import { bosCalisanFormu, calisanFormaCevir } from './calisanFormu'
 const props = defineProps<{ id: number }>()
 
 const toast = useToast()
-const kayit = useFormGonder()
-const hak = useFormGonder()
-const aktiflik = useFormGonder()
+const kayit = useFormSubmit()
+const hak = useFormSubmit()
+const aktiflik = useFormSubmit()
 
 const calisan = shallowRef<Calisan | null>(null)
 const bakiye = shallowRef<Bakiye | null>(null)
@@ -74,7 +74,7 @@ async function yukle() {
       haklariGetir(props.id),
     ])
   } catch (hata) {
-    if (!(hata instanceof ApiHatasi)) throw hata
+    if (!(hata instanceof ApiError)) throw hata
     yuklenemedi.value = true
   }
 }
@@ -219,7 +219,7 @@ watch(() => props.id, yukle, { immediate: true })
       @kaydet="kaydet"
     />
 
-    <KayitDialog
+    <FormDialog
       v-model="hakAcik"
       baslik="Hak satırı ekle"
       :kaydediliyor="hak.gonderiliyor.value"
@@ -243,7 +243,7 @@ watch(() => props.id, yukle, { immediate: true })
         type="date"
         :error-messages="hak.alanHatasi('kazanimTarihi')"
       />
-    </KayitDialog>
+    </FormDialog>
 
     <ConfirmDialog
       v-if="calisan"

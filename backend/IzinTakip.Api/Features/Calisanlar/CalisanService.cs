@@ -1,7 +1,6 @@
 using IzinTakip.Api.Common;
 using IzinTakip.Api.Common.Auth;
 using IzinTakip.Api.Common.Izin;
-using IzinTakip.Api.Common.Kapsam;
 using IzinTakip.Api.Common.Paging;
 using IzinTakip.Domain;
 using IzinTakip.Domain.Entities;
@@ -15,11 +14,11 @@ namespace IzinTakip.Api.Features.Calisanlar;
 
 public sealed class CalisanService(
     IzinTakipDbContext db,
-    CalisanKapsami kapsam,
-    KullaniciYetkiOkuyucu yetkiOkuyucu,
-    IGecerliKullanici gecerliKullanici,
+    CalisanScope kapsam,
+    KullaniciYetkiProvider yetkiOkuyucu,
+    ICurrentUser gecerliKullanici,
     KullaniciKorumasi koruma,
-    BakiyeSorgusu bakiyeSorgusu,
+    BakiyeQuery bakiyeSorgusu,
     SirketSaati sirketSaati,
     ILogger<CalisanService> logger)
 {
@@ -64,7 +63,7 @@ public sealed class CalisanService(
                 c.Aktif,
                 db.Users.Where(k => k.CalisanId == c.Id).Select(k => k.Email).FirstOrDefault()))
             .SingleOrDefaultAsync(cancellationToken)
-        ?? throw new KayitBulunamadiException("Çalışan bulunamadı.");
+        ?? throw new NotFoundException("Çalışan bulunamadı.");
 
     public async Task<CalisanResponse> OlusturAsync(CalisanKaydetRequest request, CancellationToken cancellationToken)
     {
@@ -76,7 +75,7 @@ public sealed class CalisanService(
             request.DepartmanId,
             request.IseGirisTarihi,
             request.DogumTarihi,
-            request.HakBaslangicKidemYili ?? IzinHakkiHesaplayici.IlkHakKidemYili(request.IseGirisTarihi, sirketSaati.Bugun()));
+            request.HakBaslangicKidemYili ?? IzinHakkiCalculator.IlkHakKidemYili(request.IseGirisTarihi, sirketSaati.Bugun()));
         db.Calisanlar.Add(calisan);
         await db.SaveChangesAsync(cancellationToken);
 
@@ -113,7 +112,7 @@ public sealed class CalisanService(
         {
             if (await db.Departmanlar.AnyAsync(d => d.YoneticiId == id && d.Aktif, cancellationToken))
             {
-                throw new IsKuraliException("Bu çalışan bir departmanın yöneticisi. Önce yöneticiliği başka birine verin.");
+                throw new BusinessRuleException("Bu çalışan bir departmanın yöneticisi. Önce yöneticiliği başka birine verin.");
             }
 
             kullanici = await db.Users.SingleOrDefaultAsync(k => k.CalisanId == id, cancellationToken);
@@ -122,7 +121,7 @@ public sealed class CalisanService(
                 await koruma.DokunabilirMiAsync(kullanici.Id, await gecerliKullanici.YetkileriAsync(cancellationToken), cancellationToken);
                 if (await koruma.SonAktifSuperAdminMiAsync(kullanici.Id, cancellationToken))
                 {
-                    throw new IsKuraliException("Bu çalışanın hesabı son aktif SuperAdmin; çalışan pasifleştirilemez.");
+                    throw new BusinessRuleException("Bu çalışanın hesabı son aktif SuperAdmin; çalışan pasifleştirilemez.");
                 }
 
                 kullanici.Aktif = false;
@@ -184,7 +183,7 @@ public sealed class CalisanService(
     {
         if (!await db.Departmanlar.AnyAsync(d => d.Id == departmanId && d.Aktif, cancellationToken))
         {
-            throw new IsKuraliException("Seçilen departman bulunamadı ya da pasif.");
+            throw new BusinessRuleException("Seçilen departman bulunamadı ya da pasif.");
         }
     }
 }

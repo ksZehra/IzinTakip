@@ -1,6 +1,6 @@
 import { dosyaIndir } from '@/common/http/dosyaIndir'
 import { httpClient } from '@/common/http/httpClient'
-import type { ListeSorgusu, Sayfa } from '@/common/composables/useSayfaliListe'
+import type { ListQuery, Page } from '@/common/composables/usePagedList'
 
 import type { Schema } from './types'
 
@@ -9,11 +9,11 @@ export type IzinTalebiSatiri = Schema<'IzinTalebiListeResponse'>
 export type IzinDurumu = Schema<'IzinDurumu'>
 export type SureTipi = Schema<'SureTipi'>
 export type GunYarisi = NonNullable<Schema<'GunYarisi'>>
-export type SureHesaplaIstegi = Schema<'SureHesaplaRequest'>
-export type TalepOlusturIstegi = Schema<'IzinTalebiOlusturRequest'>
+export type SureHesaplaRequest = Schema<'SureHesaplaRequest'>
+export type TalepOlusturRequest = Schema<'IzinTalebiOlusturRequest'>
 export type SureOnizlemesi = Schema<'SureHesaplaResponse'>
 
-export interface TalepFiltresi extends Record<string, string | number | null> {
+export interface TalepFilter extends Record<string, string | number | null> {
   calisanId: number | null
   durum: IzinDurumu | null
   izinTuruId: number | null
@@ -22,10 +22,10 @@ export interface TalepFiltresi extends Record<string, string | number | null> {
 }
 
 export async function talepleriGetir(
-  sorgu: ListeSorgusu<TalepFiltresi>,
+  sorgu: ListQuery<TalepFilter>,
   signal?: AbortSignal,
-): Promise<Sayfa<IzinTalebiSatiri>> {
-  const { data } = await httpClient.get<Sayfa<IzinTalebiSatiri>>('/api/izin-talepleri', {
+): Promise<Page<IzinTalebiSatiri>> {
+  const { data } = await httpClient.get<Page<IzinTalebiSatiri>>('/api/izin-talepleri', {
     params: sorgu,
     signal,
   })
@@ -37,13 +37,13 @@ export async function talebiGetir(id: number): Promise<IzinTalebi> {
   return data
 }
 
-export async function talepOlustur(istek: TalepOlusturIstegi): Promise<IzinTalebi> {
+export async function talepOlustur(istek: TalepOlusturRequest): Promise<IzinTalebi> {
   const { data } = await httpClient.post<IzinTalebi>('/api/izin-talepleri', istek)
   return data
 }
 
 export async function sureHesapla(
-  istek: SureHesaplaIstegi,
+  istek: SureHesaplaRequest,
   signal: AbortSignal,
 ): Promise<SureOnizlemesi> {
   const { data } = await httpClient.post<SureOnizlemesi>(
@@ -74,6 +74,6 @@ export async function talebiIptalEt(id: number, not: string | null): Promise<Izi
   return data
 }
 
-export function talepleriExceleAktar(filtre: TalepFiltresi): Promise<void> {
+export function talepleriExceleAktar(filtre: TalepFilter): Promise<void> {
   return dosyaIndir('/api/izin-talepleri/excel', filtre, 'izin-talepleri.xlsx')
 }

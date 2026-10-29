@@ -10,7 +10,7 @@ namespace IzinTakip.Tests.Gateway;
 
 public class GatewayFactory : WebApplicationFactory<GatewayApp::Program>, IAsyncLifetime
 {
-    public VeritabanliApiFactory Api { get; } = new();
+    public DatabaseApiFactory Api { get; } = new();
 
     protected virtual int DakikadaGirisDenemesi => 1000;
 
@@ -55,7 +55,7 @@ public class GatewayFactory : WebApplicationFactory<GatewayApp::Program>, IAsync
         });
     }
 
-    private sealed class ApiForwarderHttpClientFactory(VeritabanliApiFactory api) : IForwarderHttpClientFactory
+    private sealed class ApiForwarderHttpClientFactory(DatabaseApiFactory api) : IForwarderHttpClientFactory
     {
         public HttpMessageInvoker CreateClient(ForwarderHttpClientContext context) => new(api.Server.CreateHandler());
     }

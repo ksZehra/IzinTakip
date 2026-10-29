@@ -30,7 +30,7 @@ public sealed class IzinHakki : Entity
     {
         if (dakika == 0)
         {
-            throw new IsKuraliException("Hak düzeltmesinin süresi sıfır olamaz.");
+            throw new BusinessRuleException("Hak düzeltmesinin süresi sıfır olamaz.");
         }
 
         return new IzinHakki(calisanId, null, kazanimTarihi, dakika, HakKaynagi.Elle, aciklama);

@@ -5,10 +5,10 @@ using IzinTakip.Domain;
 
 namespace IzinTakip.Tests.Features.IzinTalepleri;
 
-public sealed class IzinOnayTests(VeritabanliApiFactory factory) : IClassFixture<VeritabanliApiFactory>
+public sealed class IzinOnayTests(DatabaseApiFactory factory) : IClassFixture<DatabaseApiFactory>
 {
     private const int GunlukDakika = 480;
-    private static readonly DateOnly Pazartesi = TestVeri.SonrakiYilPazartesi();
+    private static readonly DateOnly Pazartesi = TestData.SonrakiYilPazartesi();
 
     [Fact]
     public async Task Olustur_CalisanTalebi_YoneticiyeBildirimVeEpostaGider()
@@ -31,7 +31,7 @@ public sealed class IzinOnayTests(VeritabanliApiFactory factory) : IClassFixture
     public async Task Olustur_YoneticiEkibiAdina_TalepSahibineBildirimGiderYoneticiyeGitmez()
     {
         var ekip = await EkipKurAsync();
-        var yillik = await TestVeri.IzinTuruIdAsync(ekip.Yonetici, "Yıllık");
+        var yillik = await TestData.IzinTuruIdAsync(ekip.Yonetici, "Yıllık");
 
         var yanit = await ekip.Yonetici.PostAsJsonAsync(
             "/api/izin-talepleri",
@@ -81,8 +81,8 @@ public sealed class IzinOnayTests(VeritabanliApiFactory factory) : IClassFixture
     {
         var ekip = await EkipKurAsync();
         var ikEposta = $"ik-{Guid.NewGuid():N}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, ikEposta, SistemRolleri.IK);
-        var ik = await TestKimlik.OturumluClientAsync(factory, ikEposta);
+        await TestAuth.KullaniciOlusturAsync(factory, ikEposta, SistemRolleri.IK);
+        var ik = await TestAuth.OturumluClientAsync(factory, ikEposta);
         var talepId = await TalepAcAsync(ekip.Yonetici);
 
         var kendisi = await KararAsync(ekip.Yonetici, talepId, "onayla", new { });
@@ -98,12 +98,12 @@ public sealed class IzinOnayTests(VeritabanliApiFactory factory) : IClassFixture
     public async Task Onayla_SuperAdminKendiTalebini_Onaylanir()
     {
         var admin = await SuperAdminAsync();
-        var departmanId = await TestVeri.DepartmanEkleAsync(admin, $"Yonetim-{Guid.NewGuid():N}");
-        var calisanId = await TestVeri.CalisanEkleAsync(admin, "Admin", departmanId);
-        await TestVeri.HakEkleAsync(admin, calisanId, 14 * GunlukDakika);
+        var departmanId = await TestData.DepartmanEkleAsync(admin, $"Yonetim-{Guid.NewGuid():N}");
+        var calisanId = await TestData.CalisanEkleAsync(admin, "Admin", departmanId);
+        await TestData.HakEkleAsync(admin, calisanId, 14 * GunlukDakika);
         var eposta = $"superadmin-{calisanId}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.SuperAdmin, calisanId: calisanId);
-        var superAdmin = await TestKimlik.OturumluClientAsync(factory, eposta);
+        await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.SuperAdmin, calisanId: calisanId);
+        var superAdmin = await TestAuth.OturumluClientAsync(factory, eposta);
         var talepId = await TalepAcAsync(superAdmin);
 
         var yanit = await KararAsync(superAdmin, talepId, "onayla", new { });
@@ -202,8 +202,8 @@ public sealed class IzinOnayTests(VeritabanliApiFactory factory) : IClassFixture
         var ekip = await EkipKurAsync();
         var talepId = await TalepAcAsync(ekip.Calisan);
         var ikEposta = $"ik-{Guid.NewGuid():N}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, ikEposta, SistemRolleri.IK);
-        var ik = await TestKimlik.OturumluClientAsync(factory, ikEposta);
+        await TestAuth.KullaniciOlusturAsync(factory, ikEposta, SistemRolleri.IK);
+        var ik = await TestAuth.OturumluClientAsync(factory, ikEposta);
 
         var onayGorevi = KararAsync(ekip.Yonetici, talepId, "onayla", new { });
         var redGorevi = KararAsync(ik, talepId, "reddet", new { gerekce = "Ekip planı uygun değil" });
@@ -219,30 +219,30 @@ public sealed class IzinOnayTests(VeritabanliApiFactory factory) : IClassFixture
     private async Task<Ekip> EkipKurAsync()
     {
         var admin = await SuperAdminAsync();
-        var departmanId = await TestVeri.DepartmanEkleAsync(admin, $"Ekip-{Guid.NewGuid():N}");
-        var yoneticiId = await TestVeri.CalisanEkleAsync(admin, "Yönetici", departmanId);
-        await TestVeri.DepartmanYoneticisiAtaAsync(admin, departmanId, $"Ekip-{yoneticiId}", yoneticiId);
-        var calisanId = await TestVeri.CalisanEkleAsync(admin, "Çalışan", departmanId);
-        await TestVeri.HakEkleAsync(admin, yoneticiId, 14 * GunlukDakika);
-        await TestVeri.HakEkleAsync(admin, calisanId, 14 * GunlukDakika);
+        var departmanId = await TestData.DepartmanEkleAsync(admin, $"Ekip-{Guid.NewGuid():N}");
+        var yoneticiId = await TestData.CalisanEkleAsync(admin, "Yönetici", departmanId);
+        await TestData.DepartmanYoneticisiAtaAsync(admin, departmanId, $"Ekip-{yoneticiId}", yoneticiId);
+        var calisanId = await TestData.CalisanEkleAsync(admin, "Çalışan", departmanId);
+        await TestData.HakEkleAsync(admin, yoneticiId, 14 * GunlukDakika);
+        await TestData.HakEkleAsync(admin, calisanId, 14 * GunlukDakika);
         var yoneticiEposta = $"yonetici-{yoneticiId}@izintakip.test";
         var calisanEposta = $"calisan-{calisanId}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, yoneticiEposta, SistemRolleri.Yonetici, calisanId: yoneticiId);
-        await TestKimlik.KullaniciOlusturAsync(factory, calisanEposta, SistemRolleri.Calisan, calisanId: calisanId);
+        await TestAuth.KullaniciOlusturAsync(factory, yoneticiEposta, SistemRolleri.Yonetici, calisanId: yoneticiId);
+        await TestAuth.KullaniciOlusturAsync(factory, calisanEposta, SistemRolleri.Calisan, calisanId: calisanId);
         return new Ekip(
             calisanId,
             calisanEposta,
-            await TestKimlik.OturumluClientAsync(factory, calisanEposta),
+            await TestAuth.OturumluClientAsync(factory, calisanEposta),
             yoneticiEposta,
-            await TestKimlik.OturumluClientAsync(factory, yoneticiEposta));
+            await TestAuth.OturumluClientAsync(factory, yoneticiEposta));
     }
 
     private Task<HttpClient> SuperAdminAsync() =>
-        TestKimlik.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
+        TestAuth.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
 
     private static async Task<int> TalepAcAsync(HttpClient client)
     {
-        var yillik = await TestVeri.IzinTuruIdAsync(client, "Yıllık");
+        var yillik = await TestData.IzinTuruIdAsync(client, "Yıllık");
         var yanit = await client.PostAsJsonAsync(
             "/api/izin-talepleri",
             new { izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi, bitisTarihi = Pazartesi.AddDays(1) },

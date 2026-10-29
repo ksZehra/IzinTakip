@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { erisilebilirlikDenetle, girisYap, kullanicilar, secimYap } from './yardimcilar'
+import { erisilebilirlikDenetle, girisYap, kullanicilar, secimYap } from './helpers'
 
 function rastgeleIsGunu(): string {
   const tarih = new Date(2028 + Math.floor(Math.random() * 3), Math.floor(Math.random() * 12), 1)

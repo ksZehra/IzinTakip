@@ -5,18 +5,18 @@ using IzinTakip.Domain;
 
 namespace IzinTakip.Tests.Features.Kullanicilar;
 
-public sealed class SonSuperAdminTests(VeritabanliApiFactory factory) : IClassFixture<VeritabanliApiFactory>
+public sealed class SonSuperAdminTests(DatabaseApiFactory factory) : IClassFixture<DatabaseApiFactory>
 {
     [Fact]
     public async Task RolleriDegistir_SonAktifSuperAdmin_RoluKaldirilamazIkinciVarkenKaldirilir()
     {
-        var admin = await TestKimlik.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
+        var admin = await TestAuth.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
         var adminId = (await admin.GetFromJsonAsync<JsonElement>("/api/auth/ben", TestContext.Current.CancellationToken)).GetProperty("kullaniciId").GetInt32();
         var ikinciEposta = $"superadmin-{Guid.NewGuid():N}@izintakip.test";
 
         var tekken = await RolAyarlaAsync(admin, adminId, SistemRolleri.IK);
-        var ikinciId = await TestKimlik.KullaniciOlusturAsync(factory, ikinciEposta, SistemRolleri.SuperAdmin);
-        var ikinci = await TestKimlik.OturumluClientAsync(factory, ikinciEposta);
+        var ikinciId = await TestAuth.KullaniciOlusturAsync(factory, ikinciEposta, SistemRolleri.SuperAdmin);
+        var ikinci = await TestAuth.OturumluClientAsync(factory, ikinciEposta);
         var ikinciVarken = await RolAyarlaAsync(ikinci, adminId, SistemRolleri.IK);
         var geriAl = await RolAyarlaAsync(ikinci, adminId, SistemRolleri.SuperAdmin);
         var ikinciyiKaldir = await RolAyarlaAsync(admin, ikinciId, SistemRolleri.IK);

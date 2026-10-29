@@ -13,14 +13,14 @@ import { Yetkiler } from '@/common/auth/yetkiler'
 import ConfirmDialog from '@/common/components/ConfirmDialog.vue'
 import DurumChip from '@/common/components/DurumChip.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
-import { ApiHatasi } from '@/common/http/ApiHatasi'
-import { useFormGonder } from '@/common/composables/useFormGonder'
+import { ApiError } from '@/common/http/ApiError'
+import { useFormSubmit } from '@/common/composables/useFormSubmit'
 import { useToast } from '@/common/composables/useToast'
 import { sureTipiEtiketleri } from '@/common/utils/etiketler'
 import { tarihSaatGoster } from '@/common/utils/tarih'
 import { useAuthStore } from '@/stores/authStore'
 
-import BelgelerKarti from './BelgelerKarti.vue'
+import BelgelerCard from './BelgelerCard.vue'
 import { talepAraligiMetni } from '@/common/utils/talepAraligi'
 
 type Islem = 'onayla' | 'reddet' | 'iptal'
@@ -29,7 +29,7 @@ const props = defineProps<{ id: number }>()
 
 const auth = useAuthStore()
 const toast = useToast()
-const { gonder, gonderiliyor } = useFormGonder()
+const { gonder, gonderiliyor } = useFormSubmit()
 const talep = shallowRef<IzinTalebi | null>(null)
 const acikIslem = ref<Islem | null>(null)
 
@@ -106,7 +106,7 @@ async function yukle() {
   try {
     talep.value = await talebiGetir(props.id)
   } catch (hata) {
-    if (!(hata instanceof ApiHatasi)) throw hata
+    if (!(hata instanceof ApiError)) throw hata
     yuklenemedi.value = true
   }
 }
@@ -178,7 +178,7 @@ watch(() => props.id, yukle, { immediate: true })
         </v-card-actions>
       </v-card>
 
-      <BelgelerKarti :talep-id="talep.id" :degistirilebilir="beklemede" />
+      <BelgelerCard :talep-id="talep.id" :degistirilebilir="beklemede" />
     </div>
 
     <ConfirmDialog

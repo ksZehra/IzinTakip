@@ -19,7 +19,7 @@ public sealed class AyarlarTests
     [Fact]
     public void Olustur_OgleArasiMesaiDisinda_IsKuraliHatasiVerir()
     {
-        var hata = Assert.Throws<IsKuraliException>(() =>
+        var hata = Assert.Throws<BusinessRuleException>(() =>
             new Ayarlar(HaftaIci, new(9, 0), new(18, 0), new(8, 0), new(9, 30), 30, 2));
 
         Assert.Contains("öğle arası", hata.Message);
@@ -27,11 +27,11 @@ public sealed class AyarlarTests
 
     [Fact]
     public void Olustur_CalismaGunuYok_IsKuraliHatasiVerir() =>
-        Assert.Throws<IsKuraliException>(() =>
+        Assert.Throws<BusinessRuleException>(() =>
             new Ayarlar(HaftaGunleri.Yok, new(9, 0), new(18, 0), new(12, 30), new(13, 30), 30, 2));
 
     [Fact]
     public void Olustur_GunlukSureTekDakika_YarimGuneBolunemedigiIcinReddedilir() =>
-        Assert.Throws<IsKuraliException>(() =>
+        Assert.Throws<BusinessRuleException>(() =>
             new Ayarlar(HaftaIci, new(9, 0), new(17, 1), new(12, 0), new(13, 0), 30, 2));
 }

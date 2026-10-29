@@ -8,7 +8,7 @@ namespace IzinTakip.Api.Features.Kullanicilar;
 
 [ApiController]
 [Route("api/kullanicilar")]
-[Yetki(Yetkiler.Kullanici.Yonet)]
+[Permission(Yetkiler.Kullanici.Yonet)]
 public sealed class KullanicilarController(KullaniciService service) : ControllerBase
 {
     [HttpGet]

@@ -29,7 +29,7 @@ public sealed class IzinTalebiDurumTests
     [Fact]
     public void Onayla_KendiTalebi_IsKuraliHatasiVerir()
     {
-        var hata = Assert.Throws<IsKuraliException>(() => YeniTalep().Onayla(10, TalepSahibi, false, null, KararZamani, false, 0));
+        var hata = Assert.Throws<BusinessRuleException>(() => YeniTalep().Onayla(10, TalepSahibi, false, null, KararZamani, false, 0));
 
         Assert.Equal("Kendi izin talebinizi onaylayamazsınız.", hata.Message);
     }
@@ -51,7 +51,7 @@ public sealed class IzinTalebiDurumTests
         var talep = YeniTalep();
         talep.Reddet(20, Yonetici, false, "Yoğun dönem", KararZamani);
 
-        var hata = Assert.Throws<IsKuraliException>(() => talep.Onayla(20, Yonetici, false, null, KararZamani, false, 0));
+        var hata = Assert.Throws<BusinessRuleException>(() => talep.Onayla(20, Yonetici, false, null, KararZamani, false, 0));
 
         Assert.Equal("Bu talep artık beklemede değil.", hata.Message);
     }
@@ -59,7 +59,7 @@ public sealed class IzinTalebiDurumTests
     [Fact]
     public void Onayla_BelgeZorunluTurdeBelgeYok_IsKuraliHatasiVerir()
     {
-        var hata = Assert.Throws<IsKuraliException>(() => YeniTalep().Onayla(20, Yonetici, false, null, KararZamani, true, 0));
+        var hata = Assert.Throws<BusinessRuleException>(() => YeniTalep().Onayla(20, Yonetici, false, null, KararZamani, true, 0));
 
         Assert.Equal("Bu izin türü belge ister; talebe belge eklenmeden onaylanamaz.", hata.Message);
     }
@@ -80,13 +80,13 @@ public sealed class IzinTalebiDurumTests
         var talep = YeniTalep();
         talep.Reddet(20, Yonetici, false, "Yoğun dönem", KararZamani);
 
-        Assert.Throws<IsKuraliException>(() => talep.BelgeEklemeyiDenetle(0));
+        Assert.Throws<BusinessRuleException>(() => talep.BelgeEklemeyiDenetle(0));
     }
 
     [Fact]
     public void BelgeEklemeyiDenetle_SinirDolu_IsKuraliHatasiVerir()
     {
-        var hata = Assert.Throws<IsKuraliException>(() => YeniTalep().BelgeEklemeyiDenetle(IzinTalebi.EnFazlaBelge));
+        var hata = Assert.Throws<BusinessRuleException>(() => YeniTalep().BelgeEklemeyiDenetle(IzinTalebi.EnFazlaBelge));
 
         Assert.Equal("Bir talebe en çok 5 belge eklenebilir.", hata.Message);
     }
@@ -97,13 +97,13 @@ public sealed class IzinTalebiDurumTests
         var talep = YeniTalep();
         talep.Onayla(20, Yonetici, false, null, KararZamani, false, 0);
 
-        Assert.Throws<IsKuraliException>(talep.BelgeSilmeyiDenetle);
+        Assert.Throws<BusinessRuleException>(talep.BelgeSilmeyiDenetle);
     }
 
     [Fact]
     public void Reddet_GerekceYok_IsKuraliHatasiVerir()
     {
-        var hata = Assert.Throws<IsKuraliException>(() => YeniTalep().Reddet(20, Yonetici, false, " ", KararZamani));
+        var hata = Assert.Throws<BusinessRuleException>(() => YeniTalep().Reddet(20, Yonetici, false, " ", KararZamani));
 
         Assert.Equal("Red gerekçesi zorunludur.", hata.Message);
     }
@@ -111,7 +111,7 @@ public sealed class IzinTalebiDurumTests
     [Fact]
     public void Reddet_KendiTalebi_IsKuraliHatasiVerir()
     {
-        var hata = Assert.Throws<IsKuraliException>(() => YeniTalep().Reddet(10, TalepSahibi, false, "Gerekçe", KararZamani));
+        var hata = Assert.Throws<BusinessRuleException>(() => YeniTalep().Reddet(10, TalepSahibi, false, "Gerekçe", KararZamani));
 
         Assert.Equal("Kendi izin talebinizi reddedemezsiniz.", hata.Message);
     }
@@ -134,7 +134,7 @@ public sealed class IzinTalebiDurumTests
         var talep = YeniTalep();
         talep.Reddet(20, Yonetici, false, "Yoğun dönem", KararZamani);
 
-        var hata = Assert.Throws<IsKuraliException>(() => talep.IptalEt(10, null, Simdi, KararZamani, false));
+        var hata = Assert.Throws<BusinessRuleException>(() => talep.IptalEt(10, null, Simdi, KararZamani, false));
 
         Assert.Equal("Yalnız beklemedeki ya da onaylanmış talep iptal edilebilir.", hata.Message);
     }
@@ -144,7 +144,7 @@ public sealed class IzinTalebiDurumTests
     {
         var baslamisken = Pazartesi.ToDateTime(new TimeOnly(11, 0));
 
-        var hata = Assert.Throws<IsKuraliException>(() => YeniTalep().IptalEt(10, null, baslamisken, KararZamani, false));
+        var hata = Assert.Throws<BusinessRuleException>(() => YeniTalep().IptalEt(10, null, baslamisken, KararZamani, false));
 
         Assert.Equal("Başlamış ya da geçmiş izin iptal edilemez.", hata.Message);
     }

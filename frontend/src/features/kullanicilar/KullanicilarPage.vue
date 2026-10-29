@@ -10,29 +10,29 @@ import {
   parolaSifirla,
   rolleriGetir,
   type Kullanici,
-  type KullaniciFiltresi,
+  type KullaniciFilter,
   type Rol,
 } from '@/api/kullanicilarApi'
 import { Yetkiler } from '@/common/auth/yetkiler'
-import CalisanSecici from '@/common/components/CalisanSecici.vue'
-import AktiflikAnahtari from '@/common/components/AktiflikAnahtari.vue'
+import CalisanSelect from '@/common/components/CalisanSelect.vue'
+import AktiflikSwitch from '@/common/components/AktiflikSwitch.vue'
 import ConfirmDialog from '@/common/components/ConfirmDialog.vue'
-import KayitDialog from '@/common/components/KayitDialog.vue'
+import FormDialog from '@/common/components/FormDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
-import { useFormGonder } from '@/common/composables/useFormGonder'
-import { useSayfaliListe } from '@/common/composables/useSayfaliListe'
+import { useFormSubmit } from '@/common/composables/useFormSubmit'
+import { usePagedList } from '@/common/composables/usePagedList'
 import { useToast } from '@/common/composables/useToast'
 import { rolEtiketi, rolSecenekleri } from '@/common/utils/etiketler'
 import { useAuthStore } from '@/stores/authStore'
 
 const auth = useAuthStore()
 const toast = useToast()
-const ekleme = useFormGonder()
-const rolDuzenleme = useFormGonder()
-const sifirlama = useFormGonder()
+const ekleme = useFormSubmit()
+const rolDuzenleme = useFormSubmit()
+const sifirlama = useFormSubmit()
 
-const varsayilanFiltre: KullaniciFiltresi = { arama: '', aktif: null }
-const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor, yukle } = useSayfaliListe(
+const varsayilanFiltre: KullaniciFilter = { arama: '', aktif: null }
+const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor, yukle } = usePagedList(
   kullanicilariGetir,
   varsayilanFiltre,
 )
@@ -169,7 +169,7 @@ onMounted(async () => {
           }}</v-chip>
         </template>
         <template #[`item.aktif`]="{ item }">
-          <AktiflikAnahtari
+          <AktiflikSwitch
             :aktif="item.aktif"
             :etiket="`${item.eposta} aktif`"
             :kilitli="dokunulamaz(item)"
@@ -197,7 +197,7 @@ onMounted(async () => {
       </v-data-table-server>
     </v-card>
 
-    <KayitDialog
+    <FormDialog
       v-model="eklemeAcik"
       baslik="Yeni kullanıcı"
       :kaydediliyor="ekleme.gonderiliyor.value"
@@ -209,7 +209,7 @@ onMounted(async () => {
         type="email"
         :error-messages="ekleme.alanHatasi('eposta')"
       />
-      <CalisanSecici
+      <CalisanSelect
         v-model="yeniKullanici.calisanId"
         etiket="Bağlı çalışan (isteğe bağlı)"
         :hatalar="ekleme.alanHatasi('calisanId')"
@@ -222,9 +222,9 @@ onMounted(async () => {
         chips
         :error-messages="ekleme.alanHatasi('roller')"
       />
-    </KayitDialog>
+    </FormDialog>
 
-    <KayitDialog
+    <FormDialog
       v-model="rolAcik"
       :baslik="`Roller: ${secilen?.eposta ?? ''}`"
       :kaydediliyor="rolDuzenleme.gonderiliyor.value"
@@ -238,7 +238,7 @@ onMounted(async () => {
         chips
         :error-messages="rolDuzenleme.alanHatasi('roller')"
       />
-    </KayitDialog>
+    </FormDialog>
 
     <ConfirmDialog
       v-model="sifirlamaAcik"

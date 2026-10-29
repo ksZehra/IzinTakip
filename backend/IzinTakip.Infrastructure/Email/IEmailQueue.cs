@@ -2,7 +2,7 @@ namespace IzinTakip.Infrastructure.Email;
 
 public interface IEmailQueue
 {
-    void Enqueue(EmailMesaji mesaj);
+    void Enqueue(EmailMessage mesaj);
 
-    IAsyncEnumerable<EmailMesaji> ReadAllAsync(CancellationToken cancellationToken);
+    IAsyncEnumerable<EmailMessage> ReadAllAsync(CancellationToken cancellationToken);
 }

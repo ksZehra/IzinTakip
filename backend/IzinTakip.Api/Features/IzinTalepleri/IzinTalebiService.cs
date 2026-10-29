@@ -1,8 +1,8 @@
 using System.Data;
 using IzinTakip.Api.Common;
-using IzinTakip.Api.Common.Bildirimler;
+using IzinTakip.Api.Common.Auth;
 using IzinTakip.Api.Common.Izin;
-using IzinTakip.Api.Common.Kapsam;
+using IzinTakip.Api.Common.Notifications;
 using IzinTakip.Api.Common.Paging;
 using IzinTakip.Domain;
 using IzinTakip.Domain.Entities;
@@ -18,13 +18,13 @@ namespace IzinTakip.Api.Features.IzinTalepleri;
 
 public sealed class IzinTalebiService(
     IzinTakipDbContext db,
-    IGecerliKullanici gecerliKullanici,
-    CalisanKapsami kapsam,
-    BakiyeSorgusu bakiyeSorgusu,
-    CalismaTakvimiOkuyucu takvimOkuyucu,
+    ICurrentUser gecerliKullanici,
+    CalisanScope kapsam,
+    BakiyeQuery bakiyeSorgusu,
+    CalismaTakvimiProvider takvimOkuyucu,
     OnayciBulucu onayciBulucu,
-    BildirimYazici bildirimYazici,
-    KullaniciAdlari kullaniciAdlari,
+    NotificationPublisher bildirimYazici,
+    KullaniciAdlariProvider kullaniciAdlari,
     SirketSaati sirketSaati,
     ILogger<IzinTalebiService> logger)
 {
@@ -86,7 +86,7 @@ public sealed class IzinTalebiService(
     {
         var tur = await TurAsync(request.IzinTuruId, cancellationToken);
         var takvim = await takvimOkuyucu.OkuAsync(request.Tarih, request.BitisTarihi ?? request.Tarih, cancellationToken);
-        var hesap = IzinSuresiHesaplayici.Hesapla(Sure(request), tur.GunHesabi, takvim);
+        var hesap = IzinSuresiCalculator.Hesapla(Sure(request), tur.GunHesabi, takvim);
         return new SureHesaplaResponse(hesap.Dakika, SureMetni.Olustur(hesap.Dakika, takvim.GunlukDakika), hesap.Aralik.Baslangic, hesap.Aralik.Bitis);
     }
 
@@ -107,7 +107,7 @@ public sealed class IzinTalebiService(
         var calisanlar = await kapsam.CalisanlarAsync(cancellationToken);
         var talep = await Yansit(db.IzinTalepleri.AsNoTracking().Where(t => t.Id == id && calisanlar.Any(c => c.Id == t.CalisanId)))
             .SingleOrDefaultAsync(cancellationToken)
-            ?? throw new KayitBulunamadiException("İzin talebi bulunamadı.");
+            ?? throw new NotFoundException("İzin talebi bulunamadı.");
 
         var adlar = await kullaniciAdlari.OkuAsync([talep.OlusturanKullaniciId, talep.KararVerenKullaniciId], cancellationToken);
         return Tamamla(talep, await db.GunlukDakikaAsync(cancellationToken), adlar);
@@ -120,26 +120,26 @@ public sealed class IzinTalebiService(
         var adlar = await kullaniciAdlari.OkuAsync(talepler.SelectMany(t => new[] { t.OlusturanKullaniciId, t.KararVerenKullaniciId }), cancellationToken);
         const string tarihSaat = "dd.MM.yyyy HH:mm";
 
-        var icerik = ExcelYazici.Yaz(
+        var icerik = ExcelWriter.Yaz(
             "İzin Talepleri",
             [
-                new ExcelKolonu<IzinTalebiResponse>("Çalışan", t => t.CalisanAdSoyad, 28),
-                new ExcelKolonu<IzinTalebiResponse>("Departman", t => t.DepartmanAdi, 22),
-                new ExcelKolonu<IzinTalebiResponse>("İzin Türü", t => t.IzinTuruAdi, 18),
-                new ExcelKolonu<IzinTalebiResponse>("Biçim", t => BicimAdi(t.SureTipi), 12),
-                new ExcelKolonu<IzinTalebiResponse>("Başlangıç", t => t.Baslangic, 17, tarihSaat),
-                new ExcelKolonu<IzinTalebiResponse>("Bitiş", t => t.Bitis, 17, tarihSaat),
-                new ExcelKolonu<IzinTalebiResponse>("Süre", t => t.SureMetni, 16),
-                new ExcelKolonu<IzinTalebiResponse>("Durum", t => DurumAdi(t.Durum), 13),
-                new ExcelKolonu<IzinTalebiResponse>("Açıklama", t => t.Aciklama, 40),
-                new ExcelKolonu<IzinTalebiResponse>("Karar Veren", t => t.KararVerenAdi, 24),
-                new ExcelKolonu<IzinTalebiResponse>("Karar Notu", t => t.KararNotu, 40),
-                new ExcelKolonu<IzinTalebiResponse>("Talebi Açan", t => t.OlusturanAdi, 24),
-                new ExcelKolonu<IzinTalebiResponse>("Talep Tarihi", t => sirketSaati.Yerel(t.OlusturmaTarihi), 17, tarihSaat)
+                new ExcelColumn<IzinTalebiResponse>("Çalışan", t => t.CalisanAdSoyad, 28),
+                new ExcelColumn<IzinTalebiResponse>("Departman", t => t.DepartmanAdi, 22),
+                new ExcelColumn<IzinTalebiResponse>("İzin Türü", t => t.IzinTuruAdi, 18),
+                new ExcelColumn<IzinTalebiResponse>("Biçim", t => BicimAdi(t.SureTipi), 12),
+                new ExcelColumn<IzinTalebiResponse>("Başlangıç", t => t.Baslangic, 17, tarihSaat),
+                new ExcelColumn<IzinTalebiResponse>("Bitiş", t => t.Bitis, 17, tarihSaat),
+                new ExcelColumn<IzinTalebiResponse>("Süre", t => t.SureMetni, 16),
+                new ExcelColumn<IzinTalebiResponse>("Durum", t => DurumAdi(t.Durum), 13),
+                new ExcelColumn<IzinTalebiResponse>("Açıklama", t => t.Aciklama, 40),
+                new ExcelColumn<IzinTalebiResponse>("Karar Veren", t => t.KararVerenAdi, 24),
+                new ExcelColumn<IzinTalebiResponse>("Karar Notu", t => t.KararNotu, 40),
+                new ExcelColumn<IzinTalebiResponse>("Talebi Açan", t => t.OlusturanAdi, 24),
+                new ExcelColumn<IzinTalebiResponse>("Talep Tarihi", t => sirketSaati.Yerel(t.OlusturmaTarihi), 17, tarihSaat)
             ],
             talepler.Select(t => Tamamla(t, gunluk, adlar)));
 
-        return new DosyaResponse($"izin-talepleri-{sirketSaati.Bugun():yyyyMMdd}.xlsx", ExcelYazici.IcerikTuru, icerik);
+        return new DosyaResponse($"izin-talepleri-{sirketSaati.Bugun():yyyyMMdd}.xlsx", ExcelWriter.IcerikTuru, icerik);
     }
 
     private async Task<int> TalepSahibiAsync(int? istenenCalisanId, KullaniciYetkileri yetkiler, CancellationToken cancellationToken)
@@ -148,12 +148,12 @@ public sealed class IzinTalebiService(
         {
             if (yetkiler.CalisanId is not { } kendisi)
             {
-                throw new IsKuraliException("Hesabınız bir çalışan kaydına bağlı değil; talep için çalışan seçin.");
+                throw new BusinessRuleException("Hesabınız bir çalışan kaydına bağlı değil; talep için çalışan seçin.");
             }
 
             if (!yetkiler.VarMi(Yetkiler.IzinTalebi.Olustur))
             {
-                throw new YetkiYokException("Kendi adınıza izin talebi açma yetkiniz yok.");
+                throw new ForbiddenException("Kendi adınıza izin talebi açma yetkiniz yok.");
             }
 
             return kendisi;
@@ -161,13 +161,13 @@ public sealed class IzinTalebiService(
 
         if (!yetkiler.VarMi(Yetkiler.IzinTalebi.Yonet))
         {
-            throw new YetkiYokException("Başkası adına izin talebi açma yetkiniz yok.");
+            throw new ForbiddenException("Başkası adına izin talebi açma yetkiniz yok.");
         }
 
         var calisan = await kapsam.BulAsync(istenenCalisanId.Value, cancellationToken);
         if (!calisan.Aktif)
         {
-            throw new IsKuraliException("Pasif çalışan adına izin talebi açılamaz.");
+            throw new BusinessRuleException("Pasif çalışan adına izin talebi açılamaz.");
         }
 
         return calisan.Id;
@@ -175,7 +175,7 @@ public sealed class IzinTalebiService(
 
     private async Task<IzinTuru> TurAsync(int izinTuruId, CancellationToken cancellationToken) =>
         await db.IzinTurleri.AsNoTracking().SingleOrDefaultAsync(t => t.Id == izinTuruId, cancellationToken)
-        ?? throw new KayitBulunamadiException("İzin türü bulunamadı.");
+        ?? throw new NotFoundException("İzin türü bulunamadı.");
 
     private async Task<IQueryable<IzinTalebi>> FiltreliAsync(IzinTalebiFiltreRequest request, CancellationToken cancellationToken)
     {

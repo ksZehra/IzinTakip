@@ -1,24 +1,24 @@
 import { onUnmounted, ref, watch, type Ref } from 'vue'
 
-import { sureHesapla, type SureHesaplaIstegi } from '@/api/izinTalepleriApi'
-import { ApiHatasi } from '@/common/http/ApiHatasi'
+import { sureHesapla, type SureHesaplaRequest } from '@/api/izinTalepleriApi'
+import { ApiError } from '@/common/http/ApiError'
 
 const BEKLEME_MS = 400
 
-export function useSureOnizleme(istek: Ref<SureHesaplaIstegi | null>) {
+export function useSureOnizleme(istek: Ref<SureHesaplaRequest | null>) {
   const sureMetni = ref('')
   const hata = ref('')
   let denetleyici: AbortController | undefined
   let bekleme: ReturnType<typeof setTimeout> | undefined
 
-  async function hesapla(gonderilecek: SureHesaplaIstegi) {
+  async function hesapla(gonderilecek: SureHesaplaRequest) {
     denetleyici?.abort()
     const bu = (denetleyici = new AbortController())
     try {
       sureMetni.value = (await sureHesapla(gonderilecek, bu.signal)).sureMetni
       hata.value = ''
     } catch (yakalanan) {
-      if (!(yakalanan instanceof ApiHatasi)) throw yakalanan
+      if (!(yakalanan instanceof ApiError)) throw yakalanan
       if (yakalanan.iptalEdildi) return
       sureMetni.value = ''
       hata.value = yakalanan.alanHatasiVar

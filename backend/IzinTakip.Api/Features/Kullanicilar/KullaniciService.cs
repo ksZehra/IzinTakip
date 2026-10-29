@@ -9,18 +9,17 @@ using IzinTakip.Infrastructure.Email;
 using IzinTakip.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using static IzinTakip.Api.Common.Auth.IdentitySonucu;
 
 namespace IzinTakip.Api.Features.Kullanicilar;
 
 public sealed class KullaniciService(
     IzinTakipDbContext db,
     UserManager<Kullanici> userManager,
-    IGecerliKullanici gecerliKullanici,
-    KullaniciYetkiOkuyucu yetkiOkuyucu,
+    ICurrentUser gecerliKullanici,
+    KullaniciYetkiProvider yetkiOkuyucu,
     KullaniciKorumasi koruma,
     IEmailQueue emailQueue,
-    UygulamaAyarlari uygulama,
+    AppOptions uygulama,
     TimeProvider timeProvider,
     ILogger<KullaniciService> logger)
 {
@@ -46,7 +45,7 @@ public sealed class KullaniciService(
 
     public async Task<KullaniciResponse> DetayAsync(int id, CancellationToken cancellationToken) =>
         await Yansit(db.Users.AsNoTracking().Where(k => k.Id == id)).SingleOrDefaultAsync(cancellationToken)
-        ?? throw new KayitBulunamadiException("Kullanıcı bulunamadı.");
+        ?? throw new NotFoundException("Kullanıcı bulunamadı.");
 
     public async Task<KullaniciResponse> OlusturAsync(KullaniciOlusturRequest request, CancellationToken cancellationToken)
     {
@@ -55,19 +54,19 @@ public sealed class KullaniciService(
         await RolleriDenetleAsync(request.Roller, yapan, cancellationToken);
         if (await userManager.FindByEmailAsync(eposta) is not null)
         {
-            throw new IsKuraliException("Bu e-posta adresi başka bir kullanıcıda kayıtlı.");
+            throw new BusinessRuleException("Bu e-posta adresi başka bir kullanıcıda kayıtlı.");
         }
 
         if (request.CalisanId is { } calisanId)
         {
             if (!await db.Calisanlar.AnyAsync(c => c.Id == calisanId && c.Aktif, cancellationToken))
             {
-                throw new IsKuraliException("Seçilen çalışan bulunamadı ya da pasif.");
+                throw new BusinessRuleException("Seçilen çalışan bulunamadı ya da pasif.");
             }
 
             if (await db.Users.AnyAsync(k => k.CalisanId == calisanId, cancellationToken))
             {
-                throw new IsKuraliException("Bu çalışanın zaten bir kullanıcı hesabı var.");
+                throw new BusinessRuleException("Bu çalışanın zaten bir kullanıcı hesabı var.");
             }
         }
 
@@ -82,8 +81,8 @@ public sealed class KullaniciService(
         };
         await using (var transaction = await db.Database.BeginTransactionAsync(cancellationToken))
         {
-            Dogrula(await userManager.CreateAsync(kullanici, parola));
-            Dogrula(await userManager.AddToRolesAsync(kullanici, request.Roller.Distinct(StringComparer.OrdinalIgnoreCase)));
+            await userManager.CreateAsync(kullanici, parola).DogrulaAsync();
+            await userManager.AddToRolesAsync(kullanici, request.Roller.Distinct(StringComparer.OrdinalIgnoreCase)).DogrulaAsync();
             await transaction.CommitAsync(cancellationToken);
         }
 
@@ -105,13 +104,13 @@ public sealed class KullaniciService(
             && !yeni.Contains(SistemRolleri.SuperAdmin, StringComparer.OrdinalIgnoreCase)
             && await koruma.SonAktifSuperAdminMiAsync(id, cancellationToken))
         {
-            throw new IsKuraliException("Son aktif SuperAdmin'in SuperAdmin rolü kaldırılamaz.");
+            throw new BusinessRuleException("Son aktif SuperAdmin'in SuperAdmin rolü kaldırılamaz.");
         }
 
         await using (var transaction = await db.Database.BeginTransactionAsync(cancellationToken))
         {
-            Dogrula(await userManager.RemoveFromRolesAsync(kullanici, mevcut.Except(yeni, StringComparer.OrdinalIgnoreCase)));
-            Dogrula(await userManager.AddToRolesAsync(kullanici, yeni.Except(mevcut, StringComparer.OrdinalIgnoreCase)));
+            await userManager.RemoveFromRolesAsync(kullanici, mevcut.Except(yeni, StringComparer.OrdinalIgnoreCase)).DogrulaAsync();
+            await userManager.AddToRolesAsync(kullanici, yeni.Except(mevcut, StringComparer.OrdinalIgnoreCase)).DogrulaAsync();
             await transaction.CommitAsync(cancellationToken);
         }
 
@@ -128,17 +127,17 @@ public sealed class KullaniciService(
         await koruma.DokunabilirMiAsync(id, yapan, cancellationToken);
         if (!aktif && id == yapan.KullaniciId)
         {
-            throw new IsKuraliException("Kendi hesabınızı pasifleştiremezsiniz.");
+            throw new BusinessRuleException("Kendi hesabınızı pasifleştiremezsiniz.");
         }
 
         if (!aktif && await koruma.SonAktifSuperAdminMiAsync(id, cancellationToken))
         {
-            throw new IsKuraliException("Son aktif SuperAdmin pasifleştirilemez.");
+            throw new BusinessRuleException("Son aktif SuperAdmin pasifleştirilemez.");
         }
 
         if (aktif && kullanici.CalisanId is { } calisanId && !await db.Calisanlar.AnyAsync(c => c.Id == calisanId && c.Aktif, cancellationToken))
         {
-            throw new IsKuraliException("Bağlı çalışan kaydı pasif; önce çalışanı aktifleştirin.");
+            throw new BusinessRuleException("Bağlı çalışan kaydı pasif; önce çalışanı aktifleştirin.");
         }
 
         kullanici.Aktif = aktif;
@@ -158,13 +157,13 @@ public sealed class KullaniciService(
         var parola = GeciciParola();
         await using (var transaction = await db.Database.BeginTransactionAsync(cancellationToken))
         {
-            Dogrula(await userManager.RemovePasswordAsync(kullanici));
-            Dogrula(await userManager.AddPasswordAsync(kullanici, parola));
+            await userManager.RemovePasswordAsync(kullanici).DogrulaAsync();
+            await userManager.AddPasswordAsync(kullanici, parola).DogrulaAsync();
             kullanici.ParolaDegistirmeliMi = true;
             kullanici.GeciciParolaBitis = GeciciParolaBitisi();
             kullanici.LockoutEnd = null;
             kullanici.AccessFailedCount = 0;
-            Dogrula(await userManager.UpdateAsync(kullanici));
+            await userManager.UpdateAsync(kullanici).DogrulaAsync();
             await transaction.CommitAsync(cancellationToken);
         }
 
@@ -182,18 +181,18 @@ public sealed class KullaniciService(
             .ToListAsync(cancellationToken);
         if (bulunanlar.Count != roller.Distinct(StringComparer.OrdinalIgnoreCase).Count())
         {
-            throw new IsKuraliException("Seçilen rollerden biri bulunamadı.");
+            throw new BusinessRuleException("Seçilen rollerden biri bulunamadı.");
         }
 
         if (!yapan.SuperAdmin && bulunanlar.Contains(true))
         {
-            throw new YetkiYokException("Korumalı rolü yalnız SuperAdmin atayabilir.");
+            throw new ForbiddenException("Korumalı rolü yalnız SuperAdmin atayabilir.");
         }
     }
 
     private async Task<Kullanici> BulAsync(int id, CancellationToken cancellationToken) =>
         await db.Users.SingleOrDefaultAsync(k => k.Id == id, cancellationToken)
-        ?? throw new KayitBulunamadiException("Kullanıcı bulunamadı.");
+        ?? throw new NotFoundException("Kullanıcı bulunamadı.");
 
     private IQueryable<KullaniciResponse> Yansit(IQueryable<Kullanici> kullanicilar) =>
         kullanicilar.Select(k => new KullaniciResponse(
@@ -210,10 +209,10 @@ public sealed class KullaniciService(
                 .ToList()));
 
     private void ParolaGonder(string eposta, string konu, string parola) =>
-        emailQueue.Enqueue(new EmailMesaji(
+        emailQueue.Enqueue(new EmailMessage(
             eposta,
             konu,
-            EmailSablonu.Bildirim(
+            EmailTemplate.Bildirim(
                 konu,
                 $"Giriş e-postanız: {eposta}. Geçici parolanız: {parola}. Parola {GeciciParolaGun} gün geçerlidir; ilk girişte yeni bir parola belirlemeniz istenecek.",
                 uygulama.Adres.TrimEnd('/') + "/giris",

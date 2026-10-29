@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace IzinTakip.Tests.Features.Auth;
 
-public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<VeritabanliApiFactory>
+public sealed class AuthTests(DatabaseApiFactory factory) : IClassFixture<DatabaseApiFactory>
 {
     [Fact]
     public async Task Giris_DogruBilgilerle_TokenVeSureBitisiDoner()
@@ -44,13 +44,13 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
     public async Task Giris_BesHataliDenemedenSonra_DogruParolaylaBileAyniMesajlaReddedilir()
     {
         const string eposta = "kilit@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
+        await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
         for (var deneme = 0; deneme < 5; deneme++)
         {
             await GirisYapAsync(eposta, "YanlisParola1");
         }
 
-        var yanit = await GirisYapAsync(eposta, TestKimlik.VarsayilanParola);
+        var yanit = await GirisYapAsync(eposta, TestAuth.VarsayilanParola);
 
         Assert.Equal(HttpStatusCode.Unauthorized, yanit.StatusCode);
         Assert.Equal("E-posta ya da parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.", await DetayAsync(yanit));
@@ -79,7 +79,7 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
     [Fact]
     public async Task Ben_SuperAdminIcin_RolVeTumYetkileriDoner()
     {
-        var client = await TestKimlik.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
+        var client = await TestAuth.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
 
         var govde = await client.GetFromJsonAsync<JsonElement>("/api/auth/ben", TestContext.Current.CancellationToken);
         var yetkiler = govde.GetProperty("yetkiler").EnumerateArray().Select(y => y.GetString()).ToList();
@@ -93,8 +93,8 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
     [Fact]
     public async Task YetkiliUc_YetkisiOlmayanKullaniciya_403VeTurkceMesajDoner()
     {
-        await TestKimlik.KullaniciOlusturAsync(factory, "calisan@izintakip.test", SistemRolleri.Calisan);
-        var client = await TestKimlik.OturumluClientAsync(factory, "calisan@izintakip.test");
+        await TestAuth.KullaniciOlusturAsync(factory, "calisan@izintakip.test", SistemRolleri.Calisan);
+        var client = await TestAuth.OturumluClientAsync(factory, "calisan@izintakip.test");
 
         var yanit = await client.GetAsync("/test/yetki/rapor", TestContext.Current.CancellationToken);
 
@@ -105,8 +105,8 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
     [Fact]
     public async Task YetkiliUc_YetkisiOlanKullaniciya_200Doner()
     {
-        await TestKimlik.KullaniciOlusturAsync(factory, "yonetici@izintakip.test", SistemRolleri.Yonetici);
-        var client = await TestKimlik.OturumluClientAsync(factory, "yonetici@izintakip.test");
+        await TestAuth.KullaniciOlusturAsync(factory, "yonetici@izintakip.test", SistemRolleri.Yonetici);
+        var client = await TestAuth.OturumluClientAsync(factory, "yonetici@izintakip.test");
 
         var yanit = await client.GetAsync("/test/yetki/rapor", TestContext.Current.CancellationToken);
 
@@ -116,9 +116,9 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
     [Fact]
     public async Task RolYonetimi_IkYeKapali_SuperAdmineAcik()
     {
-        await TestKimlik.KullaniciOlusturAsync(factory, "ik@izintakip.test", SistemRolleri.IK);
-        var ik = await TestKimlik.OturumluClientAsync(factory, "ik@izintakip.test");
-        var superAdmin = await TestKimlik.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
+        await TestAuth.KullaniciOlusturAsync(factory, "ik@izintakip.test", SistemRolleri.IK);
+        var ik = await TestAuth.OturumluClientAsync(factory, "ik@izintakip.test");
+        var superAdmin = await TestAuth.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
 
         var ikYaniti = await ik.GetAsync("/test/yetki/rol-yonetimi", TestContext.Current.CancellationToken);
         var superAdminYaniti = await superAdmin.GetAsync("/test/yetki/rol-yonetimi", TestContext.Current.CancellationToken);
@@ -130,18 +130,18 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
     [Fact]
     public async Task ParolaDegistirmeliKullanici_ParolasiniDegistirenceYetkiliUcaGiremez()
     {
-        await TestKimlik.KullaniciOlusturAsync(factory, "yeni@izintakip.test", SistemRolleri.Yonetici, parolaDegistirmeli: true);
-        var client = await TestKimlik.OturumluClientAsync(factory, "yeni@izintakip.test");
+        await TestAuth.KullaniciOlusturAsync(factory, "yeni@izintakip.test", SistemRolleri.Yonetici, parolaDegistirmeli: true);
+        var client = await TestAuth.OturumluClientAsync(factory, "yeni@izintakip.test");
 
         var oncesi = await client.GetAsync("/test/yetki/rapor", TestContext.Current.CancellationToken);
         var yetkisizUcOncesi = await client.GetAsync("/api/bildirimler", TestContext.Current.CancellationToken);
         var ben = await client.GetAsync("/api/auth/ben", TestContext.Current.CancellationToken);
         var degistir = await client.PostAsJsonAsync(
             "/api/auth/parola-degistir",
-            new { mevcutParola = TestKimlik.VarsayilanParola, yeniParola = "YeniParola2026" },
+            new { mevcutParola = TestAuth.VarsayilanParola, yeniParola = "YeniParola2026" },
             TestContext.Current.CancellationToken);
         var eskiTokenla = await client.GetAsync("/test/yetki/rapor", TestContext.Current.CancellationToken);
-        var yeniOturum = await TestKimlik.OturumluClientAsync(factory, "yeni@izintakip.test", "YeniParola2026");
+        var yeniOturum = await TestAuth.OturumluClientAsync(factory, "yeni@izintakip.test", "YeniParola2026");
         var sonrasi = await yeniOturum.GetAsync("/test/yetki/rapor", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Forbidden, oncesi.StatusCode);
@@ -156,9 +156,9 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
     [Fact]
     public async Task Cikis_VerilmisTokenlarGecersizOlur()
     {
-        await TestKimlik.KullaniciOlusturAsync(factory, "cikan@izintakip.test", SistemRolleri.Calisan);
-        var birinciCihaz = await TestKimlik.OturumluClientAsync(factory, "cikan@izintakip.test");
-        var ikinciCihaz = await TestKimlik.OturumluClientAsync(factory, "cikan@izintakip.test");
+        await TestAuth.KullaniciOlusturAsync(factory, "cikan@izintakip.test", SistemRolleri.Calisan);
+        var birinciCihaz = await TestAuth.OturumluClientAsync(factory, "cikan@izintakip.test");
+        var ikinciCihaz = await TestAuth.OturumluClientAsync(factory, "cikan@izintakip.test");
 
         var cikis = await birinciCihaz.PostAsync("/api/auth/cikis", null, TestContext.Current.CancellationToken);
         var birinci = await birinciCihaz.GetAsync("/api/auth/ben", TestContext.Current.CancellationToken);
@@ -172,8 +172,8 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
     [Fact]
     public async Task ParolaDegistir_MevcutParolaHataliysa_422Doner()
     {
-        await TestKimlik.KullaniciOlusturAsync(factory, "parola@izintakip.test", SistemRolleri.Calisan);
-        var client = await TestKimlik.OturumluClientAsync(factory, "parola@izintakip.test");
+        await TestAuth.KullaniciOlusturAsync(factory, "parola@izintakip.test", SistemRolleri.Calisan);
+        var client = await TestAuth.OturumluClientAsync(factory, "parola@izintakip.test");
 
         var yanit = await ParolaDegistirAsync(client, "YanlisParola1");
 
@@ -184,15 +184,15 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
     [Fact]
     public async Task ParolaDegistir_BesHataliDenemedenSonra_DogruParolaylaBileKilitliKalir()
     {
-        await TestKimlik.KullaniciOlusturAsync(factory, "tahminci@izintakip.test", SistemRolleri.Calisan);
-        var client = await TestKimlik.OturumluClientAsync(factory, "tahminci@izintakip.test");
+        await TestAuth.KullaniciOlusturAsync(factory, "tahminci@izintakip.test", SistemRolleri.Calisan);
+        var client = await TestAuth.OturumluClientAsync(factory, "tahminci@izintakip.test");
         for (var deneme = 0; deneme < 5; deneme++)
         {
             await ParolaDegistirAsync(client, "YanlisParola1");
         }
 
-        var yanit = await ParolaDegistirAsync(client, TestKimlik.VarsayilanParola);
-        var giris = await GirisYapAsync("tahminci@izintakip.test", TestKimlik.VarsayilanParola);
+        var yanit = await ParolaDegistirAsync(client, TestAuth.VarsayilanParola);
+        var giris = await GirisYapAsync("tahminci@izintakip.test", TestAuth.VarsayilanParola);
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, yanit.StatusCode);
         Assert.Equal("Çok fazla hatalı deneme yapıldı. Birkaç dakika sonra tekrar deneyin.", await DetayAsync(yanit));
@@ -202,8 +202,8 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
     [Fact]
     public async Task PasifKullanici_GecerliTokenlaBile401Alir()
     {
-        var kullaniciId = await TestKimlik.KullaniciOlusturAsync(factory, "pasif@izintakip.test", SistemRolleri.Calisan);
-        var client = await TestKimlik.OturumluClientAsync(factory, "pasif@izintakip.test");
+        var kullaniciId = await TestAuth.KullaniciOlusturAsync(factory, "pasif@izintakip.test", SistemRolleri.Calisan);
+        var client = await TestAuth.OturumluClientAsync(factory, "pasif@izintakip.test");
 
         await using (var scope = factory.Services.CreateAsyncScope())
         {
@@ -211,7 +211,7 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
             var kullanici = await userManager.FindByIdAsync(kullaniciId.ToString(System.Globalization.CultureInfo.InvariantCulture));
             kullanici!.Aktif = false;
             await userManager.UpdateAsync(kullanici);
-            scope.ServiceProvider.GetRequiredService<KullaniciYetkiOkuyucu>().Unut(kullaniciId);
+            scope.ServiceProvider.GetRequiredService<KullaniciYetkiProvider>().Unut(kullaniciId);
         }
 
         var yanit = await client.GetAsync("/api/auth/ben", TestContext.Current.CancellationToken);
@@ -222,7 +222,7 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
     [Fact]
     public async Task BilinmeyenAdres_OturumluIstekte404AyniBicimdeDoner()
     {
-        var client = await TestKimlik.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
+        var client = await TestAuth.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
 
         var yanit = await client.GetAsync("/boyle-bir-adres-yok", TestContext.Current.CancellationToken);
 

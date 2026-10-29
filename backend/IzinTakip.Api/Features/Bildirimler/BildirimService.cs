@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IzinTakip.Api.Features.Bildirimler;
 
-public sealed class BildirimService(IzinTakipDbContext db, IGecerliKullanici gecerliKullanici)
+public sealed class BildirimService(IzinTakipDbContext db, ICurrentUser gecerliKullanici)
 {
     public async Task<PagedResponse<BildirimResponse>> ListeleAsync(BildirimListeRequest request, CancellationToken cancellationToken)
     {
@@ -29,7 +29,7 @@ public sealed class BildirimService(IzinTakipDbContext db, IGecerliKullanici gec
     public async Task OkunduIsaretleAsync(int id, CancellationToken cancellationToken)
     {
         var bildirim = await (await BenimkilerAsync(cancellationToken)).SingleOrDefaultAsync(b => b.Id == id, cancellationToken)
-            ?? throw new KayitBulunamadiException("Bildirim bulunamadı.");
+            ?? throw new NotFoundException("Bildirim bulunamadı.");
         bildirim.OkunduIsaretle();
         await db.SaveChangesAsync(cancellationToken);
     }

@@ -5,7 +5,7 @@ using IzinTakip.Domain;
 
 namespace IzinTakip.Tests.Features.Roller;
 
-public sealed class RolTests(VeritabanliApiFactory factory) : IClassFixture<VeritabanliApiFactory>
+public sealed class RolTests(DatabaseApiFactory factory) : IClassFixture<DatabaseApiFactory>
 {
     [Fact]
     public async Task Olustur_SuperAdmin_RolAcarYetkiAtanmisKullaniciHemenKullanir()
@@ -39,8 +39,8 @@ public sealed class RolTests(VeritabanliApiFactory factory) : IClassFixture<Veri
     public async Task Olustur_Ik_403Doner()
     {
         var eposta = $"ik-{Guid.NewGuid():N}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.IK);
-        var ik = await TestKimlik.OturumluClientAsync(factory, eposta);
+        await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.IK);
+        var ik = await TestAuth.OturumluClientAsync(factory, eposta);
 
         var olustur = await ik.PostAsJsonAsync("/api/roller", new { ad = "Yeni", korumali = false, yetkiler = Array.Empty<string>() }, TestContext.Current.CancellationToken);
         var liste = await ik.GetAsync("/api/roller", TestContext.Current.CancellationToken);
@@ -125,10 +125,10 @@ public sealed class RolTests(VeritabanliApiFactory factory) : IClassFixture<Veri
     private async Task<(int Id, HttpClient Client)> KullaniciAsync()
     {
         var eposta = $"kullanici-{Guid.NewGuid():N}@izintakip.test";
-        var id = await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
-        return (id, await TestKimlik.OturumluClientAsync(factory, eposta));
+        var id = await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
+        return (id, await TestAuth.OturumluClientAsync(factory, eposta));
     }
 
     private Task<HttpClient> SuperAdminAsync() =>
-        TestKimlik.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
+        TestAuth.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
 }

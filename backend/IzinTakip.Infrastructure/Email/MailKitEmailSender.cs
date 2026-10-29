@@ -5,13 +5,13 @@ using MimeKit.Text;
 
 namespace IzinTakip.Infrastructure.Email;
 
-public sealed class MailKitEmailSender(EmailAyarlari ayarlar) : IEmailSender
+public sealed class MailKitEmailSender(EmailOptions ayarlar) : IEmailSender
 {
-    public async Task SendAsync(EmailMesaji mesaj, CancellationToken cancellationToken)
+    public async Task SendAsync(EmailMessage mesaj, CancellationToken cancellationToken)
     {
         if (!MailboxAddress.TryParse(mesaj.Alici, out var alici))
         {
-            throw new KaliciEmailHatasiException("Alici adresi gecersiz.");
+            throw new PermanentEmailFailureException("Alici adresi gecersiz.");
         }
 
         using var mime = new MimeMessage();
@@ -37,7 +37,7 @@ public sealed class MailKitEmailSender(EmailAyarlari ayarlar) : IEmailSender
         }
         catch (Exception exception) when (exception is AuthenticationException or SmtpCommandException { StatusCode: >= (SmtpStatusCode)500 })
         {
-            throw new KaliciEmailHatasiException("SMTP sunucusu istegi kalici olarak reddetti.", exception);
+            throw new PermanentEmailFailureException("SMTP sunucusu istegi kalici olarak reddetti.", exception);
         }
 
         await istemci.DisconnectAsync(true, cancellationToken);

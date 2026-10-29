@@ -1,6 +1,6 @@
 import { isAxiosError, isCancel } from 'axios'
 
-import { ApiHatasi, type AlanHatalari } from './ApiHatasi'
+import { ApiError, type FieldErrors } from './ApiError'
 
 export const SUNUCUYA_ULASILAMIYOR =
   'Sunucuya şu anda ulaşılamıyor. Bağlantınızı kontrol edip tekrar deneyin.'
@@ -8,23 +8,23 @@ export const BEKLENMEYEN_HATA = 'Beklenmeyen bir hata oluştu. Sayfayı yenileyi
 
 interface ProblemDetails {
   detail?: string
-  errors?: AlanHatalari
+  errors?: FieldErrors
   traceId?: string
 }
 
-export async function apiHatasinaCevir(hata: unknown): Promise<ApiHatasi> {
+export async function apiHatasinaCevir(hata: unknown): Promise<ApiError> {
   if (isCancel(hata)) {
-    return new ApiHatasi({ durum: 0, mesaj: '', iptalEdildi: true })
+    return new ApiError({ durum: 0, mesaj: '', iptalEdildi: true })
   }
   if (!isAxiosError(hata)) {
-    return new ApiHatasi({ durum: 0, mesaj: BEKLENMEYEN_HATA })
+    return new ApiError({ durum: 0, mesaj: BEKLENMEYEN_HATA })
   }
   if (!hata.response) {
-    return new ApiHatasi({ durum: 0, mesaj: SUNUCUYA_ULASILAMIYOR })
+    return new ApiError({ durum: 0, mesaj: SUNUCUYA_ULASILAMIYOR })
   }
 
   const problem = await problemDetailsOku(hata.response.data)
-  return new ApiHatasi({
+  return new ApiError({
     durum: hata.response.status,
     mesaj: problem?.detail ?? BEKLENMEYEN_HATA,
     alanHatalari: problem?.errors,

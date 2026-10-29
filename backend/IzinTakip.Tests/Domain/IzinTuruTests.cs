@@ -8,13 +8,13 @@ public sealed class IzinTuruTests
 {
     [Fact]
     public void Olustur_HicBicimSecilmemis_IsKuraliHatasiVerir() =>
-        Assert.Throws<IsKuraliException>(() =>
+        Assert.Throws<BusinessRuleException>(() =>
             new IzinTuru("Deneme", false, false, GunHesabi.IsGunu, false, false, false, null, null));
 
     [Fact]
     public void Olustur_TakvimGunuVeYarimGun_IsKuraliHatasiVerir()
     {
-        var hata = Assert.Throws<IsKuraliException>(() =>
+        var hata = Assert.Throws<BusinessRuleException>(() =>
             new IzinTuru("Deneme", false, false, GunHesabi.TakvimGunu, true, true, false, null, null));
 
         Assert.Equal("Takvim günü sayan izin türü yalnız tam gün alınabilir.", hata.Message);
@@ -22,7 +22,7 @@ public sealed class IzinTuruTests
 
     [Fact]
     public void Olustur_TalepSiniriYillikSinirdanBuyuk_IsKuraliHatasiVerir() =>
-        Assert.Throws<IsKuraliException>(() =>
+        Assert.Throws<BusinessRuleException>(() =>
             new IzinTuru("Deneme", false, false, GunHesabi.IsGunu, true, false, false, 2400, 960));
 
     [Fact]

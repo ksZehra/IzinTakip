@@ -1,4 +1,4 @@
-using IzinTakip.Api.Common.Bildirimler;
+using IzinTakip.Api.Common.Notifications;
 using IzinTakip.Domain;
 using IzinTakip.Infrastructure.Data;
 using IzinTakip.Infrastructure.Identity;
@@ -8,10 +8,10 @@ namespace IzinTakip.Api.Common.Izin;
 
 public sealed class OnayciBulucu(IzinTakipDbContext db)
 {
-    public async Task<IReadOnlyList<Alici>> OnaycilarAsync(int calisanId, CancellationToken cancellationToken) =>
+    public async Task<IReadOnlyList<NotificationRecipient>> OnaycilarAsync(int calisanId, CancellationToken cancellationToken) =>
         (await OnaycilarAsync([calisanId], cancellationToken))[calisanId];
 
-    public async Task<IReadOnlyDictionary<int, IReadOnlyList<Alici>>> OnaycilarAsync(
+    public async Task<IReadOnlyDictionary<int, IReadOnlyList<NotificationRecipient>>> OnaycilarAsync(
         IReadOnlyCollection<int> calisanIdler,
         CancellationToken cancellationToken)
     {
@@ -22,13 +22,13 @@ public sealed class OnayciBulucu(IzinTakipDbContext db)
         var yoneticiIdler = yoneticiler.Values.OfType<int>().Distinct().ToList();
         var yoneticiKullanicilari = (await AktifKullanicilar()
                 .Where(k => k.CalisanId != null && yoneticiIdler.Contains(k.CalisanId.Value))
-                .Select(k => new { YoneticiId = k.CalisanId!.Value, Alici = new Alici(k.Id, k.Email!) })
+                .Select(k => new { YoneticiId = k.CalisanId!.Value, Alici = new NotificationRecipient(k.Id, k.Email!) })
                 .ToListAsync(cancellationToken))
             .ToLookup(k => k.YoneticiId, k => k.Alici);
 
         var onaycilar = yoneticiler.ToDictionary(
             c => c.Key,
-            IReadOnlyList<Alici> (c) => c.Value is { } yoneticiId ? yoneticiKullanicilari[yoneticiId].ToList() : []);
+            IReadOnlyList<NotificationRecipient> (c) => c.Value is { } yoneticiId ? yoneticiKullanicilari[yoneticiId].ToList() : []);
         var ikyeDusenler = onaycilar.Where(o => o.Value.Count == 0).Select(o => o.Key).ToList();
         if (ikyeDusenler.Count == 0)
         {
@@ -40,7 +40,7 @@ public sealed class OnayciBulucu(IzinTakipDbContext db)
             .Select(c => c.RoleId);
         var tumSirketKullanicilari = await AktifKullanicilar()
             .Where(k => db.UserRoles.Any(r => r.UserId == k.Id && tumSirketRolleri.Contains(r.RoleId)))
-            .Select(k => new { k.CalisanId, Alici = new Alici(k.Id, k.Email!) })
+            .Select(k => new { k.CalisanId, Alici = new NotificationRecipient(k.Id, k.Email!) })
             .ToListAsync(cancellationToken);
         foreach (var calisanId in ikyeDusenler)
         {
@@ -50,11 +50,11 @@ public sealed class OnayciBulucu(IzinTakipDbContext db)
         return onaycilar;
     }
 
-    public Task<IReadOnlyList<Alici>> CalisaninKendisiAsync(int calisanId, CancellationToken cancellationToken) =>
+    public Task<IReadOnlyList<NotificationRecipient>> CalisaninKendisiAsync(int calisanId, CancellationToken cancellationToken) =>
         Alicilar(AktifKullanicilar().Where(k => k.CalisanId == calisanId), cancellationToken);
 
     private IQueryable<Kullanici> AktifKullanicilar() => db.Users.Where(k => k.Aktif && k.Email != null);
 
-    private static async Task<IReadOnlyList<Alici>> Alicilar(IQueryable<Kullanici> kullanicilar, CancellationToken cancellationToken) =>
-        await kullanicilar.Select(k => new Alici(k.Id, k.Email!)).ToListAsync(cancellationToken);
+    private static async Task<IReadOnlyList<NotificationRecipient>> Alicilar(IQueryable<Kullanici> kullanicilar, CancellationToken cancellationToken) =>
+        await kullanicilar.Select(k => new NotificationRecipient(k.Id, k.Email!)).ToListAsync(cancellationToken);
 }

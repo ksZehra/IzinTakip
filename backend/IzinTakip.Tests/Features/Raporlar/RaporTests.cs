@@ -6,24 +6,24 @@ using IzinTakip.Domain;
 
 namespace IzinTakip.Tests.Features.Raporlar;
 
-public sealed class RaporTests(VeritabanliApiFactory factory) : IClassFixture<VeritabanliApiFactory>
+public sealed class RaporTests(DatabaseApiFactory factory) : IClassFixture<DatabaseApiFactory>
 {
     private const int GunlukDakika = 480;
-    private static readonly DateOnly Pazartesi = TestVeri.SonrakiYilPazartesi();
+    private static readonly DateOnly Pazartesi = TestData.SonrakiYilPazartesi();
 
     [Fact]
     public async Task Takvim_Yonetici_EkibininAcikIzinleriniGorurDigerleriniGormez()
     {
         var admin = await SuperAdminAsync();
-        var departmanId = await TestVeri.DepartmanEkleAsync(admin, $"Ekip-{Guid.NewGuid():N}");
-        var yoneticiId = await TestVeri.CalisanEkleAsync(admin, "Yönetici", departmanId);
-        await TestVeri.DepartmanYoneticisiAtaAsync(admin, departmanId, $"Ekip-{yoneticiId}", yoneticiId);
+        var departmanId = await TestData.DepartmanEkleAsync(admin, $"Ekip-{Guid.NewGuid():N}");
+        var yoneticiId = await TestData.CalisanEkleAsync(admin, "Yönetici", departmanId);
+        await TestData.DepartmanYoneticisiAtaAsync(admin, departmanId, $"Ekip-{yoneticiId}", yoneticiId);
         var izinliId = await CalisanAsync(admin, "İzinli", departmanId);
         var reddedilenId = await CalisanAsync(admin, "Reddedilen", departmanId);
-        var digerId = await CalisanAsync(admin, "Diğer", await TestVeri.DepartmanEkleAsync(admin, $"Diger-{Guid.NewGuid():N}"));
+        var digerId = await CalisanAsync(admin, "Diğer", await TestData.DepartmanEkleAsync(admin, $"Diger-{Guid.NewGuid():N}"));
         var yoneticiEposta = $"yonetici-{yoneticiId}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, yoneticiEposta, SistemRolleri.Yonetici, calisanId: yoneticiId);
-        var yonetici = await TestKimlik.OturumluClientAsync(factory, yoneticiEposta);
+        await TestAuth.KullaniciOlusturAsync(factory, yoneticiEposta, SistemRolleri.Yonetici, calisanId: yoneticiId);
+        var yonetici = await TestAuth.OturumluClientAsync(factory, yoneticiEposta);
         await TalepAcAsync(yonetici, izinliId, Pazartesi, Pazartesi.AddDays(1));
         var reddedilecek = await TalepAcAsync(yonetici, reddedilenId, Pazartesi, Pazartesi);
         await TalepAcAsync(admin, digerId, Pazartesi, Pazartesi);
@@ -83,10 +83,10 @@ public sealed class RaporTests(VeritabanliApiFactory factory) : IClassFixture<Ve
     public async Task Bakiyeler_Calisan_403Doner()
     {
         var admin = await SuperAdminAsync();
-        var calisanId = await CalisanAsync(admin, "Çalışan", await TestVeri.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}"));
+        var calisanId = await CalisanAsync(admin, "Çalışan", await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}"));
         var eposta = $"calisan-{calisanId}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan, calisanId: calisanId);
-        var calisan = await TestKimlik.OturumluClientAsync(factory, eposta);
+        await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan, calisanId: calisanId);
+        var calisan = await TestAuth.OturumluClientAsync(factory, eposta);
 
         var yanit = await calisan.GetAsync("/api/raporlar/bakiyeler", TestContext.Current.CancellationToken);
 
@@ -133,10 +133,10 @@ public sealed class RaporTests(VeritabanliApiFactory factory) : IClassFixture<Ve
     private async Task<(int DepartmanId, int AliId, HttpClient Ik)> BakiyeVerisiKurAsync()
     {
         var admin = await SuperAdminAsync();
-        var departmanId = await TestVeri.DepartmanEkleAsync(admin, $"Rapor-{Guid.NewGuid():N}");
+        var departmanId = await TestData.DepartmanEkleAsync(admin, $"Rapor-{Guid.NewGuid():N}");
         var aliId = await CalisanAsync(admin, "Ali", departmanId);
-        var zeynepId = await TestVeri.CalisanEkleAsync(admin, "Zeynep", departmanId);
-        await TestVeri.HakEkleAsync(admin, zeynepId, 20 * GunlukDakika);
+        var zeynepId = await TestData.CalisanEkleAsync(admin, "Zeynep", departmanId);
+        await TestData.HakEkleAsync(admin, zeynepId, 20 * GunlukDakika);
         var ik = await IkAsync();
         var onaylanacak = await TalepAcAsync(ik, aliId, Pazartesi, Pazartesi.AddDays(1));
         await TalepAcAsync(ik, aliId, Pazartesi.AddDays(2), Pazartesi.AddDays(2));
@@ -147,14 +147,14 @@ public sealed class RaporTests(VeritabanliApiFactory factory) : IClassFixture<Ve
 
     private static async Task<int> CalisanAsync(HttpClient admin, string ad, int departmanId)
     {
-        var calisanId = await TestVeri.CalisanEkleAsync(admin, ad, departmanId);
-        await TestVeri.HakEkleAsync(admin, calisanId, 14 * GunlukDakika);
+        var calisanId = await TestData.CalisanEkleAsync(admin, ad, departmanId);
+        await TestData.HakEkleAsync(admin, calisanId, 14 * GunlukDakika);
         return calisanId;
     }
 
     private static async Task<int> TalepAcAsync(HttpClient client, int calisanId, DateOnly baslangic, DateOnly bitis)
     {
-        var yillik = await TestVeri.IzinTuruIdAsync(client, "Yıllık");
+        var yillik = await TestData.IzinTuruIdAsync(client, "Yıllık");
         var yanit = await client.PostAsJsonAsync(
             "/api/izin-talepleri",
             new { calisanId, izinTuruId = yillik, sureTipi = "TamGun", tarih = baslangic, bitisTarihi = bitis },
@@ -167,10 +167,10 @@ public sealed class RaporTests(VeritabanliApiFactory factory) : IClassFixture<Ve
     private async Task<HttpClient> IkAsync()
     {
         var eposta = $"ik-{Guid.NewGuid():N}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.IK);
-        return await TestKimlik.OturumluClientAsync(factory, eposta);
+        await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.IK);
+        return await TestAuth.OturumluClientAsync(factory, eposta);
     }
 
     private Task<HttpClient> SuperAdminAsync() =>
-        TestKimlik.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
+        TestAuth.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
 }

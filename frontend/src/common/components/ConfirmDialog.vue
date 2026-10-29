@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import { useOdakDonusu } from '@/common/composables/useOdakDonusu'
+import { useFocusReturn } from '@/common/composables/useFocusReturn'
 
 const props = defineProps<{
   baslik: string
@@ -16,7 +16,7 @@ const props = defineProps<{
 const emit = defineEmits<{ onay: [not: string | null] }>()
 const acik = defineModel<boolean>({ required: true })
 const not = ref('')
-const { odagiGeriVer } = useOdakDonusu(acik)
+const { odagiGeriVer } = useFocusReturn(acik)
 
 const onaylanabilir = computed(() => !props.notZorunlu || not.value.trim().length > 0)
 

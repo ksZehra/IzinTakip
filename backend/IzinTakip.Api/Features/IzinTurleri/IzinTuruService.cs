@@ -25,7 +25,7 @@ public sealed class IzinTuruService(IzinTakipDbContext db, ILogger<IzinTuruServi
     public async Task<IzinTuruResponse> DetayAsync(int id, CancellationToken cancellationToken)
     {
         var tur = await db.IzinTurleri.AsNoTracking().SingleOrDefaultAsync(t => t.Id == id, cancellationToken)
-            ?? throw new KayitBulunamadiException("İzin türü bulunamadı.");
+            ?? throw new NotFoundException("İzin türü bulunamadı.");
         return Yanit(tur, await db.GunlukDakikaAsync(cancellationToken));
     }
 
@@ -71,13 +71,13 @@ public sealed class IzinTuruService(IzinTakipDbContext db, ILogger<IzinTuruServi
 
     private async Task<IzinTuru> BulAsync(int id, CancellationToken cancellationToken) =>
         await db.IzinTurleri.SingleOrDefaultAsync(t => t.Id == id, cancellationToken)
-        ?? throw new KayitBulunamadiException("İzin türü bulunamadı.");
+        ?? throw new NotFoundException("İzin türü bulunamadı.");
 
     private async Task AdBenzersizMiAsync(int? id, string ad, CancellationToken cancellationToken)
     {
         if (await db.IzinTurleri.AnyAsync(t => t.Ad == ad && t.Id != id, cancellationToken))
         {
-            throw new IsKuraliException("Bu adla bir izin türü zaten var.");
+            throw new BusinessRuleException("Bu adla bir izin türü zaten var.");
         }
     }
 

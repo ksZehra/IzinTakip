@@ -1,7 +1,7 @@
 using IzinTakip.Api.Common;
-using IzinTakip.Api.Common.Bildirimler;
+using IzinTakip.Api.Common.Auth;
 using IzinTakip.Api.Common.Izin;
-using IzinTakip.Api.Common.Kapsam;
+using IzinTakip.Api.Common.Notifications;
 using IzinTakip.Domain;
 using IzinTakip.Domain.Entities;
 using IzinTakip.Domain.Exceptions;
@@ -13,10 +13,10 @@ namespace IzinTakip.Api.Features.IzinTalepleri;
 
 public sealed class IzinOnayService(
     IzinTakipDbContext db,
-    IGecerliKullanici gecerliKullanici,
-    CalisanKapsami kapsam,
+    ICurrentUser gecerliKullanici,
+    CalisanScope kapsam,
     OnayciBulucu onayciBulucu,
-    BildirimYazici bildirimYazici,
+    NotificationPublisher bildirimYazici,
     SirketSaati sirketSaati,
     TimeProvider timeProvider,
     ILogger<IzinOnayService> logger)
@@ -71,7 +71,7 @@ public sealed class IzinOnayService(
         var kendiTalebi = talep.CalisanId == yetkiler.CalisanId;
         if (!kendiTalebi && !yetkiler.VarMi(Yetkiler.IzinTalebi.Yonet))
         {
-            throw new YetkiYokException("Başkasının izin talebini iptal etme yetkiniz yok.");
+            throw new ForbiddenException("Başkasının izin talebini iptal etme yetkiniz yok.");
         }
 
         talep.IptalEt(
@@ -112,7 +112,7 @@ public sealed class IzinOnayService(
             .Include(t => t.IzinTuru)
             .Include(t => t.Calisan)
             .SingleOrDefaultAsync(t => t.Id == id && calisanlar.Any(c => c.Id == t.CalisanId), cancellationToken)
-            ?? throw new KayitBulunamadiException("İzin talebi bulunamadı.");
+            ?? throw new NotFoundException("İzin talebi bulunamadı.");
     }
 
     private async Task<string> OzetAsync(IzinTalebi talep, CancellationToken cancellationToken)

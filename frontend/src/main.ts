@@ -3,7 +3,7 @@ import { createApp } from 'vue'
 
 import App from '@/App.vue'
 import { useToast } from '@/common/composables/useToast'
-import { ApiHatasi } from '@/common/http/ApiHatasi'
+import { ApiError } from '@/common/http/ApiError'
 import { BEKLENMEYEN_HATA } from '@/common/http/apiHatasinaCevir'
 import { oturumDustugundeCalistir } from '@/common/http/httpClient'
 import { createAppVuetify } from '@/plugins/vuetify'
@@ -13,7 +13,7 @@ import { useAuthStore } from '@/stores/authStore'
 const app = createApp(App).use(createPinia()).use(router).use(createAppVuetify())
 
 app.config.errorHandler = (hata) => {
-  if (!(hata instanceof ApiHatasi)) {
+  if (!(hata instanceof ApiError)) {
     useToast().hataGoster(BEKLENMEYEN_HATA)
   }
 }

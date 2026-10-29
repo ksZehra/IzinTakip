@@ -42,18 +42,18 @@ public sealed class Ayarlar : Entity
     {
         if (calismaGunleri == HaftaGunleri.Yok)
         {
-            throw new IsKuraliException("En az bir çalışma günü seçilmeli.");
+            throw new BusinessRuleException("En az bir çalışma günü seçilmeli.");
         }
 
         if (!(mesaiBaslangic < mesaiBitis && mesaiBaslangic <= ogleArasiBaslangic && ogleArasiBaslangic <= ogleArasiBitis && ogleArasiBitis <= mesaiBitis))
         {
-            throw new IsKuraliException("Mesai başlangıcı bitişten önce olmalı; öğle arası mesai saatlerinin içinde kalmalı.");
+            throw new BusinessRuleException("Mesai başlangıcı bitişten önce olmalı; öğle arası mesai saatlerinin içinde kalmalı.");
         }
 
         var gunluk = GunlukDakika(mesaiBaslangic, mesaiBitis, ogleArasiBaslangic, ogleArasiBitis);
         if (gunluk <= 0 || gunluk % 2 != 0)
         {
-            throw new IsKuraliException("Günlük çalışma süresi sıfırdan büyük olmalı ve yarım güne tam bölünebilmeli (çift dakika).");
+            throw new BusinessRuleException("Günlük çalışma süresi sıfırdan büyük olmalı ve yarım güne tam bölünebilmeli (çift dakika).");
         }
 
         CalismaGunleri = calismaGunleri;

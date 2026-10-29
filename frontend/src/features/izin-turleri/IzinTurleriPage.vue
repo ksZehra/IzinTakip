@@ -8,13 +8,13 @@ import {
   izinTuruGuncelle,
   izinTurleriniGetir,
   type IzinTuru,
-  type IzinTuruKaydetIstegi,
+  type IzinTuruKaydetRequest,
 } from '@/api/izinTurleriApi'
-import AktiflikAnahtari from '@/common/components/AktiflikAnahtari.vue'
-import KayitDialog from '@/common/components/KayitDialog.vue'
+import AktiflikSwitch from '@/common/components/AktiflikSwitch.vue'
+import FormDialog from '@/common/components/FormDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
 import SureInput from '@/common/components/SureInput.vue'
-import { useKayitFormu } from '@/common/composables/useKayitFormu'
+import { useCrudForm } from '@/common/composables/useCrudForm'
 import { useToast } from '@/common/composables/useToast'
 import { gunHesabiEtiketleri, secenekler } from '@/common/utils/etiketler'
 
@@ -25,9 +25,9 @@ async function yukle() {
   turler.value = await izinTurleriniGetir()
 }
 
-const { acik, form, yeniKayit, yeni, duzenle, kaydet, gonderiliyor, alanHatasi } = useKayitFormu<
+const { acik, form, yeniKayit, yeni, duzenle, kaydet, gonderiliyor, alanHatasi } = useCrudForm<
   IzinTuru,
-  IzinTuruKaydetIstegi
+  IzinTuruKaydetRequest
 >({
   bosForm: () => ({
     ad: '',
@@ -101,7 +101,7 @@ onMounted(yukle)
     <v-card>
       <v-data-table :headers="basliklar" :items="turler" items-per-page="-1" hide-default-footer>
         <template #[`item.aktif`]="{ item }">
-          <AktiflikAnahtari
+          <AktiflikSwitch
             :aktif="item.aktif"
             :etiket="`${item.ad} aktif`"
             :degistir="(aktif) => aktiflikDegistir(item, aktif)"
@@ -119,7 +119,7 @@ onMounted(yukle)
       </v-data-table>
     </v-card>
 
-    <KayitDialog
+    <FormDialog
       v-model="acik"
       :baslik="yeniKayit ? 'Yeni izin türü' : 'İzin türünü düzenle'"
       :kaydediliyor="gonderiliyor"
@@ -157,6 +157,6 @@ onMounted(yukle)
         bos-olabilir
         :hatalar="alanHatasi('yillikEnFazlaDakika')"
       />
-    </KayitDialog>
+    </FormDialog>
   </v-container>
 </template>

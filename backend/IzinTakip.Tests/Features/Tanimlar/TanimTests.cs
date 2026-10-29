@@ -5,7 +5,7 @@ using IzinTakip.Domain;
 
 namespace IzinTakip.Tests.Features.Tanimlar;
 
-public sealed class TanimTests(VeritabanliApiFactory factory) : IClassFixture<VeritabanliApiFactory>
+public sealed class TanimTests(DatabaseApiFactory factory) : IClassFixture<DatabaseApiFactory>
 {
     [Fact]
     public async Task IzinTurleri_BaslangicVerisi_YediTurVeSureMetniylaGelir()
@@ -35,10 +35,10 @@ public sealed class TanimTests(VeritabanliApiFactory factory) : IClassFixture<Ve
     [Fact]
     public async Task IzinTuru_Olustur_IkIcin201CalisanIcin403()
     {
-        await TestKimlik.KullaniciOlusturAsync(factory, "tanim-ik@izintakip.test", SistemRolleri.IK);
-        await TestKimlik.KullaniciOlusturAsync(factory, "tanim-calisan@izintakip.test", SistemRolleri.Calisan);
-        var ik = await TestKimlik.OturumluClientAsync(factory, "tanim-ik@izintakip.test");
-        var calisan = await TestKimlik.OturumluClientAsync(factory, "tanim-calisan@izintakip.test");
+        await TestAuth.KullaniciOlusturAsync(factory, "tanim-ik@izintakip.test", SistemRolleri.IK);
+        await TestAuth.KullaniciOlusturAsync(factory, "tanim-calisan@izintakip.test", SistemRolleri.Calisan);
+        var ik = await TestAuth.OturumluClientAsync(factory, "tanim-ik@izintakip.test");
+        var calisan = await TestAuth.OturumluClientAsync(factory, "tanim-calisan@izintakip.test");
 
         var ikYaniti = await ik.PostAsJsonAsync("/api/izin-turleri", IzinTuru("Mazeret", "IsGunu", saatlik: true), TestContext.Current.CancellationToken);
         var calisanYaniti = await calisan.PostAsJsonAsync("/api/izin-turleri", IzinTuru("Mazeret 2", "IsGunu", saatlik: true), TestContext.Current.CancellationToken);
@@ -112,7 +112,7 @@ public sealed class TanimTests(VeritabanliApiFactory factory) : IClassFixture<Ve
     public async Task Departman_AyniAdlaIkinciKayit_422Doner()
     {
         var client = await SuperAdminAsync();
-        await TestVeri.DepartmanEkleAsync(client, "Muhasebe");
+        await TestData.DepartmanEkleAsync(client, "Muhasebe");
 
         var yanit = await client.PostAsJsonAsync("/api/departmanlar", new { ad = "Muhasebe" }, TestContext.Current.CancellationToken);
 
@@ -124,8 +124,8 @@ public sealed class TanimTests(VeritabanliApiFactory factory) : IClassFixture<Ve
     public async Task Departman_AktifCalisaniVarken_Pasiflestirilemez()
     {
         var client = await SuperAdminAsync();
-        var departmanId = await TestVeri.DepartmanEkleAsync(client, "Lojistik");
-        await TestVeri.CalisanEkleAsync(client, "Kerem", departmanId);
+        var departmanId = await TestData.DepartmanEkleAsync(client, "Lojistik");
+        await TestData.CalisanEkleAsync(client, "Kerem", departmanId);
 
         var yanit = await client.PutAsJsonAsync($"/api/departmanlar/{departmanId}/aktiflik", new { aktif = false }, TestContext.Current.CancellationToken);
 
@@ -133,7 +133,7 @@ public sealed class TanimTests(VeritabanliApiFactory factory) : IClassFixture<Ve
     }
 
     private Task<HttpClient> SuperAdminAsync() =>
-        TestKimlik.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
+        TestAuth.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
 
     private static object IzinTuru(string ad, string gunHesabi, bool saatlik) => new
     {

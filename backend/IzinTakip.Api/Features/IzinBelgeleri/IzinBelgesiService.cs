@@ -1,5 +1,5 @@
 using IzinTakip.Api.Common;
-using IzinTakip.Api.Common.Kapsam;
+using IzinTakip.Api.Common.Auth;
 using IzinTakip.Domain.Entities;
 using IzinTakip.Domain.Exceptions;
 using IzinTakip.Infrastructure.Data;
@@ -10,7 +10,7 @@ namespace IzinTakip.Api.Features.IzinBelgeleri;
 
 public sealed class IzinBelgesiService(
     IzinTakipDbContext db,
-    CalisanKapsami kapsam,
+    CalisanScope kapsam,
     IFileStorage fileStorage,
     ILogger<IzinBelgesiService> logger)
 {
@@ -78,14 +78,14 @@ public sealed class IzinBelgesiService(
         var calisanlar = await kapsam.CalisanlarAsync(cancellationToken);
         return await db.IzinTalepleri
             .SingleOrDefaultAsync(t => t.Id == talepId && calisanlar.Any(c => c.Id == t.CalisanId), cancellationToken)
-            ?? throw new KayitBulunamadiException("İzin talebi bulunamadı.");
+            ?? throw new NotFoundException("İzin talebi bulunamadı.");
     }
 
     private void RowVersionIleKoru(IzinTalebi talep) => db.Entry(talep).State = EntityState.Modified;
 
     private async Task<IzinBelgesi> BelgeAsync(int talepId, int id, CancellationToken cancellationToken) =>
         await db.IzinBelgeleri.SingleOrDefaultAsync(b => b.Id == id && b.IzinTalebiId == talepId, cancellationToken)
-        ?? throw new KayitBulunamadiException("Belge bulunamadı.");
+        ?? throw new NotFoundException("Belge bulunamadı.");
 
     private static IQueryable<IzinBelgesiResponse> Yansit(IQueryable<IzinBelgesi> belgeler) =>
         belgeler.Select(b => new IzinBelgesiResponse(b.Id, b.DosyaAdi, b.IcerikTuru, b.Boyut, b.OlusturmaTarihi));

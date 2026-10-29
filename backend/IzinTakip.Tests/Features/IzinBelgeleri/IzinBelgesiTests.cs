@@ -7,10 +7,10 @@ using IzinTakip.Domain;
 
 namespace IzinTakip.Tests.Features.IzinBelgeleri;
 
-public sealed class IzinBelgesiTests(VeritabanliApiFactory factory) : IClassFixture<VeritabanliApiFactory>
+public sealed class IzinBelgesiTests(DatabaseApiFactory factory) : IClassFixture<DatabaseApiFactory>
 {
     private static readonly byte[] Pdf = Encoding.ASCII.GetBytes("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF");
-    private static readonly DateOnly Pazartesi = TestVeri.SonrakiYilPazartesi();
+    private static readonly DateOnly Pazartesi = TestData.SonrakiYilPazartesi();
 
     [Fact]
     public async Task Yukle_PdfDosya_201ListedeGorunurVeAyniIcerikIndirilir()
@@ -145,22 +145,22 @@ public sealed class IzinBelgesiTests(VeritabanliApiFactory factory) : IClassFixt
 
     private async Task<Ekip> EkipKurAsync()
     {
-        var admin = await TestKimlik.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
-        var departmanId = await TestVeri.DepartmanEkleAsync(admin, $"Ekip-{Guid.NewGuid():N}");
-        var yoneticiId = await TestVeri.CalisanEkleAsync(admin, "Yönetici", departmanId);
-        await TestVeri.DepartmanYoneticisiAtaAsync(admin, departmanId, $"Ekip-{yoneticiId}", yoneticiId);
-        var calisanId = await TestVeri.CalisanEkleAsync(admin, "Çalışan", departmanId);
-        await TestVeri.HakEkleAsync(admin, calisanId, 14 * 480);
+        var admin = await TestAuth.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
+        var departmanId = await TestData.DepartmanEkleAsync(admin, $"Ekip-{Guid.NewGuid():N}");
+        var yoneticiId = await TestData.CalisanEkleAsync(admin, "Yönetici", departmanId);
+        await TestData.DepartmanYoneticisiAtaAsync(admin, departmanId, $"Ekip-{yoneticiId}", yoneticiId);
+        var calisanId = await TestData.CalisanEkleAsync(admin, "Çalışan", departmanId);
+        await TestData.HakEkleAsync(admin, calisanId, 14 * 480);
         var yoneticiEposta = $"yonetici-{yoneticiId}@izintakip.test";
         var calisanEposta = $"calisan-{calisanId}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, yoneticiEposta, SistemRolleri.Yonetici, calisanId: yoneticiId);
-        await TestKimlik.KullaniciOlusturAsync(factory, calisanEposta, SistemRolleri.Calisan, calisanId: calisanId);
-        return new Ekip(await TestKimlik.OturumluClientAsync(factory, calisanEposta), await TestKimlik.OturumluClientAsync(factory, yoneticiEposta));
+        await TestAuth.KullaniciOlusturAsync(factory, yoneticiEposta, SistemRolleri.Yonetici, calisanId: yoneticiId);
+        await TestAuth.KullaniciOlusturAsync(factory, calisanEposta, SistemRolleri.Calisan, calisanId: calisanId);
+        return new Ekip(await TestAuth.OturumluClientAsync(factory, calisanEposta), await TestAuth.OturumluClientAsync(factory, yoneticiEposta));
     }
 
     private static async Task<int> TalepAcAsync(HttpClient client, string tur)
     {
-        var turId = await TestVeri.IzinTuruIdAsync(client, tur);
+        var turId = await TestData.IzinTuruIdAsync(client, tur);
         var yanit = await client.PostAsJsonAsync(
             "/api/izin-talepleri",
             new { izinTuruId = turId, sureTipi = "TamGun", tarih = Pazartesi, bitisTarihi = Pazartesi.AddDays(1) },

@@ -8,18 +8,18 @@ import {
   resmiTatilleriGetir,
   resmiTatilSil,
   type ResmiTatil,
-  type ResmiTatilKaydetIstegi,
+  type ResmiTatilKaydetRequest,
 } from '@/api/tanimlarApi'
 import ConfirmDialog from '@/common/components/ConfirmDialog.vue'
-import KayitDialog from '@/common/components/KayitDialog.vue'
+import FormDialog from '@/common/components/FormDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
-import { useFormGonder } from '@/common/composables/useFormGonder'
-import { useKayitFormu } from '@/common/composables/useKayitFormu'
+import { useFormSubmit } from '@/common/composables/useFormSubmit'
+import { useCrudForm } from '@/common/composables/useCrudForm'
 import { useToast } from '@/common/composables/useToast'
 import { gunBasligi } from '@/common/utils/tarih'
 
 const toast = useToast()
-const silme = useFormGonder()
+const silme = useFormSubmit()
 const buYil = new Date().getFullYear()
 const yil = ref(buYil)
 const yillar = [buYil - 1, buYil, buYil + 1, buYil + 2]
@@ -31,9 +31,9 @@ async function yukle() {
   tatiller.value = await resmiTatilleriGetir(yil.value)
 }
 
-const { acik, form, yeniKayit, yeni, duzenle, kaydet, gonderiliyor, alanHatasi } = useKayitFormu<
+const { acik, form, yeniKayit, yeni, duzenle, kaydet, gonderiliyor, alanHatasi } = useCrudForm<
   ResmiTatil,
-  ResmiTatilKaydetIstegi
+  ResmiTatilKaydetRequest
 >({
   bosForm: () => ({ tarih: '', ad: '', yarimGun: false }),
   formaCevir: ({ tarih, ad, yarimGun }) => ({ tarih, ad, yarimGun }),
@@ -116,7 +116,7 @@ watch(yil, yukle, { immediate: true })
       </v-data-table>
     </v-card>
 
-    <KayitDialog
+    <FormDialog
       v-model="acik"
       :baslik="yeniKayit ? 'Yeni resmi tatil' : 'Resmi tatili düzenle'"
       :kaydediliyor="gonderiliyor"
@@ -134,7 +134,7 @@ watch(yil, yukle, { immediate: true })
         label="Yarım gün (arife: öğleden sonrası tatil)"
         hide-details
       />
-    </KayitDialog>
+    </FormDialog>
 
     <ConfirmDialog
       v-model="silmeAcik"

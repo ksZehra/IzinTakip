@@ -10,7 +10,7 @@ namespace IzinTakip.Api.Features.Raporlar;
 public sealed class RaporlarController(RaporService service) : ControllerBase
 {
     [HttpGet("takvim")]
-    [Yetki(Yetkiler.IzinTalebi.Olustur, Yetkiler.IzinTalebi.Yonet)]
+    [Permission(Yetkiler.IzinTalebi.Olustur, Yetkiler.IzinTalebi.Yonet)]
     [EndpointSummary("Kapsamdaki beklemede ve onaylı izinleri tarih aralığında listeler (en çok 3 ay)")]
     public async Task<ActionResult<IReadOnlyList<TakvimKaydiResponse>>> Takvim(
         [FromQuery] TakvimRequest request,
@@ -18,7 +18,7 @@ public sealed class RaporlarController(RaporService service) : ControllerBase
         Ok(await service.TakvimAsync(request, cancellationToken));
 
     [HttpGet("bakiyeler")]
-    [Yetki(Yetkiler.Rapor.Gor)]
+    [Permission(Yetkiler.Rapor.Gor)]
     [EndpointSummary("Kapsamdaki aktif çalışanların bakiyelerini sayfalı listeler")]
     public async Task<ActionResult<PagedResponse<BakiyeRaporuResponse>>> Bakiyeler(
         [FromQuery] BakiyeRaporuRequest request,
@@ -26,7 +26,7 @@ public sealed class RaporlarController(RaporService service) : ControllerBase
         await service.BakiyelerAsync(request, cancellationToken);
 
     [HttpGet("bakiyeler/excel")]
-    [Yetki(Yetkiler.Rapor.Gor)]
+    [Permission(Yetkiler.Rapor.Gor)]
     [EndpointSummary("Bakiye raporunu Excel dosyası olarak indirir")]
     [ProducesResponseType<Stream>(StatusCodes.Status200OK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
     public async Task<IActionResult> BakiyeExcel([FromQuery] int? departmanId, CancellationToken cancellationToken)

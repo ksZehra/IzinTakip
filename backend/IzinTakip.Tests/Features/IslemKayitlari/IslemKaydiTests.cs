@@ -5,16 +5,16 @@ using IzinTakip.Domain;
 
 namespace IzinTakip.Tests.Features.IslemKayitlari;
 
-public sealed class IslemKaydiTests(VeritabanliApiFactory factory) : IClassFixture<VeritabanliApiFactory>
+public sealed class IslemKaydiTests(DatabaseApiFactory factory) : IClassFixture<DatabaseApiFactory>
 {
     [Fact]
     public async Task HakEkle_IkKendiKaydina_KendiKaydiOlarakGorunur()
     {
         var admin = await SuperAdminAsync();
-        var calisanId = await TestVeri.CalisanEkleAsync(admin, "İK Kişi", await TestVeri.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}"));
+        var calisanId = await TestData.CalisanEkleAsync(admin, "İK Kişi", await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}"));
         var ikEposta = $"ik-{calisanId}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, ikEposta, SistemRolleri.IK, calisanId: calisanId);
-        var ik = await TestKimlik.OturumluClientAsync(factory, ikEposta);
+        await TestAuth.KullaniciOlusturAsync(factory, ikEposta, SistemRolleri.IK, calisanId: calisanId);
+        var ik = await TestAuth.OturumluClientAsync(factory, ikEposta);
 
         await ik.PostAsJsonAsync($"/api/calisanlar/{calisanId}/haklar", new { dakika = 4800, aciklama = "Düzeltme" }, TestContext.Current.CancellationToken);
         var kayitlar = await admin.GetFromJsonAsync<JsonElement>(
@@ -33,8 +33,8 @@ public sealed class IslemKaydiTests(VeritabanliApiFactory factory) : IClassFixtu
     public async Task Listele_IkGoremezSuperAdminGorur()
     {
         var ikEposta = $"ik-{Guid.NewGuid():N}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, ikEposta, SistemRolleri.IK);
-        var ik = await TestKimlik.OturumluClientAsync(factory, ikEposta);
+        await TestAuth.KullaniciOlusturAsync(factory, ikEposta, SistemRolleri.IK);
+        var ik = await TestAuth.OturumluClientAsync(factory, ikEposta);
         var admin = await SuperAdminAsync();
 
         var ikYaniti = await ik.GetAsync("/api/islem-kayitlari", TestContext.Current.CancellationToken);
@@ -48,8 +48,8 @@ public sealed class IslemKaydiTests(VeritabanliApiFactory factory) : IClassFixtu
     public async Task CalisanGuncelle_YalnizDegisenAlanEskiVeYeniDegeriyleYazilir()
     {
         var admin = await SuperAdminAsync();
-        var departmanId = await TestVeri.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}");
-        var calisanId = await TestVeri.CalisanEkleAsync(admin, "Tarihi Düzelen", departmanId);
+        var departmanId = await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}");
+        var calisanId = await TestData.CalisanEkleAsync(admin, "Tarihi Düzelen", departmanId);
 
         await admin.PutAsJsonAsync(
             $"/api/calisanlar/{calisanId}",
@@ -72,11 +72,11 @@ public sealed class IslemKaydiTests(VeritabanliApiFactory factory) : IClassFixtu
     public async Task ParolaDegistir_ParolaOzetiKaydaYazilmaz()
     {
         var eposta = $"parola-{Guid.NewGuid():N}@izintakip.test";
-        var kullaniciId = await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
-        var kullanici = await TestKimlik.OturumluClientAsync(factory, eposta);
+        var kullaniciId = await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
+        var kullanici = await TestAuth.OturumluClientAsync(factory, eposta);
         await kullanici.PostAsJsonAsync(
             "/api/auth/parola-degistir",
-            new { mevcutParola = TestKimlik.VarsayilanParola, yeniParola = "YeniParola2026" },
+            new { mevcutParola = TestAuth.VarsayilanParola, yeniParola = "YeniParola2026" },
             TestContext.Current.CancellationToken);
 
         var yanit = await (await SuperAdminAsync()).GetStringAsync($"/api/islem-kayitlari?tablo=Kullanici&kullaniciId={kullaniciId}", TestContext.Current.CancellationToken);
@@ -91,7 +91,7 @@ public sealed class IslemKaydiTests(VeritabanliApiFactory factory) : IClassFixtu
     public async Task RolDegistir_RolAdiylaYazilir()
     {
         var admin = await SuperAdminAsync();
-        var kullaniciId = await TestKimlik.KullaniciOlusturAsync(factory, $"terfi-{Guid.NewGuid():N}@izintakip.test", SistemRolleri.Calisan);
+        var kullaniciId = await TestAuth.KullaniciOlusturAsync(factory, $"terfi-{Guid.NewGuid():N}@izintakip.test", SistemRolleri.Calisan);
 
         await admin.PutAsJsonAsync($"/api/kullanicilar/{kullaniciId}/roller", new { roller = new[] { SistemRolleri.Yonetici } }, TestContext.Current.CancellationToken);
         var kayitlar = await admin.GetFromJsonAsync<JsonElement>("/api/islem-kayitlari?tablo=KullaniciRolu&pageSize=100", TestContext.Current.CancellationToken);
@@ -105,5 +105,5 @@ public sealed class IslemKaydiTests(VeritabanliApiFactory factory) : IClassFixtu
         kayit.GetProperty("degisiklikler").EnumerateArray().Single(d => d.GetProperty("alan").GetString() == "RoleId").GetProperty(taraf).GetString();
 
     private Task<HttpClient> SuperAdminAsync() =>
-        TestKimlik.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
+        TestAuth.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
 }

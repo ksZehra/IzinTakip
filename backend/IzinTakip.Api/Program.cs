@@ -6,14 +6,13 @@ using FluentValidation;
 using IzinTakip.Api.BackgroundServices;
 using IzinTakip.Api.Common;
 using IzinTakip.Api.Common.Auth;
-using IzinTakip.Api.Common.Bildirimler;
 using IzinTakip.Api.Common.Errors;
 using IzinTakip.Api.Common.Izin;
-using IzinTakip.Api.Common.Kapsam;
+using IzinTakip.Api.Common.Notifications;
 using IzinTakip.Api.Common.Validation;
+using IzinTakip.Infrastructure.Audit;
 using IzinTakip.Infrastructure.Data;
 using IzinTakip.Infrastructure.Data.Seed;
-using IzinTakip.Infrastructure.Denetim;
 using IzinTakip.Infrastructure.Email;
 using IzinTakip.Infrastructure.Identity;
 using IzinTakip.Infrastructure.Storage;
@@ -59,7 +58,7 @@ try
     var connectionString = builder.Configuration.GetConnectionString("IzinTakip")
         ?? throw new InvalidOperationException("ConnectionStrings:IzinTakip tanımlı değil. Bağlantı dizesini user-secrets ya da ortam değişkeniyle verin.");
 
-    var jwtAyarlari = builder.Configuration.GetSection("Jwt").Get<JwtAyarlari>() ?? new JwtAyarlari();
+    var jwtAyarlari = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
     if (jwtAyarlari.SigningKey.Length < 32)
     {
         throw new InvalidOperationException("Jwt:SigningKey en az 32 karakter olmalı. Değeri user-secrets ya da ortam değişkeniyle verin.");
@@ -69,16 +68,16 @@ try
     builder.Services.AddSingleton(jwtAyarlari);
     builder.Services.AddMemoryCache();
     builder.Services.AddHttpContextAccessor();
-    builder.Services.AddScoped<IGecerliKullanici, HttpGecerliKullanici>();
-    builder.Services.AddScoped<KullaniciYetkiOkuyucu>();
-    builder.Services.AddScoped<AuditInterceptor>();
-    builder.Services.AddScoped<IslemKaydiInterceptor>();
-    builder.Services.AddScoped<BaslangicVerisi>();
+    builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
+    builder.Services.AddScoped<KullaniciYetkiProvider>();
+    builder.Services.AddScoped<AuditFieldsInterceptor>();
+    builder.Services.AddScoped<AuditLogInterceptor>();
+    builder.Services.AddScoped<DataSeeder>();
     builder.Services.AddDbContext<IzinTakipDbContext>((serviceProvider, options) =>
         options.UseSqlServer(connectionString)
                .AddInterceptors(
-                   serviceProvider.GetRequiredService<AuditInterceptor>(),
-                   serviceProvider.GetRequiredService<IslemKaydiInterceptor>()));
+                   serviceProvider.GetRequiredService<AuditFieldsInterceptor>(),
+                   serviceProvider.GetRequiredService<AuditLogInterceptor>()));
     builder.Services.AddHealthChecks().AddDbContextCheck<IzinTakipDbContext>();
 
     builder.Services.AddIdentityCore<Kullanici>(options =>
@@ -92,7 +91,7 @@ try
         .AddRoles<Rol>()
         .AddEntityFrameworkStores<IzinTakipDbContext>()
         .AddSignInManager()
-        .AddErrorDescriber<TurkceIdentityErrorDescriber>();
+        .AddErrorDescriber<TurkishIdentityErrorDescriber>();
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
@@ -110,12 +109,12 @@ try
             {
                 OnTokenValidated = async context =>
                 {
-                    var okuyucu = context.HttpContext.RequestServices.GetRequiredService<KullaniciYetkiOkuyucu>();
+                    var okuyucu = context.HttpContext.RequestServices.GetRequiredService<KullaniciYetkiProvider>();
                     var yetkiler = int.TryParse(context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Sub), out var kullaniciId)
                         ? await okuyucu.OkuAsync(kullaniciId, context.HttpContext.RequestAborted)
                         : null;
                     if (yetkiler is not { Aktif: true }
-                        || yetkiler.GuvenlikDamgasi != context.Principal?.FindFirstValue(JwtAyarlari.GuvenlikDamgasiClaim))
+                        || yetkiler.GuvenlikDamgasi != context.Principal?.FindFirstValue(JwtOptions.GuvenlikDamgasiClaim))
                     {
                         context.Fail("Kullanici bulunamadi, pasif ya da oturumu kapatilmis.");
                     }
@@ -123,9 +122,9 @@ try
             };
         });
     builder.Services.AddAuthorizationBuilder()
-        .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().AddRequirements(new YetkiAttribute()).Build());
-    builder.Services.AddScoped<IAuthorizationHandler, YetkiAuthorizationHandler>();
-    builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, YetkiSonucuHandler>();
+        .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().AddRequirements(new PermissionAttribute()).Build());
+    builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+    builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationResultHandler>();
 
     builder.Services.AddProblemDetails(options =>
         options.CustomizeProblemDetails = context =>
@@ -138,27 +137,27 @@ try
 
     var saatDilimi = TimeZoneInfo.FindSystemTimeZoneById(builder.Configuration["Sirket:SaatDilimi"] ?? "Europe/Istanbul");
     builder.Services.AddSingleton(serviceProvider => new SirketSaati(serviceProvider.GetRequiredService<TimeProvider>(), saatDilimi));
-    builder.Services.AddScoped<CalisanKapsami>();
-    builder.Services.AddScoped<BakiyeSorgusu>();
-    builder.Services.AddScoped<CalismaTakvimiOkuyucu>();
+    builder.Services.AddScoped<CalisanScope>();
+    builder.Services.AddScoped<BakiyeQuery>();
+    builder.Services.AddScoped<CalismaTakvimiProvider>();
     builder.Services.AddScoped<KullaniciKorumasi>();
-    builder.Services.AddScoped<KullaniciAdlari>();
+    builder.Services.AddScoped<KullaniciAdlariProvider>();
     builder.Services.AddScoped<OnayciBulucu>();
-    builder.Services.AddScoped<BildirimYazici>();
+    builder.Services.AddScoped<NotificationPublisher>();
 
-    builder.Services.AddSingleton(builder.Configuration.GetSection("Uygulama").Get<UygulamaAyarlari>() ?? new UygulamaAyarlari());
-    builder.Services.AddSingleton(builder.Configuration.GetSection("Email").Get<EmailAyarlari>() ?? new EmailAyarlari());
+    builder.Services.AddSingleton(builder.Configuration.GetSection("Uygulama").Get<AppOptions>() ?? new AppOptions());
+    builder.Services.AddSingleton(builder.Configuration.GetSection("Email").Get<EmailOptions>() ?? new EmailOptions());
     builder.Services.AddSingleton<IEmailQueue, ChannelEmailQueue>();
     builder.Services.AddSingleton<IEmailSender, MailKitEmailSender>();
-    builder.Services.AddSingleton(new DosyaDeposuAyarlari
+    builder.Services.AddSingleton(new FileStorageOptions
     {
         Klasor = builder.Configuration["DosyaDeposu:Klasor"] ?? Path.Combine(builder.Environment.ContentRootPath, "belgeler")
     });
     builder.Services.AddSingleton<IFileStorage, LocalFileStorage>();
-    builder.Services.AddHostedService<EmailGonderimServisi>();
-    builder.Services.AddSingleton(builder.Configuration.GetSection("ArkaPlan").Get<ArkaPlanAyarlari>() ?? new ArkaPlanAyarlari());
-    builder.Services.AddHostedService<YillikHakServisi>();
-    builder.Services.AddHostedService<HatirlatmaServisi>();
+    builder.Services.AddHostedService<EmailQueueWorker>();
+    builder.Services.AddSingleton(builder.Configuration.GetSection("ArkaPlan").Get<BackgroundJobOptions>() ?? new BackgroundJobOptions());
+    builder.Services.AddHostedService<YillikHakJob>();
+    builder.Services.AddHostedService<OnayHatirlatmaJob>();
     foreach (var serviceTipi in typeof(Program).Assembly.GetTypes().Where(t =>
                  t is { IsClass: true, IsAbstract: false }
                  && t.Name.EndsWith("Service", StringComparison.Ordinal)
@@ -203,8 +202,8 @@ try
 
         if (baslangicVerisiYukle)
         {
-            await scope.ServiceProvider.GetRequiredService<BaslangicVerisi>().HazirlaAsync(
-                new BaslangicVerisiAyarlari(
+            await scope.ServiceProvider.GetRequiredService<DataSeeder>().HazirlaAsync(
+                new SeedOptions(
                     app.Configuration["Seed:SuperAdmin:Eposta"],
                     app.Configuration["Seed:SuperAdmin:Parola"],
                     app.Configuration.GetValue<bool>("Seed:DemoVeri"),

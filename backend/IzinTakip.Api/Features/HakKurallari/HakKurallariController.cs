@@ -7,7 +7,7 @@ namespace IzinTakip.Api.Features.HakKurallari;
 
 [ApiController]
 [Route("api/hak-kurallari")]
-[Yetki(Yetkiler.Tanim.Yonet)]
+[Permission(Yetkiler.Tanim.Yonet)]
 public sealed class HakKurallariController(HakKuraliService service) : ControllerBase
 {
     [HttpGet]

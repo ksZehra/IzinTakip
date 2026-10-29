@@ -1,6 +1,6 @@
 namespace IzinTakip.Infrastructure.Storage;
 
-public sealed class LocalFileStorage(DosyaDeposuAyarlari ayarlar) : IFileStorage
+public sealed class LocalFileStorage(FileStorageOptions ayarlar) : IFileStorage
 {
     public async Task<string> KaydetAsync(Stream icerik, string uzanti, CancellationToken cancellationToken)
     {

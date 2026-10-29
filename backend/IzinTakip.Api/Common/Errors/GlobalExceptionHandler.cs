@@ -25,10 +25,10 @@ public sealed class GlobalExceptionHandler(
     {
         var (status, bilinenMesaj) = exception switch
         {
-            KimlikDogrulanamadiException e => (StatusCodes.Status401Unauthorized, e.Message),
-            IsKuraliException e => (StatusCodes.Status422UnprocessableEntity, e.Message),
-            KayitBulunamadiException e => (StatusCodes.Status404NotFound, e.Message),
-            YetkiYokException e => (StatusCodes.Status403Forbidden, e.Message),
+            UnauthorizedException e => (StatusCodes.Status401Unauthorized, e.Message),
+            BusinessRuleException e => (StatusCodes.Status422UnprocessableEntity, e.Message),
+            NotFoundException e => (StatusCodes.Status404NotFound, e.Message),
+            ForbiddenException e => (StatusCodes.Status403Forbidden, e.Message),
             DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, CakismaMesaji),
             _ when SqlHataNumarasi(exception) is 2601 or 2627 => (StatusCodes.Status409Conflict, TekrarMesaji),
             _ when SqlHataNumarasi(exception) is 1205 => (StatusCodes.Status409Conflict, EsZamanliIslemMesaji),

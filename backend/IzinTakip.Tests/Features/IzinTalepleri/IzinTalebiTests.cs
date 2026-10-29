@@ -5,16 +5,16 @@ using IzinTakip.Domain;
 
 namespace IzinTakip.Tests.Features.IzinTalepleri;
 
-public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixture<VeritabanliApiFactory>
+public sealed class IzinTalebiTests(DatabaseApiFactory factory) : IClassFixture<DatabaseApiFactory>
 {
     private const int GunlukDakika = 480;
-    private static readonly DateOnly Pazartesi = TestVeri.SonrakiYilPazartesi();
+    private static readonly DateOnly Pazartesi = TestData.SonrakiYilPazartesi();
 
     [Fact]
     public async Task Olustur_KendiAdinaTamGun_201BeklemedeVeBakiyedenDuser()
     {
         var (calisanId, client) = await CalisanKurAsync();
-        var yillik = await TestVeri.IzinTuruIdAsync(client, "Yıllık");
+        var yillik = await TestData.IzinTuruIdAsync(client, "Yıllık");
 
         var yanit = await TalepAcAsync(client, new { izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi, bitisTarihi = Pazartesi.AddDays(2) });
         var talep = await yanit.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
@@ -31,8 +31,8 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     public async Task Olustur_YarimGunVeSaatlik_DogruSureylerOlusur()
     {
         var (_, client) = await CalisanKurAsync();
-        var yillik = await TestVeri.IzinTuruIdAsync(client, "Yıllık");
-        var saatlik = await TestVeri.IzinTuruIdAsync(client, "Saatlik İzin");
+        var yillik = await TestData.IzinTuruIdAsync(client, "Yıllık");
+        var saatlik = await TestData.IzinTuruIdAsync(client, "Saatlik İzin");
 
         var yarim = await TalepAcAsync(client, new { izinTuruId = yillik, sureTipi = "YarimGun", tarih = Pazartesi, gunYarisi = "Sabah" });
         var saat = await TalepAcAsync(client, new { izinTuruId = saatlik, sureTipi = "Saatlik", tarih = Pazartesi, baslangicSaati = "14:00", bitisSaati = "16:00" });
@@ -47,7 +47,7 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     public async Task Olustur_BakiyeYetersiz_422VeAcikMesajDoner()
     {
         var (_, client) = await CalisanKurAsync();
-        var yillik = await TestVeri.IzinTuruIdAsync(client, "Yıllık");
+        var yillik = await TestData.IzinTuruIdAsync(client, "Yıllık");
 
         var yanit = await TalepAcAsync(client, new { izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi, bitisTarihi = Pazartesi.AddDays(18) });
 
@@ -59,7 +59,7 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     public async Task Olustur_CakisanIkinciTalep_422Doner()
     {
         var (_, client) = await CalisanKurAsync();
-        var yillik = await TestVeri.IzinTuruIdAsync(client, "Yıllık");
+        var yillik = await TestData.IzinTuruIdAsync(client, "Yıllık");
 
         await TalepAcAsync(client, new { izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi, bitisTarihi = Pazartesi.AddDays(1) });
         var ikinci = await TalepAcAsync(client, new { izinTuruId = yillik, sureTipi = "YarimGun", tarih = Pazartesi.AddDays(1), gunYarisi = "OgledenSonra" });
@@ -72,8 +72,8 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     public async Task Olustur_GecmisTarih_CalisanaKapaliIkeAcik()
     {
         var (calisanId, calisan) = await CalisanKurAsync();
-        var yillik = await TestVeri.IzinTuruIdAsync(calisan, "Yıllık");
-        var gecmis = TestVeri.GecenYilPazartesi();
+        var yillik = await TestData.IzinTuruIdAsync(calisan, "Yıllık");
+        var gecmis = TestData.GecenYilPazartesi();
 
         var calisanYaniti = await TalepAcAsync(calisan, new { izinTuruId = yillik, sureTipi = "TamGun", tarih = gecmis });
         var ik = await IkClientAsync();
@@ -89,7 +89,7 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     {
         var (_, client) = await CalisanKurAsync();
         var (digerId, _) = await CalisanKurAsync();
-        var yillik = await TestVeri.IzinTuruIdAsync(client, "Yıllık");
+        var yillik = await TestData.IzinTuruIdAsync(client, "Yıllık");
 
         var yanit = await TalepAcAsync(client, new { calisanId = digerId, izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi });
 
@@ -101,16 +101,16 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     public async Task Olustur_Yonetici_EkibiAdinaAcarEkipDisinaAcamaz()
     {
         var admin = await SuperAdminAsync();
-        var ekip = await TestVeri.DepartmanEkleAsync(admin, $"Ekip-{Guid.NewGuid():N}");
-        var yoneticiId = await TestVeri.CalisanEkleAsync(admin, "Yönetici", ekip);
-        await TestVeri.DepartmanYoneticisiAtaAsync(admin, ekip, $"Ekip-{yoneticiId}", yoneticiId);
-        var ekiptenId = await TestVeri.CalisanEkleAsync(admin, "Ekipten", ekip);
-        await TestVeri.HakEkleAsync(admin, ekiptenId, 14 * GunlukDakika);
+        var ekip = await TestData.DepartmanEkleAsync(admin, $"Ekip-{Guid.NewGuid():N}");
+        var yoneticiId = await TestData.CalisanEkleAsync(admin, "Yönetici", ekip);
+        await TestData.DepartmanYoneticisiAtaAsync(admin, ekip, $"Ekip-{yoneticiId}", yoneticiId);
+        var ekiptenId = await TestData.CalisanEkleAsync(admin, "Ekipten", ekip);
+        await TestData.HakEkleAsync(admin, ekiptenId, 14 * GunlukDakika);
         var (disaridanId, _) = await CalisanKurAsync();
         var eposta = $"yonetici-{yoneticiId}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Yonetici, calisanId: yoneticiId);
-        var yonetici = await TestKimlik.OturumluClientAsync(factory, eposta);
-        var yillik = await TestVeri.IzinTuruIdAsync(yonetici, "Yıllık");
+        await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Yonetici, calisanId: yoneticiId);
+        var yonetici = await TestAuth.OturumluClientAsync(factory, eposta);
+        var yillik = await TestData.IzinTuruIdAsync(yonetici, "Yıllık");
 
         var ekibine = await TalepAcAsync(yonetici, new { calisanId = ekiptenId, izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi });
         var disariya = await TalepAcAsync(yonetici, new { calisanId = disaridanId, izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi });
@@ -124,7 +124,7 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     {
         var (_, birinci) = await CalisanKurAsync();
         var (_, ikinci) = await CalisanKurAsync();
-        var yillik = await TestVeri.IzinTuruIdAsync(birinci, "Yıllık");
+        var yillik = await TestData.IzinTuruIdAsync(birinci, "Yıllık");
         await TalepAcAsync(birinci, new { izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi });
         await TalepAcAsync(ikinci, new { izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi });
 
@@ -138,7 +138,7 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     public async Task Detay_KayitZamaniUtcIsaretliTalepAraligiYerelDoner()
     {
         var (_, client) = await CalisanKurAsync();
-        var yillik = await TestVeri.IzinTuruIdAsync(client, "Yıllık");
+        var yillik = await TestData.IzinTuruIdAsync(client, "Yıllık");
         var talep = await (await TalepAcAsync(client, new { izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi }))
             .Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
 
@@ -153,7 +153,7 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     {
         var (_, birinci) = await CalisanKurAsync();
         var (_, ikinci) = await CalisanKurAsync();
-        var yillik = await TestVeri.IzinTuruIdAsync(birinci, "Yıllık");
+        var yillik = await TestData.IzinTuruIdAsync(birinci, "Yıllık");
         var talep = await (await TalepAcAsync(birinci, new { izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi }))
             .Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
 
@@ -166,7 +166,7 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     public async Task SureHesapla_SaatlikOgleArasiniKapsayan_IkiSaatDoner()
     {
         var (_, client) = await CalisanKurAsync();
-        var saatlik = await TestVeri.IzinTuruIdAsync(client, "Saatlik İzin");
+        var saatlik = await TestData.IzinTuruIdAsync(client, "Saatlik İzin");
 
         var yanit = await client.PostAsJsonAsync(
             "/api/izin-talepleri/sure-hesapla",
@@ -183,7 +183,7 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     public async Task Olustur_SaatlikteBitisSaatiYok_400AlanHatasiDoner()
     {
         var (_, client) = await CalisanKurAsync();
-        var saatlik = await TestVeri.IzinTuruIdAsync(client, "Saatlik İzin");
+        var saatlik = await TestData.IzinTuruIdAsync(client, "Saatlik İzin");
 
         var yanit = await TalepAcAsync(client, new { izinTuruId = saatlik, sureTipi = "Saatlik", tarih = Pazartesi, baslangicSaati = "10:00" });
         var govde = await yanit.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
@@ -196,7 +196,7 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     public async Task Olustur_SaniyeliSaat_400AlanHatasiDoner()
     {
         var (_, client) = await CalisanKurAsync();
-        var saatlik = await TestVeri.IzinTuruIdAsync(client, "Saatlik İzin");
+        var saatlik = await TestData.IzinTuruIdAsync(client, "Saatlik İzin");
 
         var yanit = await TalepAcAsync(client, new { izinTuruId = saatlik, sureTipi = "Saatlik", tarih = Pazartesi, baslangicSaati = "10:00:30", bitisSaati = "11:00" });
         var govde = await yanit.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
@@ -211,7 +211,7 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     public async Task Olustur_TamGunDisindaBitisTarihi_400AlanHatasiDoner(string sureTipi, string? gunYarisi, string? baslangicSaati, string? bitisSaati)
     {
         var (_, client) = await CalisanKurAsync();
-        var tur = await TestVeri.IzinTuruIdAsync(client, sureTipi == "Saatlik" ? "Saatlik İzin" : "Yıllık");
+        var tur = await TestData.IzinTuruIdAsync(client, sureTipi == "Saatlik" ? "Saatlik İzin" : "Yıllık");
 
         var yanit = await TalepAcAsync(client, new
         {
@@ -261,9 +261,9 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     public async Task Olustur_BakiyeyiAsanIkiTalepAyniAnda_YalnizBiriKabulEdilir()
     {
         var admin = await SuperAdminAsync();
-        var calisanId = await TestVeri.CalisanEkleAsync(admin, "Acele", await TestVeri.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}"));
-        await TestVeri.HakEkleAsync(admin, calisanId, 2 * GunlukDakika);
-        var yillik = await TestVeri.IzinTuruIdAsync(admin, "Yıllık");
+        var calisanId = await TestData.CalisanEkleAsync(admin, "Acele", await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}"));
+        await TestData.HakEkleAsync(admin, calisanId, 2 * GunlukDakika);
+        var yillik = await TestData.IzinTuruIdAsync(admin, "Yıllık");
 
         var yanitlar = await Task.WhenAll(
             TalepAcAsync(admin, new { calisanId, izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi, bitisTarihi = Pazartesi.AddDays(1) }),
@@ -278,23 +278,23 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     private async Task<(int CalisanId, HttpClient Client)> CalisanKurAsync()
     {
         var admin = await SuperAdminAsync();
-        var departmanId = await TestVeri.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}");
-        var calisanId = await TestVeri.CalisanEkleAsync(admin, "Çalışan", departmanId);
-        await TestVeri.HakEkleAsync(admin, calisanId, 14 * GunlukDakika);
+        var departmanId = await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}");
+        var calisanId = await TestData.CalisanEkleAsync(admin, "Çalışan", departmanId);
+        await TestData.HakEkleAsync(admin, calisanId, 14 * GunlukDakika);
         var eposta = $"calisan-{calisanId}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan, calisanId: calisanId);
-        return (calisanId, await TestKimlik.OturumluClientAsync(factory, eposta));
+        await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan, calisanId: calisanId);
+        return (calisanId, await TestAuth.OturumluClientAsync(factory, eposta));
     }
 
     private async Task<HttpClient> IkClientAsync()
     {
         var eposta = $"ik-{Guid.NewGuid():N}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.IK);
-        return await TestKimlik.OturumluClientAsync(factory, eposta);
+        await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.IK);
+        return await TestAuth.OturumluClientAsync(factory, eposta);
     }
 
     private Task<HttpClient> SuperAdminAsync() =>
-        TestKimlik.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
+        TestAuth.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
 
     private static Task<HttpResponseMessage> TalepAcAsync(HttpClient client, object talep) =>
         client.PostAsJsonAsync("/api/izin-talepleri", talep, TestContext.Current.CancellationToken);

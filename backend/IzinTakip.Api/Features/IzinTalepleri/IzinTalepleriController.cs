@@ -7,7 +7,7 @@ namespace IzinTakip.Api.Features.IzinTalepleri;
 
 [ApiController]
 [Route("api/izin-talepleri")]
-[Yetki(Yetkiler.IzinTalebi.Olustur, Yetkiler.IzinTalebi.Yonet)]
+[Permission(Yetkiler.IzinTalebi.Olustur, Yetkiler.IzinTalebi.Yonet)]
 public sealed class IzinTalepleriController(IzinTalebiService service, IzinOnayService onayService) : ControllerBase
 {
     [HttpPost]
@@ -33,7 +33,7 @@ public sealed class IzinTalepleriController(IzinTalebiService service, IzinOnayS
         await service.ListeleAsync(request, cancellationToken);
 
     [HttpGet("excel")]
-    [Yetki(Yetkiler.Rapor.Gor)]
+    [Permission(Yetkiler.Rapor.Gor)]
     [EndpointSummary("Kapsamdaki izin taleplerini liste filtreleriyle Excel dosyası olarak indirir")]
     [ProducesResponseType<Stream>(StatusCodes.Status200OK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
     public async Task<IActionResult> Excel([FromQuery] IzinTalebiFiltreRequest request, CancellationToken cancellationToken)
@@ -49,7 +49,7 @@ public sealed class IzinTalepleriController(IzinTalebiService service, IzinOnayS
         await service.DetayAsync(id, cancellationToken);
 
     [HttpPost("{id:int}/onayla")]
-    [Yetki(Yetkiler.IzinTalebi.Yonet)]
+    [Permission(Yetkiler.IzinTalebi.Yonet)]
     [EndpointSummary("Beklemedeki talebi onaylar; kimse kendi talebini onaylayamaz (SuperAdmin hariç)")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<IzinTalebiResponse>> Onayla(int id, IzinTalebiKararRequest request, CancellationToken cancellationToken)
@@ -59,7 +59,7 @@ public sealed class IzinTalepleriController(IzinTalebiService service, IzinOnayS
     }
 
     [HttpPost("{id:int}/reddet")]
-    [Yetki(Yetkiler.IzinTalebi.Yonet)]
+    [Permission(Yetkiler.IzinTalebi.Yonet)]
     [EndpointSummary("Beklemedeki talebi gerekçesiyle reddeder")]
     public async Task<ActionResult<IzinTalebiResponse>> Reddet(int id, IzinTalebiReddetRequest request, CancellationToken cancellationToken)
     {

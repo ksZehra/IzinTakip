@@ -18,8 +18,8 @@ public sealed class AuthController(AuthService service) : ControllerBase
     [HttpGet("ben")]
     [Authorize]
     [EndpointSummary("Oturumdaki kullanıcının bilgisini, rollerini ve yetkilerini döner")]
-    [ProducesResponseType<BenResponse>(StatusCodes.Status200OK)]
-    public async Task<ActionResult<BenResponse>> Ben(CancellationToken cancellationToken) =>
+    [ProducesResponseType<CurrentUserResponse>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<CurrentUserResponse>> Ben(CancellationToken cancellationToken) =>
         await service.BenAsync(cancellationToken);
 
     [HttpPost("parola-degistir")]

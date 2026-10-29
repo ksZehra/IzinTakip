@@ -48,17 +48,17 @@ public sealed class IzinTuru : Entity
     {
         if (!tamGunAlinir && !yarimGunAlinir && !saatlikAlinir)
         {
-            throw new IsKuraliException("En az bir süre biçimi seçilmeli: tam gün, yarım gün ya da saatlik.");
+            throw new BusinessRuleException("En az bir süre biçimi seçilmeli: tam gün, yarım gün ya da saatlik.");
         }
 
         if (gunHesabi == GunHesabi.TakvimGunu && (yarimGunAlinir || saatlikAlinir))
         {
-            throw new IsKuraliException("Takvim günü sayan izin türü yalnız tam gün alınabilir.");
+            throw new BusinessRuleException("Takvim günü sayan izin türü yalnız tam gün alınabilir.");
         }
 
         if (talepBasinaEnFazlaDakika is not null && yillikEnFazlaDakika is not null && talepBasinaEnFazlaDakika > yillikEnFazlaDakika)
         {
-            throw new IsKuraliException("Talep başına sınır, yıllık sınırdan büyük olamaz.");
+            throw new BusinessRuleException("Talep başına sınır, yıllık sınırdan büyük olamaz.");
         }
 
         Ad = ad;

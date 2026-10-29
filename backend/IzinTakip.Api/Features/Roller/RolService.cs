@@ -1,20 +1,20 @@
 using System.Globalization;
 using System.Security.Claims;
+using IzinTakip.Api.Common.Auth;
 using IzinTakip.Domain;
 using IzinTakip.Domain.Exceptions;
 using IzinTakip.Infrastructure.Data;
 using IzinTakip.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using static IzinTakip.Api.Common.Auth.IdentitySonucu;
 
 namespace IzinTakip.Api.Features.Roller;
 
 public sealed class RolService(
     IzinTakipDbContext db,
     RoleManager<Rol> roleManager,
-    IGecerliKullanici gecerliKullanici,
-    KullaniciYetkiOkuyucu yetkiOkuyucu,
+    ICurrentUser gecerliKullanici,
+    KullaniciYetkiProvider yetkiOkuyucu,
     ILogger<RolService> logger)
 {
     public async Task<IReadOnlyList<RolResponse>> ListeleAsync(CancellationToken cancellationToken) =>
@@ -22,7 +22,7 @@ public sealed class RolService(
 
     public async Task<RolResponse> DetayAsync(int id, CancellationToken cancellationToken) =>
         await Yansit(db.Roles.AsNoTracking().Where(r => r.Id == id)).SingleOrDefaultAsync(cancellationToken)
-        ?? throw new KayitBulunamadiException("Rol bulunamadı.");
+        ?? throw new NotFoundException("Rol bulunamadı.");
 
     public async Task<RolResponse> OlusturAsync(RolKaydetRequest request, CancellationToken cancellationToken)
     {
@@ -32,10 +32,10 @@ public sealed class RolService(
 
         await using (var transaction = await db.Database.BeginTransactionAsync(cancellationToken))
         {
-            Dogrula(await roleManager.CreateAsync(rol));
+            await roleManager.CreateAsync(rol).DogrulaAsync();
             foreach (var yetki in yetkiler)
             {
-                Dogrula(await roleManager.AddClaimAsync(rol, new Claim(Yetkiler.ClaimType, yetki)));
+                await roleManager.AddClaimAsync(rol, new Claim(Yetkiler.ClaimType, yetki)).DogrulaAsync();
             }
 
             await transaction.CommitAsync(cancellationToken);
@@ -52,13 +52,13 @@ public sealed class RolService(
         var rol = await BulAsync(id);
         if (rol.Name == SistemRolleri.SuperAdmin)
         {
-            throw new IsKuraliException("SuperAdmin rolü değiştirilemez.");
+            throw new BusinessRuleException("SuperAdmin rolü değiştirilemez.");
         }
 
         var ad = request.Ad.Trim();
         if (SistemRolleri.Tumu.Contains(rol.Name) && ad != rol.Name)
         {
-            throw new IsKuraliException("Sistem rollerinin adı değiştirilemez.");
+            throw new BusinessRuleException("Sistem rollerinin adı değiştirilemez.");
         }
 
         var yeniYetkiler = request.Yetkiler.Distinct().ToList();
@@ -67,17 +67,17 @@ public sealed class RolService(
         {
             rol.Name = ad;
             rol.Korumali = request.Korumali;
-            Dogrula(await roleManager.UpdateAsync(rol));
+            await roleManager.UpdateAsync(rol).DogrulaAsync();
 
             eskiYetkiler = (await roleManager.GetClaimsAsync(rol)).Where(c => c.Type == Yetkiler.ClaimType).Select(c => c.Value).ToList();
             foreach (var yetki in eskiYetkiler.Except(yeniYetkiler))
             {
-                Dogrula(await roleManager.RemoveClaimAsync(rol, new Claim(Yetkiler.ClaimType, yetki)));
+                await roleManager.RemoveClaimAsync(rol, new Claim(Yetkiler.ClaimType, yetki)).DogrulaAsync();
             }
 
             foreach (var yetki in yeniYetkiler.Except(eskiYetkiler))
             {
-                Dogrula(await roleManager.AddClaimAsync(rol, new Claim(Yetkiler.ClaimType, yetki)));
+                await roleManager.AddClaimAsync(rol, new Claim(Yetkiler.ClaimType, yetki)).DogrulaAsync();
             }
 
             await transaction.CommitAsync(cancellationToken);
@@ -100,21 +100,21 @@ public sealed class RolService(
         var rol = await BulAsync(id);
         if (SistemRolleri.Tumu.Contains(rol.Name))
         {
-            throw new IsKuraliException("Sistem rolleri silinemez.");
+            throw new BusinessRuleException("Sistem rolleri silinemez.");
         }
 
         if (await db.UserRoles.AnyAsync(ur => ur.RoleId == id, cancellationToken))
         {
-            throw new IsKuraliException("Bu role atanmış kullanıcılar var; önce kullanıcıların rollerini değiştirin.");
+            throw new BusinessRuleException("Bu role atanmış kullanıcılar var; önce kullanıcıların rollerini değiştirin.");
         }
 
-        Dogrula(await roleManager.DeleteAsync(rol));
+        await roleManager.DeleteAsync(rol).DogrulaAsync();
         logger.LogInformation("Rol silindi {RolId} {Ad} {YapanKullaniciId}", id, rol.Name, yapan.KullaniciId);
     }
 
     private async Task<Rol> BulAsync(int id) =>
         await roleManager.FindByIdAsync(id.ToString(CultureInfo.InvariantCulture))
-        ?? throw new KayitBulunamadiException("Rol bulunamadı.");
+        ?? throw new NotFoundException("Rol bulunamadı.");
 
     private IQueryable<RolResponse> Yansit(IQueryable<Rol> roller) =>
         roller.Select(r => new RolResponse(

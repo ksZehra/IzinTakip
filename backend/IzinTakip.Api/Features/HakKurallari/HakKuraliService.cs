@@ -49,7 +49,7 @@ public sealed class HakKuraliService(IzinTakipDbContext db, ILogger<HakKuraliSer
 
     private async Task<IzinHakkiKurali> BulAsync(int id, CancellationToken cancellationToken) =>
         await db.IzinHakkiKurallari.SingleOrDefaultAsync(k => k.Id == id, cancellationToken)
-        ?? throw new KayitBulunamadiException("Hak kuralı bulunamadı.");
+        ?? throw new NotFoundException("Hak kuralı bulunamadı.");
 
     private static HakKuraliResponse Yanit(IzinHakkiKurali k) =>
         new(k.Id, k.Ad, k.MinKidemYil, k.MaxKidemYil, k.MinYas, k.MaxYas, k.Gun, k.Aktif);

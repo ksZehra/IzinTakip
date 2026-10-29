@@ -7,7 +7,7 @@ namespace IzinTakip.Api.Features.IslemKayitlari;
 
 [ApiController]
 [Route("api/islem-kayitlari")]
-[Yetki(Yetkiler.Denetim.Gor)]
+[Permission(Yetkiler.Denetim.Gor)]
 public sealed class IslemKayitlariController(IslemKaydiService service) : ControllerBase
 {
     [HttpGet]

@@ -1,26 +1,26 @@
 import { httpClient } from '@/common/http/httpClient'
-import type { ListeSorgusu, Sayfa } from '@/common/composables/useSayfaliListe'
+import type { ListQuery, Page } from '@/common/composables/usePagedList'
 
 import type { Schema } from './types'
 
 export type Calisan = Schema<'CalisanResponse'>
 export type CalisanSatiri = Schema<'CalisanListeResponse'>
-export type CalisanKaydetIstegi = Schema<'CalisanKaydetRequest'>
+export type CalisanKaydetRequest = Schema<'CalisanKaydetRequest'>
 export type Bakiye = Schema<'BakiyeResponse'>
 export type IzinHaklari = Schema<'IzinHaklariResponse'>
-export type IzinHakkiEkleIstegi = Schema<'IzinHakkiEkleRequest'>
+export type IzinHakkiEkleRequest = Schema<'IzinHakkiEkleRequest'>
 
-export interface CalisanFiltresi extends Record<string, string | number | boolean | null> {
+export interface CalisanFilter extends Record<string, string | number | boolean | null> {
   arama: string
   departmanId: number | null
   aktif: boolean | null
 }
 
 export async function calisanlariGetir(
-  sorgu: Partial<ListeSorgusu<CalisanFiltresi>>,
+  sorgu: Partial<ListQuery<CalisanFilter>>,
   signal?: AbortSignal,
-): Promise<Sayfa<CalisanSatiri>> {
-  const { data } = await httpClient.get<Sayfa<CalisanSatiri>>('/api/calisanlar', {
+): Promise<Page<CalisanSatiri>> {
+  const { data } = await httpClient.get<Page<CalisanSatiri>>('/api/calisanlar', {
     params: sorgu,
     signal,
   })
@@ -32,12 +32,12 @@ export async function calisaniGetir(id: number): Promise<Calisan> {
   return data
 }
 
-export async function calisanEkle(istek: CalisanKaydetIstegi): Promise<Calisan> {
+export async function calisanEkle(istek: CalisanKaydetRequest): Promise<Calisan> {
   const { data } = await httpClient.post<Calisan>('/api/calisanlar', istek)
   return data
 }
 
-export async function calisanGuncelle(id: number, istek: CalisanKaydetIstegi): Promise<Calisan> {
+export async function calisanGuncelle(id: number, istek: CalisanKaydetRequest): Promise<Calisan> {
   const { data } = await httpClient.put<Calisan>(`/api/calisanlar/${id}`, istek)
   return data
 }
@@ -56,6 +56,6 @@ export async function haklariGetir(calisanId: number): Promise<IzinHaklari> {
   return data
 }
 
-export async function hakEkle(calisanId: number, istek: IzinHakkiEkleIstegi): Promise<void> {
+export async function hakEkle(calisanId: number, istek: IzinHakkiEkleRequest): Promise<void> {
   await httpClient.post(`/api/calisanlar/${calisanId}/haklar`, istek)
 }

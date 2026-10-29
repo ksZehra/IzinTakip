@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { useFormGonder } from '@/common/composables/useFormGonder'
+import { useFormSubmit } from '@/common/composables/useFormSubmit'
 import CenteredLayout from '@/layouts/CenteredLayout.vue'
 import { guvenliDonusAdresi } from '@/router/guards'
 import { useAuthStore } from '@/stores/authStore'
@@ -10,7 +10,7 @@ import { useAuthStore } from '@/stores/authStore'
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
-const { gonder, gonderiliyor, hataMesaji, alanHatasi } = useFormGonder()
+const { gonder, gonderiliyor, hataMesaji, alanHatasi } = useFormSubmit()
 
 const eposta = ref('')
 const parola = ref('')

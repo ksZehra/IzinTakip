@@ -548,7 +548,7 @@ namespace IzinTakip.Infrastructure.Data.Migrations
                     b.ToTable("ResmiTatiller");
                 });
 
-            modelBuilder.Entity("IzinTakip.Infrastructure.Denetim.IslemKaydi", b =>
+            modelBuilder.Entity("IzinTakip.Infrastructure.Audit.IslemKaydi", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -883,7 +883,7 @@ namespace IzinTakip.Infrastructure.Data.Migrations
                     b.Navigation("IzinTuru");
                 });
 
-            modelBuilder.Entity("IzinTakip.Infrastructure.Denetim.IslemKaydi", b =>
+            modelBuilder.Entity("IzinTakip.Infrastructure.Audit.IslemKaydi", b =>
                 {
                     b.HasOne("IzinTakip.Domain.Entities.Calisan", "IlgiliCalisan")
                         .WithMany()

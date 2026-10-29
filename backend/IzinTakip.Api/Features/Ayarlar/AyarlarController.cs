@@ -14,7 +14,7 @@ public sealed class AyarlarController(AyarlarService service) : ControllerBase
         await service.GetirAsync(cancellationToken);
 
     [HttpPut]
-    [Yetki(Yetkiler.Tanim.Yonet)]
+    [Permission(Yetkiler.Tanim.Yonet)]
     [EndpointSummary("Çalışma günlerini, mesai ve öğle arası saatlerini, saatlik izin adımını ve hatırlatma süresini günceller")]
     public async Task<ActionResult<AyarlarResponse>> Guncelle(AyarlarGuncelleRequest request, CancellationToken cancellationToken) =>
         await service.GuncelleAsync(request, cancellationToken);

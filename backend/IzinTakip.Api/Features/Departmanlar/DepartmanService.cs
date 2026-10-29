@@ -12,7 +12,7 @@ public sealed class DepartmanService(IzinTakipDbContext db, ILogger<DepartmanSer
 
     public async Task<DepartmanResponse> DetayAsync(int id, CancellationToken cancellationToken) =>
         await Yansit(db.Departmanlar.AsNoTracking().Where(d => d.Id == id)).SingleOrDefaultAsync(cancellationToken)
-        ?? throw new KayitBulunamadiException("Departman bulunamadı.");
+        ?? throw new NotFoundException("Departman bulunamadı.");
 
     public async Task<DepartmanResponse> OlusturAsync(DepartmanKaydetRequest request, CancellationToken cancellationToken)
     {
@@ -30,7 +30,7 @@ public sealed class DepartmanService(IzinTakipDbContext db, ILogger<DepartmanSer
     public async Task<DepartmanResponse> GuncelleAsync(int id, DepartmanKaydetRequest request, CancellationToken cancellationToken)
     {
         var departman = await db.Departmanlar.SingleOrDefaultAsync(d => d.Id == id, cancellationToken)
-            ?? throw new KayitBulunamadiException("Departman bulunamadı.");
+            ?? throw new NotFoundException("Departman bulunamadı.");
         var ad = request.Ad.Trim();
         await DenetleAsync(id, ad, request.YoneticiId, cancellationToken);
 
@@ -44,10 +44,10 @@ public sealed class DepartmanService(IzinTakipDbContext db, ILogger<DepartmanSer
     public async Task<DepartmanResponse> AktiflikDegistirAsync(int id, bool aktif, CancellationToken cancellationToken)
     {
         var departman = await db.Departmanlar.SingleOrDefaultAsync(d => d.Id == id, cancellationToken)
-            ?? throw new KayitBulunamadiException("Departman bulunamadı.");
+            ?? throw new NotFoundException("Departman bulunamadı.");
         if (!aktif && await db.Calisanlar.AnyAsync(c => c.DepartmanId == id && c.Aktif, cancellationToken))
         {
-            throw new IsKuraliException("Departmanda aktif çalışan varken departman pasifleştirilemez.");
+            throw new BusinessRuleException("Departmanda aktif çalışan varken departman pasifleştirilemez.");
         }
 
         departman.AktiflikDegistir(aktif);
@@ -61,12 +61,12 @@ public sealed class DepartmanService(IzinTakipDbContext db, ILogger<DepartmanSer
     {
         if (await db.Departmanlar.AnyAsync(d => d.Ad == ad && d.Id != id, cancellationToken))
         {
-            throw new IsKuraliException("Bu adla bir departman zaten var.");
+            throw new BusinessRuleException("Bu adla bir departman zaten var.");
         }
 
         if (yoneticiId is not null && !await db.Calisanlar.AnyAsync(c => c.Id == yoneticiId && c.Aktif, cancellationToken))
         {
-            throw new IsKuraliException("Seçilen yönetici bulunamadı ya da pasif.");
+            throw new BusinessRuleException("Seçilen yönetici bulunamadı ya da pasif.");
         }
     }
 

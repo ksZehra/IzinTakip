@@ -1,6 +1,6 @@
 using IzinTakip.Api.Common;
+using IzinTakip.Api.Common.Auth;
 using IzinTakip.Api.Common.Izin;
-using IzinTakip.Api.Common.Kapsam;
 using IzinTakip.Api.Common.Paging;
 using IzinTakip.Domain;
 using IzinTakip.Domain.Entities;
@@ -14,8 +14,8 @@ namespace IzinTakip.Api.Features.Raporlar;
 
 public sealed class RaporService(
     IzinTakipDbContext db,
-    CalisanKapsami kapsam,
-    BakiyeSorgusu bakiyeSorgusu,
+    CalisanScope kapsam,
+    BakiyeQuery bakiyeSorgusu,
     SirketSaati sirketSaati)
 {
     public async Task<IReadOnlyList<TakvimKaydiResponse>> TakvimAsync(TakvimRequest request, CancellationToken cancellationToken)
@@ -59,20 +59,20 @@ public sealed class RaporService(
         var bakiyeler = await bakiyeSorgusu.HesaplaAsync(calisanlar, cancellationToken);
         var gunluk = await db.GunlukDakikaAsync(cancellationToken);
 
-        var icerik = ExcelYazici.Yaz(
+        var icerik = ExcelWriter.Yaz(
             "Bakiyeler",
             [
-                new ExcelKolonu<BakiyeRaporuResponse>("Çalışan", r => r.CalisanAdSoyad, 28),
-                new ExcelKolonu<BakiyeRaporuResponse>("Departman", r => r.DepartmanAdi, 22),
-                new ExcelKolonu<BakiyeRaporuResponse>("İşe Giriş", r => r.IseGirisTarihi.ToDateTime(TimeOnly.MinValue), 12, "dd.MM.yyyy"),
-                new ExcelKolonu<BakiyeRaporuResponse>("Hak", r => r.HakMetni, 18),
-                new ExcelKolonu<BakiyeRaporuResponse>("Kullanılan", r => r.KullanilanMetni, 18),
-                new ExcelKolonu<BakiyeRaporuResponse>("Bekleyen", r => r.BekleyenMetni, 18),
-                new ExcelKolonu<BakiyeRaporuResponse>("Kullanılabilir", r => r.KullanilabilirMetni, 18)
+                new ExcelColumn<BakiyeRaporuResponse>("Çalışan", r => r.CalisanAdSoyad, 28),
+                new ExcelColumn<BakiyeRaporuResponse>("Departman", r => r.DepartmanAdi, 22),
+                new ExcelColumn<BakiyeRaporuResponse>("İşe Giriş", r => r.IseGirisTarihi.ToDateTime(TimeOnly.MinValue), 12, "dd.MM.yyyy"),
+                new ExcelColumn<BakiyeRaporuResponse>("Hak", r => r.HakMetni, 18),
+                new ExcelColumn<BakiyeRaporuResponse>("Kullanılan", r => r.KullanilanMetni, 18),
+                new ExcelColumn<BakiyeRaporuResponse>("Bekleyen", r => r.BekleyenMetni, 18),
+                new ExcelColumn<BakiyeRaporuResponse>("Kullanılabilir", r => r.KullanilabilirMetni, 18)
             ],
             satirlar.Select(s => Yanit(s, bakiyeler[s.CalisanId], gunluk)));
 
-        return new DosyaResponse($"bakiye-raporu-{sirketSaati.Bugun():yyyyMMdd}.xlsx", ExcelYazici.IcerikTuru, icerik);
+        return new DosyaResponse($"bakiye-raporu-{sirketSaati.Bugun():yyyyMMdd}.xlsx", ExcelWriter.IcerikTuru, icerik);
     }
 
     private async Task<IQueryable<Calisan>> KapsamdakilerAsync(int? departmanId, CancellationToken cancellationToken)

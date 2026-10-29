@@ -4,18 +4,18 @@ using System.Text.Json;
 
 namespace IzinTakip.Tests.Features.IzinTalepleri;
 
-public sealed class MesaiDegisikligiTests(VeritabanliApiFactory factory) : IClassFixture<VeritabanliApiFactory>
+public sealed class MesaiDegisikligiTests(DatabaseApiFactory factory) : IClassFixture<DatabaseApiFactory>
 {
     [Fact]
     public async Task Olustur_MesaiOneAlindiktanSonra_TamGunIzinliGuneSaatlikAcilamaz()
     {
-        var admin = await TestKimlik.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
-        var calisanId = await TestVeri.CalisanEkleAsync(admin, "Erkenci", await TestVeri.DepartmanEkleAsync(admin, "Mesai"));
-        await TestVeri.HakEkleAsync(admin, calisanId, 14 * 480);
-        var pazartesi = TestVeri.SonrakiYilPazartesi();
+        var admin = await TestAuth.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
+        var calisanId = await TestData.CalisanEkleAsync(admin, "Erkenci", await TestData.DepartmanEkleAsync(admin, "Mesai"));
+        await TestData.HakEkleAsync(admin, calisanId, 14 * 480);
+        var pazartesi = TestData.SonrakiYilPazartesi();
         var tamGun = await admin.PostAsJsonAsync(
             "/api/izin-talepleri",
-            new { calisanId, izinTuruId = await TestVeri.IzinTuruIdAsync(admin, "Yıllık"), sureTipi = "TamGun", tarih = pazartesi },
+            new { calisanId, izinTuruId = await TestData.IzinTuruIdAsync(admin, "Yıllık"), sureTipi = "TamGun", tarih = pazartesi },
             TestContext.Current.CancellationToken);
 
         var ayar = await admin.PutAsJsonAsync(
@@ -36,7 +36,7 @@ public sealed class MesaiDegisikligiTests(VeritabanliApiFactory factory) : IClas
             new
             {
                 calisanId,
-                izinTuruId = await TestVeri.IzinTuruIdAsync(admin, "Saatlik İzin"),
+                izinTuruId = await TestData.IzinTuruIdAsync(admin, "Saatlik İzin"),
                 sureTipi = "Saatlik",
                 tarih = pazartesi,
                 baslangicSaati = "08:00",

@@ -4,7 +4,7 @@ namespace IzinTakip.Api.Common.Paging;
 
 public sealed record PagedResponse<T>(IReadOnlyList<T> Items, int TotalCount, int Page, int PageSize);
 
-public static class SayfalamaExtensions
+public static class PagingExtensions
 {
     private const int EnFazlaSayfaBoyutu = 100;
 

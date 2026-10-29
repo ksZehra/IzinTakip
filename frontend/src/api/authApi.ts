@@ -2,7 +2,7 @@ import { httpClient } from '@/common/http/httpClient'
 
 import type { Schema } from './types'
 
-export type Oturum = Schema<'BenResponse'>
+export type Oturum = Schema<'CurrentUserResponse'>
 
 export async function girisYap(eposta: string, parola: string): Promise<void> {
   await httpClient.post('/bff/giris', { eposta, parola }, { sessiz: true })

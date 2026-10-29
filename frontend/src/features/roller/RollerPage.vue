@@ -9,19 +9,19 @@ import {
   rolleriGetir,
   rolSil,
   type Rol,
-  type RolKaydetIstegi,
+  type RolKaydetRequest,
   type YetkiTanimi,
 } from '@/api/kullanicilarApi'
 import ConfirmDialog from '@/common/components/ConfirmDialog.vue'
-import KayitDialog from '@/common/components/KayitDialog.vue'
+import FormDialog from '@/common/components/FormDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
-import { useFormGonder } from '@/common/composables/useFormGonder'
-import { useKayitFormu } from '@/common/composables/useKayitFormu'
+import { useFormSubmit } from '@/common/composables/useFormSubmit'
+import { useCrudForm } from '@/common/composables/useCrudForm'
 import { useToast } from '@/common/composables/useToast'
 import { rolEtiketi } from '@/common/utils/etiketler'
 
 const toast = useToast()
-const silme = useFormGonder()
+const silme = useFormSubmit()
 const roller = shallowRef<Rol[]>([])
 const yetkiler = shallowRef<YetkiTanimi[]>([])
 const silinecek = ref<Rol | null>(null)
@@ -31,9 +31,9 @@ async function yukle() {
   roller.value = await rolleriGetir()
 }
 
-const { acik, form, yeniKayit, yeni, duzenle, kaydet, gonderiliyor, alanHatasi } = useKayitFormu<
+const { acik, form, yeniKayit, yeni, duzenle, kaydet, gonderiliyor, alanHatasi } = useCrudForm<
   Rol,
-  RolKaydetIstegi
+  RolKaydetRequest
 >({
   bosForm: () => ({ ad: '', korumali: false, yetkiler: [] }),
   formaCevir: (rol) => ({ ad: rol.ad, korumali: rol.korumali, yetkiler: [...rol.yetkiler] }),
@@ -110,7 +110,7 @@ onMounted(async () => {
       </v-data-table>
     </v-card>
 
-    <KayitDialog
+    <FormDialog
       v-model="acik"
       :baslik="yeniKayit ? 'Yeni rol' : 'Rolü düzenle'"
       :kaydediliyor="gonderiliyor"
@@ -131,7 +131,7 @@ onMounted(async () => {
         />
         <v-messages :messages="alanHatasi('yetkiler')" active color="error" />
       </fieldset>
-    </KayitDialog>
+    </FormDialog>
 
     <ConfirmDialog
       v-model="silmeAcik"

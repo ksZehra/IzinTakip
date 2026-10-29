@@ -10,13 +10,13 @@ import {
   type Bildirim,
 } from '@/api/bildirimlerApi'
 import PageHeader from '@/common/components/PageHeader.vue'
-import { useSayfaliListe } from '@/common/composables/useSayfaliListe'
+import { usePagedList } from '@/common/composables/usePagedList'
 import { tarihSaatGoster } from '@/common/utils/tarih'
 import { useBildirimStore } from '@/stores/bildirimStore'
 
 const router = useRouter()
 const bildirimSayisi = useBildirimStore()
-const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor, yukle } = useSayfaliListe(
+const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor, yukle } = usePagedList(
   bildirimleriGetir,
   { sadeceOkunmamis: false },
 )

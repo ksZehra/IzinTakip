@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace IzinTakip.Tests.Features.Bildirimler;
 
-public sealed class BildirimTests(VeritabanliApiFactory factory) : IClassFixture<VeritabanliApiFactory>
+public sealed class BildirimTests(DatabaseApiFactory factory) : IClassFixture<DatabaseApiFactory>
 {
     [Fact]
     public async Task Listele_YalnizKendiBildirimleriniYenidenEskiyeDoner()
@@ -58,8 +58,8 @@ public sealed class BildirimTests(VeritabanliApiFactory factory) : IClassFixture
     private async Task<(int KullaniciId, HttpClient Client)> KullaniciKurAsync()
     {
         var eposta = $"kullanici-{Guid.NewGuid():N}@izintakip.test";
-        var kullaniciId = await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
-        return (kullaniciId, await TestKimlik.OturumluClientAsync(factory, eposta));
+        var kullaniciId = await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
+        return (kullaniciId, await TestAuth.OturumluClientAsync(factory, eposta));
     }
 
     private async Task<int[]> BildirimEkleAsync(int kullaniciId, params string[] basliklar)

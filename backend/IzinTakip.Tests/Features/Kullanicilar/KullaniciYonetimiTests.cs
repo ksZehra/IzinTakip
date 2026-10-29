@@ -10,14 +10,14 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace IzinTakip.Tests.Features.Kullanicilar;
 
-public sealed partial class KullaniciYonetimiTests(VeritabanliApiFactory factory) : IClassFixture<VeritabanliApiFactory>
+public sealed partial class KullaniciYonetimiTests(DatabaseApiFactory factory) : IClassFixture<DatabaseApiFactory>
 {
     [Fact]
     public async Task Olustur_Ik_CalisanaHesapAcarGeciciParolaIleIlkGiristeDegistirmeZorunlu()
     {
         var ik = await IkAsync();
         var admin = await SuperAdminAsync();
-        var calisanId = await TestVeri.CalisanEkleAsync(admin, "Yeni", await TestVeri.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}"));
+        var calisanId = await TestData.CalisanEkleAsync(admin, "Yeni", await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}"));
         var eposta = $"yeni-{calisanId}@izintakip.test";
 
         var yanit = await ik.PostAsJsonAsync(
@@ -26,7 +26,7 @@ public sealed partial class KullaniciYonetimiTests(VeritabanliApiFactory factory
             TestContext.Current.CancellationToken);
         var kullanici = await yanit.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
         var parola = GeciciParola(await factory.EmailSender.BekleAsync(eposta, "İzin Takip hesabınız açıldı"));
-        var yeni = await TestKimlik.OturumluClientAsync(factory, eposta, parola);
+        var yeni = await TestAuth.OturumluClientAsync(factory, eposta, parola);
         var bildirimler = await yeni.GetAsync("/api/bildirimler", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Created, yanit.StatusCode);
@@ -54,7 +54,7 @@ public sealed partial class KullaniciYonetimiTests(VeritabanliApiFactory factory
     public async Task Ik_KorumaliRoluOlanKullaniciya_DokunamazSuperAdminDokunur()
     {
         var ik = await IkAsync();
-        var digerIkId = await TestKimlik.KullaniciOlusturAsync(factory, $"ik-{Guid.NewGuid():N}@izintakip.test", SistemRolleri.IK);
+        var digerIkId = await TestAuth.KullaniciOlusturAsync(factory, $"ik-{Guid.NewGuid():N}@izintakip.test", SistemRolleri.IK);
         var admin = await SuperAdminAsync();
 
         var sifirlama = await ik.PostAsync($"/api/kullanicilar/{digerIkId}/parola-sifirla", null, TestContext.Current.CancellationToken);
@@ -72,8 +72,8 @@ public sealed partial class KullaniciYonetimiTests(VeritabanliApiFactory factory
     {
         var ik = await IkAsync();
         var eposta = $"terfi-{Guid.NewGuid():N}@izintakip.test";
-        var kullaniciId = await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
-        var kullanici = await TestKimlik.OturumluClientAsync(factory, eposta);
+        var kullaniciId = await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
+        var kullanici = await TestAuth.OturumluClientAsync(factory, eposta);
 
         var oncesi = await kullanici.GetAsync("/api/raporlar/bakiyeler", TestContext.Current.CancellationToken);
         var degisim = await ik.PutAsJsonAsync(
@@ -93,12 +93,12 @@ public sealed partial class KullaniciYonetimiTests(VeritabanliApiFactory factory
     {
         var ik = await IkAsync();
         var eposta = $"unutkan-{Guid.NewGuid():N}@izintakip.test";
-        var kullaniciId = await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
+        var kullaniciId = await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
         var client = factory.CreateClient();
 
         var yanit = await ik.PostAsync($"/api/kullanicilar/{kullaniciId}/parola-sifirla", null, TestContext.Current.CancellationToken);
         var parola = GeciciParola(await factory.EmailSender.BekleAsync(eposta, "İzin Takip parolanız sıfırlandı"));
-        var eski = await client.PostAsJsonAsync("/api/auth/login", new { eposta, parola = TestKimlik.VarsayilanParola }, TestContext.Current.CancellationToken);
+        var eski = await client.PostAsJsonAsync("/api/auth/login", new { eposta, parola = TestAuth.VarsayilanParola }, TestContext.Current.CancellationToken);
         var yeni = await client.PostAsJsonAsync("/api/auth/login", new { eposta, parola }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, yanit.StatusCode);
@@ -111,7 +111,7 @@ public sealed partial class KullaniciYonetimiTests(VeritabanliApiFactory factory
     {
         var ik = await IkAsync();
         var eposta = $"gec-kalan-{Guid.NewGuid():N}@izintakip.test";
-        var kullaniciId = await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
+        var kullaniciId = await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
 
         await ik.PostAsync($"/api/kullanicilar/{kullaniciId}/parola-sifirla", null, TestContext.Current.CancellationToken);
         var mesaj = await factory.EmailSender.BekleAsync(eposta, "İzin Takip parolanız sıfırlandı");
@@ -139,8 +139,8 @@ public sealed partial class KullaniciYonetimiTests(VeritabanliApiFactory factory
     {
         var ik = await IkAsync();
         var eposta = $"ayrilan-{Guid.NewGuid():N}@izintakip.test";
-        var kullaniciId = await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
-        var kullanici = await TestKimlik.OturumluClientAsync(factory, eposta);
+        var kullaniciId = await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
+        var kullanici = await TestAuth.OturumluClientAsync(factory, eposta);
 
         var pasif = await ik.PutAsJsonAsync($"/api/kullanicilar/{kullaniciId}/aktiflik", new { aktif = false }, TestContext.Current.CancellationToken);
         var sonrasi = await kullanici.GetAsync("/api/auth/ben", TestContext.Current.CancellationToken);
@@ -168,8 +168,8 @@ public sealed partial class KullaniciYonetimiTests(VeritabanliApiFactory factory
     public async Task Listele_Calisan_403Doner()
     {
         var eposta = $"merakli-{Guid.NewGuid():N}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
-        var client = await TestKimlik.OturumluClientAsync(factory, eposta);
+        await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
+        var client = await TestAuth.OturumluClientAsync(factory, eposta);
 
         var yanit = await client.GetAsync("/api/kullanicilar", TestContext.Current.CancellationToken);
 
@@ -179,14 +179,14 @@ public sealed partial class KullaniciYonetimiTests(VeritabanliApiFactory factory
     private async Task<HttpClient> IkAsync()
     {
         var eposta = $"ik-{Guid.NewGuid():N}@izintakip.test";
-        await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.IK);
-        return await TestKimlik.OturumluClientAsync(factory, eposta);
+        await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.IK);
+        return await TestAuth.OturumluClientAsync(factory, eposta);
     }
 
     private Task<HttpClient> SuperAdminAsync() =>
-        TestKimlik.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
+        TestAuth.OturumluClientAsync(factory, ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
 
-    private static string GeciciParola(EmailMesaji mesaj) =>
+    private static string GeciciParola(EmailMessage mesaj) =>
         GeciciParolaKalibi().Match(mesaj.HtmlGovde).Groups[1].Value;
 
     private static async Task<string?> DetayAsync(HttpResponseMessage yanit) =>

@@ -10,7 +10,7 @@ public sealed class KullaniciConfiguration : IEntityTypeConfiguration<Kullanici>
     public void Configure(EntityTypeBuilder<Kullanici> builder)
     {
         builder.ToTable("Kullanicilar");
-        builder.Property(k => k.GeciciParolaBitis).HasConversion<UtcZamanDonusturucu>();
+        builder.Property(k => k.GeciciParolaBitis).HasConversion<UtcDateTimeConverter>();
         builder.HasIndex(k => k.CalisanId).IsUnique().HasFilter("[CalisanId] IS NOT NULL");
         builder.HasOne<Calisan>().WithMany().HasForeignKey(k => k.CalisanId).OnDelete(DeleteBehavior.Restrict);
     }

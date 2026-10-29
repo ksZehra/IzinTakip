@@ -2451,9 +2451,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["BenResponse"];
-                        "application/json": components["schemas"]["BenResponse"];
-                        "text/json": components["schemas"]["BenResponse"];
+                        "text/plain": components["schemas"]["CurrentUserResponse"];
+                        "application/json": components["schemas"]["CurrentUserResponse"];
+                        "text/json": components["schemas"]["CurrentUserResponse"];
                     };
                 };
             };
@@ -2629,17 +2629,6 @@ export interface components {
             kullanilabilirDakika: number;
             kullanilabilirMetni: string;
         };
-        BenResponse: {
-            /** Format: int32 */
-            kullaniciId: number;
-            eposta: string;
-            gorunenAd: string;
-            /** Format: int32 */
-            calisanId: null | number;
-            roller: string[];
-            yetkiler: string[];
-            parolaDegistirmeli: boolean;
-        };
         BildirimResponse: {
             /** Format: int32 */
             id: number;
@@ -2694,6 +2683,17 @@ export interface components {
             hakBaslangicKidemYili: number;
             aktif: boolean;
             kullaniciEposta: null | string;
+        };
+        CurrentUserResponse: {
+            /** Format: int32 */
+            kullaniciId: number;
+            eposta: string;
+            gorunenAd: string;
+            /** Format: int32 */
+            calisanId: null | number;
+            roller: string[];
+            yetkiler: string[];
+            parolaDegistirmeli: boolean;
         };
         DepartmanKaydetRequest: {
             ad: string;

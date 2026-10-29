@@ -7,13 +7,13 @@ import {
   talepleriExceleAktar,
   talepleriGetir,
   type IzinTalebiSatiri,
-  type TalepFiltresi,
+  type TalepFilter,
 } from '@/api/izinTalepleriApi'
 import { izinTurleriniGetir, type IzinTuru } from '@/api/izinTurleriApi'
 import { Yetkiler } from '@/common/auth/yetkiler'
 import DurumChip from '@/common/components/DurumChip.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
-import { useSayfaliListe } from '@/common/composables/useSayfaliListe'
+import { usePagedList } from '@/common/composables/usePagedList'
 import { durumEtiketleri, secenekler } from '@/common/utils/etiketler'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -24,14 +24,14 @@ const router = useRouter()
 const ekibiGorur = auth.yetkiVar(Yetkiler.IzinTalebiYonet)
 const excelAlabilir = auth.yetkiVar(Yetkiler.RaporGor)
 
-const varsayilanFiltre: TalepFiltresi = {
+const varsayilanFiltre: TalepFilter = {
   calisanId: null,
   durum: null,
   izinTuruId: null,
   baslangic: null,
   bitis: null,
 }
-const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor } = useSayfaliListe(
+const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor } = usePagedList(
   talepleriGetir,
   varsayilanFiltre,
 )

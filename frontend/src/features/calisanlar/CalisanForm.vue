@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { CalisanKaydetIstegi } from '@/api/calisanlarApi'
+import type { CalisanKaydetRequest } from '@/api/calisanlarApi'
 import type { Departman } from '@/api/departmanlarApi'
-import KayitDialog from '@/common/components/KayitDialog.vue'
+import FormDialog from '@/common/components/FormDialog.vue'
 
 defineProps<{
   baslik: string
@@ -11,16 +11,11 @@ defineProps<{
 }>()
 const emit = defineEmits<{ kaydet: [] }>()
 const acik = defineModel<boolean>({ required: true })
-const form = defineModel<CalisanKaydetIstegi>('form', { required: true })
+const form = defineModel<CalisanKaydetRequest>('form', { required: true })
 </script>
 
 <template>
-  <KayitDialog
-    v-model="acik"
-    :baslik="baslik"
-    :kaydediliyor="kaydediliyor"
-    @kaydet="emit('kaydet')"
-  >
+  <FormDialog v-model="acik" :baslik="baslik" :kaydediliyor="kaydediliyor" @kaydet="emit('kaydet')">
     <div class="d-flex flex-wrap ga-4">
       <v-text-field
         v-model="form.ad"
@@ -67,5 +62,5 @@ const form = defineModel<CalisanKaydetIstegi>('form', { required: true })
       :min="1"
       :error-messages="alanHatasi('hakBaslangicKidemYili')"
     />
-  </KayitDialog>
+  </FormDialog>
 </template>

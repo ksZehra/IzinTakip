@@ -3,13 +3,13 @@ import { mdiMicrosoftExcel } from '@mdi/js'
 import { onMounted, shallowRef } from 'vue'
 
 import { departmanlariGetir, type Departman } from '@/api/departmanlarApi'
-import { bakiyeleriExceleAktar, bakiyeleriGetir, type BakiyeFiltresi } from '@/api/raporlarApi'
+import { bakiyeleriExceleAktar, bakiyeleriGetir, type BakiyeFilter } from '@/api/raporlarApi'
 import PageHeader from '@/common/components/PageHeader.vue'
-import { useSayfaliListe } from '@/common/composables/useSayfaliListe'
+import { usePagedList } from '@/common/composables/usePagedList'
 import { tarihGoster } from '@/common/utils/tarih'
 
-const varsayilanFiltre: BakiyeFiltresi = { departmanId: null }
-const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor } = useSayfaliListe(
+const varsayilanFiltre: BakiyeFilter = { departmanId: null }
+const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor } = usePagedList(
   bakiyeleriGetir,
   varsayilanFiltre,
 )

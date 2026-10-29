@@ -104,7 +104,7 @@ public sealed class GatewayTests(GatewayFactory factory) : IClassFixture<Gateway
     [Fact]
     public async Task TarayicininAuthorizationBasligi_ApiyeIletilmez()
     {
-        var token = await TestKimlik.TokenAlAsync(factory.Api.CreateClient(), ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
+        var token = await TestAuth.TokenAlAsync(factory.Api.CreateClient(), ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
         var tarayici = factory.TarayiciClient();
         tarayici.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 

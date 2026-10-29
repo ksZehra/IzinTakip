@@ -20,7 +20,7 @@ public sealed class IzinTurleriController(IzinTuruService service) : ControllerB
         await service.DetayAsync(id, cancellationToken);
 
     [HttpPost]
-    [Yetki(Yetkiler.Tanim.Yonet)]
+    [Permission(Yetkiler.Tanim.Yonet)]
     [EndpointSummary("Yeni izin türü ekler; süre sınırları dakikadır")]
     [ProducesResponseType<IzinTuruResponse>(StatusCodes.Status201Created)]
     public async Task<ActionResult<IzinTuruResponse>> Olustur(IzinTuruKaydetRequest request, CancellationToken cancellationToken)
@@ -30,13 +30,13 @@ public sealed class IzinTurleriController(IzinTuruService service) : ControllerB
     }
 
     [HttpPut("{id:int}")]
-    [Yetki(Yetkiler.Tanim.Yonet)]
+    [Permission(Yetkiler.Tanim.Yonet)]
     [EndpointSummary("İzin türünü günceller")]
     public async Task<ActionResult<IzinTuruResponse>> Guncelle(int id, IzinTuruKaydetRequest request, CancellationToken cancellationToken) =>
         await service.GuncelleAsync(id, request, cancellationToken);
 
     [HttpPut("{id:int}/aktiflik")]
-    [Yetki(Yetkiler.Tanim.Yonet)]
+    [Permission(Yetkiler.Tanim.Yonet)]
     [EndpointSummary("İzin türünü aktif ya da pasif yapar")]
     public async Task<ActionResult<IzinTuruResponse>> AktiflikDegistir(int id, AktiflikRequest request, CancellationToken cancellationToken) =>
         await service.AktiflikDegistirAsync(id, request.Aktif, cancellationToken);

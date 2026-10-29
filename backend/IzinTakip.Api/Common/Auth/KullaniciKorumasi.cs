@@ -13,7 +13,7 @@ public sealed class KullaniciKorumasi(IzinTakipDbContext db)
         if (!yapan.SuperAdmin
             && await db.Roles.AnyAsync(r => r.Korumali && db.UserRoles.Any(ur => ur.UserId == kullaniciId && ur.RoleId == r.Id), cancellationToken))
         {
-            throw new YetkiYokException("Korumalı role sahip kullanıcıda değişiklik yapma yetkiniz yok.");
+            throw new ForbiddenException("Korumalı role sahip kullanıcıda değişiklik yapma yetkiniz yok.");
         }
     }
 

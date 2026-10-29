@@ -43,7 +43,7 @@ public sealed class IzinTalebi : Entity
     {
         if (!tur.Aktif)
         {
-            throw new IsKuraliException("Seçilen izin türü kullanımda değil.");
+            throw new BusinessRuleException("Seçilen izin türü kullanımda değil.");
         }
 
         var bicimAcik = sure.Tip switch
@@ -55,15 +55,15 @@ public sealed class IzinTalebi : Entity
         };
         if (!bicimAcik)
         {
-            throw new IsKuraliException($"{tur.Ad} türünde izin {BicimAdi(sure.Tip)} alınamaz.");
+            throw new BusinessRuleException($"{tur.Ad} türünde izin {BicimAdi(sure.Tip)} alınamaz.");
         }
 
-        var hesap = IzinSuresiHesaplayici.Hesapla(sure, tur.GunHesabi, takvim);
+        var hesap = IzinSuresiCalculator.Hesapla(sure, tur.GunHesabi, takvim);
         var gunluk = takvim.GunlukDakika;
 
         if (tur.TalepBasinaEnFazlaDakika is { } talepSiniri && hesap.Dakika > talepSiniri)
         {
-            throw new IsKuraliException(
+            throw new BusinessRuleException(
                 $"{tur.Ad} türünde bir talepte en çok {SureMetni.Olustur(talepSiniri, gunluk)} izin alınabilir; talep {SureMetni.Olustur(hesap.Dakika, gunluk)}.");
         }
 
@@ -71,13 +71,13 @@ public sealed class IzinTalebi : Entity
         {
             if (hesap.Aralik.Baslangic.Year != hesap.Aralik.Bitis.Year)
             {
-                throw new IsKuraliException(
+                throw new BusinessRuleException(
                     $"{tur.Ad} türünde yıllık sınır olduğu için talep yıl sonunu aşamaz. Talebi 31 Aralık'a kadar ve yeni yıl için iki ayrı talep olarak açın.");
             }
 
             if (turunYilIcindeKullanimi + hesap.Dakika > yillikSinir)
             {
-                throw new IsKuraliException(
+                throw new BusinessRuleException(
                     $"{tur.Ad} türünde yılda en çok {SureMetni.Olustur(yillikSinir, gunluk)} izin alınabilir; bu yıl kullanılan {SureMetni.Olustur(turunYilIcindeKullanimi, gunluk)}, talep {SureMetni.Olustur(hesap.Dakika, gunluk)}.");
             }
         }
@@ -85,18 +85,18 @@ public sealed class IzinTalebi : Entity
         var cakismaAraligi = CakismaAraligi(sure.Tip, hesap.Aralik);
         if (acikTalepler.Any(a => a.CakisirMi(cakismaAraligi)))
         {
-            throw new IsKuraliException("Bu tarihlerle çakışan, beklemede ya da onaylanmış başka bir izin talebi var.");
+            throw new BusinessRuleException("Bu tarihlerle çakışan, beklemede ya da onaylanmış başka bir izin talebi var.");
         }
 
         if (tur.BakiyedenDuser && hesap.Dakika > bakiye.KullanilabilirDakika)
         {
-            throw new IsKuraliException(
+            throw new BusinessRuleException(
                 $"Bakiye yetersiz: kullanılabilir {SureMetni.Olustur(bakiye.KullanilabilirDakika, gunluk)}, talep {SureMetni.Olustur(hesap.Dakika, gunluk)}.");
         }
 
         if (hesap.Aralik.Baslangic < simdi && !gecmisTarihYetkisi)
         {
-            throw new IsKuraliException("Geçmiş tarihli izin talebi açılamaz.");
+            throw new BusinessRuleException("Geçmiş tarihli izin talebi açılamaz.");
         }
 
         return new IzinTalebi
@@ -128,7 +128,7 @@ public sealed class IzinTalebi : Entity
         KararVerilebilirMi(kararVerenCalisanId, superAdmin, "onaylayamazsınız");
         if (belgeZorunlu && belgeSayisi == 0)
         {
-            throw new IsKuraliException("Bu izin türü belge ister; talebe belge eklenmeden onaylanamaz.");
+            throw new BusinessRuleException("Bu izin türü belge ister; talebe belge eklenmeden onaylanamaz.");
         }
 
         Durum = IzinDurumu.Onaylandi;
@@ -139,7 +139,7 @@ public sealed class IzinTalebi : Entity
     {
         if (string.IsNullOrWhiteSpace(gerekce))
         {
-            throw new IsKuraliException("Red gerekçesi zorunludur.");
+            throw new BusinessRuleException("Red gerekçesi zorunludur.");
         }
 
         KararVerilebilirMi(kararVerenCalisanId, superAdmin, "reddedemezsiniz");
@@ -151,12 +151,12 @@ public sealed class IzinTalebi : Entity
     {
         if (Durum is not (IzinDurumu.Beklemede or IzinDurumu.Onaylandi))
         {
-            throw new IsKuraliException("Yalnız beklemedeki ya da onaylanmış talep iptal edilebilir.");
+            throw new BusinessRuleException("Yalnız beklemedeki ya da onaylanmış talep iptal edilebilir.");
         }
 
         if (Baslangic <= simdi && !baslamisIzniIptalYetkisi)
         {
-            throw new IsKuraliException("Başlamış ya da geçmiş izin iptal edilemez.");
+            throw new BusinessRuleException("Başlamış ya da geçmiş izin iptal edilemez.");
         }
 
         Durum = IzinDurumu.IptalEdildi;
@@ -169,12 +169,12 @@ public sealed class IzinTalebi : Entity
     {
         if (Durum is not (IzinDurumu.Beklemede or IzinDurumu.Onaylandi))
         {
-            throw new IsKuraliException("Reddedilmiş ya da iptal edilmiş talebe belge eklenemez.");
+            throw new BusinessRuleException("Reddedilmiş ya da iptal edilmiş talebe belge eklenemez.");
         }
 
         if (mevcutBelgeSayisi >= EnFazlaBelge)
         {
-            throw new IsKuraliException($"Bir talebe en çok {EnFazlaBelge} belge eklenebilir.");
+            throw new BusinessRuleException($"Bir talebe en çok {EnFazlaBelge} belge eklenebilir.");
         }
     }
 
@@ -182,7 +182,7 @@ public sealed class IzinTalebi : Entity
     {
         if (Durum != IzinDurumu.Beklemede)
         {
-            throw new IsKuraliException("Belge yalnız beklemedeki talepten silinebilir.");
+            throw new BusinessRuleException("Belge yalnız beklemedeki talepten silinebilir.");
         }
     }
 
@@ -190,12 +190,12 @@ public sealed class IzinTalebi : Entity
     {
         if (Durum != IzinDurumu.Beklemede)
         {
-            throw new IsKuraliException("Bu talep artık beklemede değil.");
+            throw new BusinessRuleException("Bu talep artık beklemede değil.");
         }
 
         if (kararVerenCalisanId == CalisanId && !superAdmin)
         {
-            throw new IsKuraliException($"Kendi izin talebinizi {eylem}.");
+            throw new BusinessRuleException($"Kendi izin talebinizi {eylem}.");
         }
     }
 

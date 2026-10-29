@@ -6,7 +6,7 @@ namespace IzinTakip.Api.Features.IzinBelgeleri;
 
 [ApiController]
 [Route("api/izin-talepleri/{talepId:int}/belgeler")]
-[Yetki(Yetkiler.IzinTalebi.Olustur, Yetkiler.IzinTalebi.Yonet)]
+[Permission(Yetkiler.IzinTalebi.Olustur, Yetkiler.IzinTalebi.Yonet)]
 public sealed class IzinBelgeleriController(IzinBelgesiService service) : ControllerBase
 {
     [HttpGet]

@@ -8,12 +8,12 @@ import {
   hakKuraliGuncelle,
   hakKurallariniGetir,
   type HakKurali,
-  type HakKuraliKaydetIstegi,
+  type HakKuraliKaydetRequest,
 } from '@/api/tanimlarApi'
-import AktiflikAnahtari from '@/common/components/AktiflikAnahtari.vue'
-import KayitDialog from '@/common/components/KayitDialog.vue'
+import AktiflikSwitch from '@/common/components/AktiflikSwitch.vue'
+import FormDialog from '@/common/components/FormDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
-import { useKayitFormu } from '@/common/composables/useKayitFormu'
+import { useCrudForm } from '@/common/composables/useCrudForm'
 import { useToast } from '@/common/composables/useToast'
 
 const toast = useToast()
@@ -23,9 +23,9 @@ async function yukle() {
   kurallar.value = await hakKurallariniGetir()
 }
 
-const { acik, form, yeniKayit, yeni, duzenle, kaydet, gonderiliyor, alanHatasi } = useKayitFormu<
+const { acik, form, yeniKayit, yeni, duzenle, kaydet, gonderiliyor, alanHatasi } = useCrudForm<
   HakKurali,
-  HakKuraliKaydetIstegi
+  HakKuraliKaydetRequest
 >({
   bosForm: () => ({
     ad: '',
@@ -84,7 +84,7 @@ onMounted(yukle)
     <v-card>
       <v-data-table :headers="basliklar" :items="kurallar" items-per-page="-1" hide-default-footer>
         <template #[`item.aktif`]="{ item }">
-          <AktiflikAnahtari
+          <AktiflikSwitch
             :aktif="item.aktif"
             :etiket="`${item.ad} aktif`"
             :degistir="(aktif) => aktiflikDegistir(item, aktif)"
@@ -102,7 +102,7 @@ onMounted(yukle)
       </v-data-table>
     </v-card>
 
-    <KayitDialog
+    <FormDialog
       v-model="acik"
       :baslik="yeniKayit ? 'Yeni hak kuralı' : 'Hak kuralını düzenle'"
       :kaydediliyor="gonderiliyor"
@@ -147,6 +147,6 @@ onMounted(yukle)
         :min="0"
         :error-messages="alanHatasi('gun')"
       />
-    </KayitDialog>
+    </FormDialog>
   </v-container>
 </template>

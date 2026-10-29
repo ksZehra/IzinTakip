@@ -6,13 +6,13 @@ import { useRouter } from 'vue-router'
 import {
   calisanEkle,
   calisanlariGetir,
-  type CalisanFiltresi,
+  type CalisanFilter,
   type CalisanSatiri,
 } from '@/api/calisanlarApi'
 import { departmanlariGetir, type Departman } from '@/api/departmanlarApi'
 import PageHeader from '@/common/components/PageHeader.vue'
-import { useFormGonder } from '@/common/composables/useFormGonder'
-import { useSayfaliListe } from '@/common/composables/useSayfaliListe'
+import { useFormSubmit } from '@/common/composables/useFormSubmit'
+import { usePagedList } from '@/common/composables/usePagedList'
 import { useToast } from '@/common/composables/useToast'
 import { tarihGoster } from '@/common/utils/tarih'
 
@@ -21,10 +21,10 @@ import { bosCalisanFormu } from './calisanFormu'
 
 const router = useRouter()
 const toast = useToast()
-const { gonder, gonderiliyor, alanHatasi } = useFormGonder()
+const { gonder, gonderiliyor, alanHatasi } = useFormSubmit()
 
-const varsayilanFiltre: CalisanFiltresi = { arama: '', departmanId: null, aktif: true }
-const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor, yukle } = useSayfaliListe(
+const varsayilanFiltre: CalisanFilter = { arama: '', departmanId: null, aktif: true }
+const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor, yukle } = usePagedList(
   calisanlariGetir,
   varsayilanFiltre,
 )

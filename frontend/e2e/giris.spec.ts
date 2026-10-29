@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { erisilebilirlikDenetle, girisFormunuDoldur, kullanicilar } from './yardimcilar'
+import { erisilebilirlikDenetle, girisFormunuDoldur, kullanicilar } from './helpers'
 
 test('hatalı parolada formda uyarı gösterir', async ({ page }) => {
   await page.goto('/giris')

@@ -8,13 +8,13 @@ import {
   departmanGuncelle,
   departmanlariGetir,
   type Departman,
-  type DepartmanKaydetIstegi,
+  type DepartmanKaydetRequest,
 } from '@/api/departmanlarApi'
-import CalisanSecici from '@/common/components/CalisanSecici.vue'
-import AktiflikAnahtari from '@/common/components/AktiflikAnahtari.vue'
-import KayitDialog from '@/common/components/KayitDialog.vue'
+import CalisanSelect from '@/common/components/CalisanSelect.vue'
+import AktiflikSwitch from '@/common/components/AktiflikSwitch.vue'
+import FormDialog from '@/common/components/FormDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
-import { useKayitFormu } from '@/common/composables/useKayitFormu'
+import { useCrudForm } from '@/common/composables/useCrudForm'
 import { useToast } from '@/common/composables/useToast'
 
 const toast = useToast()
@@ -31,9 +31,9 @@ async function yukle() {
   }
 }
 
-const { acik, form, yeniKayit, yeni, duzenle, kaydet, gonderiliyor, alanHatasi } = useKayitFormu<
+const { acik, form, yeniKayit, yeni, duzenle, kaydet, gonderiliyor, alanHatasi } = useCrudForm<
   Departman,
-  DepartmanKaydetIstegi
+  DepartmanKaydetRequest
 >({
   bosForm: () => ({ ad: '', yoneticiId: null }),
   formaCevir: (departman) => {
@@ -79,7 +79,7 @@ onMounted(yukle)
       >
         <template #[`item.yoneticiAdSoyad`]="{ item }">{{ item.yoneticiAdSoyad ?? '—' }}</template>
         <template #[`item.aktif`]="{ item }">
-          <AktiflikAnahtari
+          <AktiflikSwitch
             :aktif="item.aktif"
             :etiket="`${item.ad} aktif`"
             :degistir="(aktif) => aktiflikDegistir(item, aktif)"
@@ -97,19 +97,19 @@ onMounted(yukle)
       </v-data-table>
     </v-card>
 
-    <KayitDialog
+    <FormDialog
       v-model="acik"
       :baslik="yeniKayit ? 'Yeni departman' : 'Departmanı düzenle'"
       :kaydediliyor="gonderiliyor"
       @kaydet="kaydet"
     >
       <v-text-field v-model="form.ad" label="Ad" :error-messages="alanHatasi('ad')" />
-      <CalisanSecici
+      <CalisanSelect
         v-model="form.yoneticiId"
         etiket="Yönetici"
         :secili-ad="seciliYoneticiAdi"
         :hatalar="alanHatasi('yoneticiId')"
       />
-    </KayitDialog>
+    </FormDialog>
   </v-container>
 </template>
