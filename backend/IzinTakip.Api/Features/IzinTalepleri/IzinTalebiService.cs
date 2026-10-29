@@ -40,10 +40,12 @@ public sealed class IzinTalebiService(
         var takvim = await takvimOkuyucu.OkuAsync(request.Tarih, bitisTarihi, cancellationToken);
         var pencereBaslangic = request.Tarih.ToDateTime(TimeOnly.MinValue);
         var pencereBitis = bitisTarihi.AddDays(1).ToDateTime(TimeOnly.MinValue);
-        var acikTalepler = await AcikTalepler(calisanId)
-            .Where(t => t.Baslangic < pencereBitis && t.Bitis > pencereBaslangic)
-            .Select(t => new ZamanAraligi(t.Baslangic, t.Bitis))
-            .ToListAsync(cancellationToken);
+        var acikTalepler = (await AcikTalepler(calisanId)
+                .Where(t => t.Baslangic < pencereBitis && t.Bitis > pencereBaslangic)
+                .Select(t => new { t.SureTipi, t.Baslangic, t.Bitis })
+                .ToListAsync(cancellationToken))
+            .Select(t => IzinTalebi.CakismaAraligi(t.SureTipi, new ZamanAraligi(t.Baslangic, t.Bitis)))
+            .ToList();
         var bakiye = await bakiyeSorgusu.HesaplaAsync(calisanId, cancellationToken);
         var turunYilIcindeKullanimi = await AcikTalepler(calisanId)
             .Where(t => t.IzinTuruId == tur.Id && t.Baslangic.Year == request.Tarih.Year)

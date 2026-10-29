@@ -11,6 +11,7 @@ public sealed class IzinTalebiOlusturTests
     private static readonly DateTime Simdi = new(2026, 2, 2, 10, 0, 0);
     private static readonly Bakiye OnDortGun = new(14 * 480, 0, 0);
     private static readonly IzinTuru Yillik = new("Yıllık", true, false, GunHesabi.IsGunu, true, true, false, null, null);
+    private static readonly IzinTuru Saatlik = new("Saatlik", true, false, GunHesabi.IsGunu, false, false, true, null, null);
 
     [Fact]
     public void Olustur_GecerliTamGun_BeklemedeVeSuresiDolu()
@@ -83,6 +84,33 @@ public sealed class IzinTalebiOlusturTests
         var mevcut = new ZamanAraligi(Pazartesi.ToDateTime(new(9, 0)), Pazartesi.ToDateTime(new(12, 30)));
 
         Assert.Throws<IsKuraliException>(() => Olustur(Yillik, TamGun(Pazartesi, Pazartesi), acikTalepler: [mevcut]));
+    }
+
+    [Fact]
+    public void Olustur_TamGunIzinliGune_EskiMesaiyleKalanSaatDisindaBileSaatlikAcilamaz()
+    {
+        var eskiMesaiyleTamGun = IzinTalebi.CakismaAraligi(
+            SureTipi.TamGun, new ZamanAraligi(Pazartesi.ToDateTime(new(10, 0)), Pazartesi.ToDateTime(new(19, 0))));
+
+        Assert.Throws<IsKuraliException>(() =>
+            Olustur(Saatlik, new SureIstegi(SureTipi.Saatlik, Pazartesi, null, null, new(9, 0), new(10, 0)), acikTalepler: [eskiMesaiyleTamGun]));
+    }
+
+    [Fact]
+    public void Olustur_TamGun_EskiMesaiyleKalanSaatlikIzinleCakisir()
+    {
+        var eskiMesaiyleSaatlik = new ZamanAraligi(Pazartesi.ToDateTime(new(18, 0)), Pazartesi.ToDateTime(new(19, 0)));
+
+        Assert.Throws<IsKuraliException>(() => Olustur(Yillik, TamGun(Pazartesi, Pazartesi), acikTalepler: [eskiMesaiyleSaatlik]));
+    }
+
+    [Fact]
+    public void Olustur_ArdArdaTamGunler_Cakismaz()
+    {
+        var pazartesi = IzinTalebi.CakismaAraligi(
+            SureTipi.TamGun, new ZamanAraligi(Pazartesi.ToDateTime(new(9, 0)), Pazartesi.ToDateTime(new(18, 0))));
+
+        Assert.Equal(480, Olustur(Yillik, TamGun(Pazartesi.AddDays(1), Pazartesi.AddDays(1)), acikTalepler: [pazartesi]).Dakika);
     }
 
     [Fact]

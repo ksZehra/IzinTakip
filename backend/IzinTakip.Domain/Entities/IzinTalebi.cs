@@ -82,7 +82,8 @@ public sealed class IzinTalebi : Entity
             }
         }
 
-        if (acikTalepler.Any(a => a.CakisirMi(hesap.Aralik)))
+        var cakismaAraligi = CakismaAraligi(sure.Tip, hesap.Aralik);
+        if (acikTalepler.Any(a => a.CakisirMi(cakismaAraligi)))
         {
             throw new IsKuraliException("Bu tarihlerle çakışan, beklemede ya da onaylanmış başka bir izin talebi var.");
         }
@@ -111,6 +112,9 @@ public sealed class IzinTalebi : Entity
             Aciklama = aciklama
         };
     }
+
+    public static ZamanAraligi CakismaAraligi(SureTipi tip, ZamanAraligi aralik) =>
+        tip == SureTipi.TamGun ? new ZamanAraligi(aralik.Baslangic.Date, aralik.Bitis.Date.AddDays(1)) : aralik;
 
     public void Onayla(
         int kararVerenKullaniciId,
