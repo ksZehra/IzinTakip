@@ -28,6 +28,24 @@ public sealed class IzinOnayTests(VeritabanliApiFactory factory) : IClassFixture
     }
 
     [Fact]
+    public async Task Olustur_YoneticiEkibiAdina_TalepSahibineBildirimGiderYoneticiyeGitmez()
+    {
+        var ekip = await EkipKurAsync();
+        var yillik = await TestVeri.IzinTuruIdAsync(ekip.Yonetici, "Yıllık");
+
+        var yanit = await ekip.Yonetici.PostAsJsonAsync(
+            "/api/izin-talepleri",
+            new { calisanId = ekip.CalisanId, izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi },
+            TestContext.Current.CancellationToken);
+        var bildirim = (await BildirimlerAsync(ekip.Calisan)).GetProperty("items")[0];
+        await factory.EmailSender.BekleAsync(ekip.CalisanEposta, "Adınıza izin talebi açıldı");
+
+        Assert.Equal(HttpStatusCode.Created, yanit.StatusCode);
+        Assert.Equal("Adınıza izin talebi açıldı", bildirim.GetProperty("baslik").GetString());
+        Assert.Equal(0, await OkunmamisAsync(ekip.Yonetici));
+    }
+
+    [Fact]
     public async Task Onayla_YoneticiEkibininTalebini_OnaylanirVeSahibineBildirimGider()
     {
         var ekip = await EkipKurAsync();

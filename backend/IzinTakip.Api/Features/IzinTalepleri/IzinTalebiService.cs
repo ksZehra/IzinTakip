@@ -35,9 +35,13 @@ public sealed class IzinTalebiService(
         var tur = await TurAsync(request.IzinTuruId, cancellationToken);
         var bitisTarihi = request.BitisTarihi ?? request.Tarih;
 
+        var takvim = await takvimOkuyucu.OkuAsync(request.Tarih, bitisTarihi, cancellationToken);
+        var calisanAdi = await db.Calisanlar.Where(c => c.Id == calisanId).Select(c => c.Ad + " " + c.Soyad).SingleAsync(cancellationToken);
+        var onaycilar = (await onayciBulucu.OnaycilarAsync(calisanId, cancellationToken)).Where(a => a.KullaniciId != yetkiler.KullaniciId).ToList();
+        var talepSahibi = calisanId == yetkiler.CalisanId ? [] : await onayciBulucu.CalisaninKendisiAsync(calisanId, cancellationToken);
+
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
 
-        var takvim = await takvimOkuyucu.OkuAsync(request.Tarih, bitisTarihi, cancellationToken);
         var pencereBaslangic = request.Tarih.ToDateTime(TimeOnly.MinValue);
         var pencereBitis = bitisTarihi.AddDays(1).ToDateTime(TimeOnly.MinValue);
         var acikTalepler = (await AcikTalepler(calisanId)
@@ -65,24 +69,10 @@ public sealed class IzinTalebiService(
         db.IzinTalepleri.Add(talep);
         await db.SaveChangesAsync(cancellationToken);
 
-        var calisanAdi = await db.Calisanlar.Where(c => c.Id == calisanId).Select(c => c.Ad + " " + c.Soyad).SingleAsync(cancellationToken);
         var ozet = TalepOzeti.Olustur(talep, tur.Ad, takvim.GunlukDakika);
         var baglanti = $"/izin-talepleri/{talep.Id}";
-        bildirimYazici.Ekle(
-            (await onayciBulucu.OnaycilarAsync(calisanId, cancellationToken)).Where(a => a.KullaniciId != yetkiler.KullaniciId),
-            "Onayınızı bekleyen izin talebi",
-            $"{calisanAdi} izin talebi açtı. {ozet}",
-            baglanti,
-            "Talebi incele");
-        if (calisanId != yetkiler.CalisanId)
-        {
-            bildirimYazici.Ekle(
-                await onayciBulucu.CalisaninKendisiAsync(calisanId, cancellationToken),
-                "Adınıza izin talebi açıldı",
-                ozet,
-                baglanti,
-                "Talebi görüntüle");
-        }
+        bildirimYazici.Ekle(onaycilar, "Onayınızı bekleyen izin talebi", $"{calisanAdi} izin talebi açtı. {ozet}", baglanti, "Talebi incele");
+        bildirimYazici.Ekle(talepSahibi, "Adınıza izin talebi açıldı", ozet, baglanti, "Talebi görüntüle");
 
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
