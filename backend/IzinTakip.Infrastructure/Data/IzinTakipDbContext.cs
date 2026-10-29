@@ -33,5 +33,11 @@ public sealed class IzinTakipDbContext(DbContextOptions<IzinTakipDbContext> opti
         modelBuilder.Entity<IdentityRoleClaim<int>>().ToTable("RolClaimleri");
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(IzinTakipDbContext).Assembly);
+
+        foreach (var entityTipi in modelBuilder.Model.GetEntityTypes().Where(tip => tip.ClrType.IsAssignableTo(typeof(Entity))).ToList())
+        {
+            modelBuilder.Entity(entityTipi.ClrType).Property(nameof(Entity.OlusturmaTarihi)).HasConversion<UtcZamanDonusturucu>();
+            modelBuilder.Entity(entityTipi.ClrType).Property(nameof(Entity.GuncellemeTarihi)).HasConversion<UtcZamanDonusturucu>();
+        }
     }
 }

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using FluentValidation;
 using IzinTakip.Api.BackgroundServices;
@@ -172,7 +173,8 @@ try
             options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
         })
         .ConfigureApiBehaviorOptions(options => options.InvalidModelStateResponseFactory = ValidationFilter.BaglamaHataYaniti)
-        .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+        .AddJsonOptions(options => JsonSecenekleriniAyarla(options.JsonSerializerOptions));
+    builder.Services.ConfigureHttpJsonOptions(options => JsonSecenekleriniAyarla(options.SerializerOptions));
     builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document, _, _) =>
     {
         document.Components ??= new OpenApiComponents();
@@ -235,6 +237,12 @@ try
     app.MapControllers();
 
     app.Run();
+
+    static void JsonSecenekleriniAyarla(JsonSerializerOptions secenekler)
+    {
+        secenekler.Converters.Add(new JsonStringEnumConverter());
+        secenekler.NumberHandling = JsonNumberHandling.Strict;
+    }
 }
 catch (Exception exception) when (exception is not HostAbortedException)
 {

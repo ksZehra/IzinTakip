@@ -135,6 +135,20 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
     }
 
     [Fact]
+    public async Task Detay_KayitZamaniUtcIsaretliTalepAraligiYerelDoner()
+    {
+        var (_, client) = await CalisanKurAsync();
+        var yillik = await TestVeri.IzinTuruIdAsync(client, "Yıllık");
+        var talep = await (await TalepAcAsync(client, new { izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi }))
+            .Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+
+        var detay = await client.GetFromJsonAsync<JsonElement>($"/api/izin-talepleri/{talep.GetProperty("id").GetInt32()}", TestContext.Current.CancellationToken);
+
+        Assert.EndsWith("Z", detay.GetProperty("olusturmaTarihi").GetString());
+        Assert.DoesNotContain("Z", detay.GetProperty("baslangic").GetString());
+    }
+
+    [Fact]
     public async Task Detay_BaskasininTalebi_404Doner()
     {
         var (_, birinci) = await CalisanKurAsync();
