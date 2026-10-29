@@ -1,6 +1,9 @@
+using System.Globalization;
 using System.Text.Json;
 using IzinTakip.Api.Common;
+using IzinTakip.Api.Common.Izin;
 using IzinTakip.Api.Common.Paging;
+using IzinTakip.Domain;
 using IzinTakip.Infrastructure.Audit;
 using IzinTakip.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +12,11 @@ namespace IzinTakip.Api.Features.IslemKayitlari;
 
 public sealed class IslemKaydiService(IzinTakipDbContext db, KullaniciAdlariProvider kullaniciAdlari, SirketSaati sirketSaati)
 {
+    private static readonly HashSet<string> SureAlanlari = ["Dakika", "TalepBasinaEnFazlaDakika", "YillikEnFazlaDakika"];
+    private static readonly HashSet<string> CalisanAlanlari = ["CalisanId", "YoneticiId"];
+    private static readonly HashSet<string> DepartmanAlanlari = ["DepartmanId"];
+    private static readonly HashSet<string> KullaniciAlanlari = ["UserId"];
+
     public async Task<PagedResponse<IslemKaydiResponse>> ListeleAsync(IslemKaydiListeRequest request, CancellationToken cancellationToken)
     {
         var sorgu = db.IslemKayitlari.AsNoTracking().Select(k => new
@@ -66,7 +74,39 @@ public sealed class IslemKaydiService(IzinTakipDbContext db, KullaniciAdlariProv
                 x.KendiKaydi,
                 x.Kayit.Degisiklikler))
             .SayfalaAsync(request.Page, request.PageSize, cancellationToken);
-        var adlar = await kullaniciAdlari.OkuAsync(sayfa.Items.Select(s => s.KullaniciId), cancellationToken);
+        var degisiklikler = sayfa.Items.ToDictionary(s => s.Id, s => JsonSerializer.Deserialize<List<AlanDegisikligi>>(s.Degisiklikler) ?? []);
+        var tumu = degisiklikler.Values.SelectMany(d => d).ToList();
+        var calisanIdler = Idler(tumu, CalisanAlanlari);
+        var departmanIdler = Idler(tumu, DepartmanAlanlari);
+        var calisanAdlari = await db.Calisanlar
+            .Where(c => calisanIdler.Contains(c.Id))
+            .ToDictionaryAsync(c => c.Id, c => c.Ad + " " + c.Soyad, cancellationToken);
+        var departmanAdlari = await db.Departmanlar
+            .Where(d => departmanIdler.Contains(d.Id))
+            .ToDictionaryAsync(d => d.Id, d => d.Ad, cancellationToken);
+        var adlar = await kullaniciAdlari.OkuAsync(
+            sayfa.Items.Select(s => s.KullaniciId).Concat(Idler(tumu, KullaniciAlanlari).Select(id => (int?)id)),
+            cancellationToken);
+        var gunlukDakika = await db.GunlukDakikaAsync(cancellationToken);
+
+        string? Goster(string alan, string? deger)
+        {
+            if (deger is null || !int.TryParse(deger, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var sayi))
+            {
+                return deger;
+            }
+
+            if (SureAlanlari.Contains(alan))
+            {
+                return SureMetni.Olustur(sayi, gunlukDakika);
+            }
+
+            var ad = CalisanAlanlari.Contains(alan) ? calisanAdlari.GetValueOrDefault(sayi)
+                : DepartmanAlanlari.Contains(alan) ? departmanAdlari.GetValueOrDefault(sayi)
+                : KullaniciAlanlari.Contains(alan) ? adlar.GetValueOrDefault(sayi)
+                : null;
+            return ad ?? deger;
+        }
 
         return new PagedResponse<IslemKaydiResponse>(
             sayfa.Items.Select(s => new IslemKaydiResponse(
@@ -81,11 +121,20 @@ public sealed class IslemKaydiService(IzinTakipDbContext db, KullaniciAdlariProv
                 s.IlgiliCalisanAdi,
                 s.IlgiliKullaniciId,
                 s.KendiKaydi,
-                JsonSerializer.Deserialize<List<AlanDegisikligi>>(s.Degisiklikler) ?? [])).ToList(),
+                degisiklikler[s.Id].Select(d => d with { Eski = Goster(d.Alan, d.Eski), Yeni = Goster(d.Alan, d.Yeni) }).ToList())).ToList(),
             sayfa.TotalCount,
             sayfa.Page,
             sayfa.PageSize);
     }
+
+    private static List<int> Idler(IEnumerable<AlanDegisikligi> degisiklikler, IReadOnlySet<string> alanlar) =>
+        degisiklikler
+            .Where(d => alanlar.Contains(d.Alan))
+            .SelectMany(d => new[] { d.Eski, d.Yeni })
+            .Select(deger => int.TryParse(deger, CultureInfo.InvariantCulture, out var id) ? id : (int?)null)
+            .OfType<int>()
+            .Distinct()
+            .ToList();
 
     private sealed record IslemKaydiSatiri(
         int Id,

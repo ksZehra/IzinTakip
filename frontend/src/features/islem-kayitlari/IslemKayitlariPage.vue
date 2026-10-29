@@ -8,6 +8,8 @@ import PageHeader from '@/common/components/PageHeader.vue'
 import { usePagedList } from '@/common/composables/usePagedList'
 import { tarihSaatGoster } from '@/common/utils/tarih'
 
+import { alanEtiketi, degerGoster } from './degisiklikGoster'
+
 const varsayilanFiltre: IslemKaydiFilter = {
   tablo: null,
   baslangic: null,
@@ -102,8 +104,9 @@ const basliklar = [
         <template #[`item.degisiklikler`]="{ item }">
           <ul class="degisiklikler">
             <li v-for="degisiklik in item.degisiklikler" :key="degisiklik.alan">
-              <strong>{{ degisiklik.alan }}:</strong>
-              {{ degisiklik.eski ?? '—' }} → {{ degisiklik.yeni ?? '—' }}
+              <strong>{{ alanEtiketi(degisiklik.alan) }}:</strong>
+              {{ degerGoster(degisiklik.alan, degisiklik.eski) }} →
+              {{ degerGoster(degisiklik.alan, degisiklik.yeni) }}
             </li>
           </ul>
           <v-chip v-if="item.kendiKaydi" size="x-small" color="warning" class="mt-1">

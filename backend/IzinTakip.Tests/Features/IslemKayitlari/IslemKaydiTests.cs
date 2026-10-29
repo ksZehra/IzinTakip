@@ -26,7 +26,8 @@ public sealed class IslemKaydiTests(DatabaseApiFactory factory) : IClassFixture<
         Assert.Equal("Eklendi", kayit.GetProperty("islem").GetString());
         Assert.Equal("İK Kişi Test", kayit.GetProperty("kullaniciAdi").GetString());
         Assert.True(kayit.GetProperty("kendiKaydi").GetBoolean());
-        Assert.Contains(kayit.GetProperty("degisiklikler").EnumerateArray(), d => d.GetProperty("alan").GetString() == "Dakika" && d.GetProperty("yeni").GetString() == "4800");
+        Assert.Contains(kayit.GetProperty("degisiklikler").EnumerateArray(), d => d.GetProperty("alan").GetString() == "Dakika" && d.GetProperty("yeni").GetString() == "10 gün");
+        Assert.Contains(kayit.GetProperty("degisiklikler").EnumerateArray(), d => d.GetProperty("alan").GetString() == "CalisanId" && d.GetProperty("yeni").GetString() == "İK Kişi Test");
     }
 
     [Fact]
