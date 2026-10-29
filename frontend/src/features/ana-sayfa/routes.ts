@@ -1,10 +1,11 @@
+import { mdiHome } from '@mdi/js'
 import type { RouteRecordRaw } from 'vue-router'
 
 export const anaSayfaRoutes: RouteRecordRaw[] = [
   {
-    path: '/',
+    path: '',
     name: 'ana-sayfa',
     component: () => import('./AnaSayfaPage.vue'),
-    meta: { baslik: 'Ana Sayfa' },
+    meta: { baslik: 'Ana Sayfa', menu: { baslik: 'Ana Sayfa', ikon: mdiHome } },
   },
 ]

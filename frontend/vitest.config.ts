@@ -20,7 +20,9 @@ export default mergeConfig(
         },
         {
           extends: true,
-          optimizeDeps: { include: ['vuetify/components/*'] },
+          optimizeDeps: {
+            include: ['vuetify/components/*', 'vuetify', '@mdi/js', 'axios', 'pinia', 'vue-router'],
+          },
           test: {
             name: 'browser',
             include: ['src/**/*.browser.test.ts'],
