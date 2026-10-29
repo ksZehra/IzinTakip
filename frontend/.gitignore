@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+*.local
+*.tsbuildinfo
+.eslintcache
+test-results/
+playwright-report/
+__screenshots__/
