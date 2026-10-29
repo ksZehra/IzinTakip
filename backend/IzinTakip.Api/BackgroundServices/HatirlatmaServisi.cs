@@ -30,15 +30,17 @@ public sealed class HatirlatmaServisi(
             .Include(t => t.Calisan)
             .Include(t => t.IzinTuru)
             .Where(t => t.Durum == IzinDurumu.Beklemede
+                        && t.Calisan.Aktif
                         && t.OlusturmaTarihi < acilisSiniri
                         && (t.SonHatirlatmaTarihi == null || t.SonHatirlatmaTarihi <= sonGun))
             .ToListAsync(cancellationToken);
+        var onaycilar = await onayciBulucu.OnaycilarAsync(talepler.Select(t => t.CalisanId).Distinct().ToList(), cancellationToken);
 
         foreach (var talep in talepler)
         {
             var bekledigiGun = bugun.DayNumber - DateOnly.FromDateTime(SirketSaati.Yerel(talep.OlusturmaTarihi)).DayNumber;
             bildirimYazici.Ekle(
-                await onayciBulucu.OnaycilarAsync(talep.CalisanId, cancellationToken),
+                onaycilar[talep.CalisanId],
                 "Hatırlatma: onayınızı bekleyen izin talebi",
                 $"{talep.Calisan.Ad} {talep.Calisan.Soyad} adlı çalışanın izin talebi {bekledigiGun} gündür onay bekliyor. "
                 + TalepOzeti.Olustur(talep, talep.IzinTuru.Ad, ayar.GunlukCalismaDakikasi),

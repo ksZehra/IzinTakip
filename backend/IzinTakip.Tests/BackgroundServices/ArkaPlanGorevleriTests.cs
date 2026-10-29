@@ -91,6 +91,58 @@ public sealed class ArkaPlanGorevleriTests(VeritabanliApiFactory factory) : ICla
         await factory.EmailSender.BekleAsync(yoneticiEposta, "Hatırlatma: onayınızı bekleyen izin talebi");
     }
 
+    [Fact]
+    public async Task Hatirlatma_HerTalepKendiOnaycisinaGiderPasifCalisanAtlanir()
+    {
+        var bugun = factory.Services.GetRequiredService<SirketSaati>().Bugun();
+        var admin = await SuperAdminAsync();
+        var yillik = await TestVeri.IzinTuruIdAsync(admin, "Yıllık");
+        var (birinciYonetici, birinciDepartman) = await EkipAsync(admin);
+        var (ikinciYonetici, ikinciDepartman) = await EkipAsync(admin);
+        await TalepliCalisanAsync(admin, "Aktif", birinciDepartman, yillik);
+        var ayrilan = await TalepliCalisanAsync(admin, "Ayrılan", birinciDepartman, yillik);
+        await TalepliCalisanAsync(admin, "Diğer", ikinciDepartman, yillik);
+        (await admin.PutAsJsonAsync($"/api/calisanlar/{ayrilan}/aktiflik", new { aktif = false }, TestContext.Current.CancellationToken))
+            .EnsureSuccessStatusCode();
+
+        await Gorev<HatirlatmaServisi>().CalistirAsync(bugun.AddDays(2), TestContext.Current.CancellationToken);
+        var birinci = await birinciYonetici.GetFromJsonAsync<JsonElement>("/api/bildirimler", TestContext.Current.CancellationToken);
+        var ikinci = await ikinciYonetici.GetFromJsonAsync<JsonElement>("/api/bildirimler", TestContext.Current.CancellationToken);
+
+        var birinciHatirlatmalar = Hatirlatmalar(birinci);
+        Assert.Single(birinciHatirlatmalar);
+        Assert.StartsWith("Aktif Test", birinciHatirlatmalar[0]);
+        Assert.StartsWith("Diğer Test", Assert.Single(Hatirlatmalar(ikinci)));
+    }
+
+    private async Task<(HttpClient Yonetici, int DepartmanId)> EkipAsync(HttpClient admin)
+    {
+        var departmanId = await TestVeri.DepartmanEkleAsync(admin, $"Ekip-{Guid.NewGuid():N}");
+        var yoneticiId = await TestVeri.CalisanEkleAsync(admin, "Yönetici", departmanId);
+        await TestVeri.DepartmanYoneticisiAtaAsync(admin, departmanId, $"Ekip-{yoneticiId}", yoneticiId);
+        var eposta = $"yonetici-{yoneticiId}@izintakip.test";
+        await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Yonetici, calisanId: yoneticiId);
+        return (await TestKimlik.OturumluClientAsync(factory, eposta), departmanId);
+    }
+
+    private static async Task<int> TalepliCalisanAsync(HttpClient admin, string ad, int departmanId, int izinTuruId)
+    {
+        var calisanId = await TestVeri.CalisanEkleAsync(admin, ad, departmanId);
+        await TestVeri.HakEkleAsync(admin, calisanId, 14 * 480);
+        (await admin.PostAsJsonAsync(
+                "/api/izin-talepleri",
+                new { calisanId, izinTuruId, sureTipi = "TamGun", tarih = TestVeri.SonrakiYilPazartesi() },
+                TestContext.Current.CancellationToken))
+            .EnsureSuccessStatusCode();
+        return calisanId;
+    }
+
+    private static List<string> Hatirlatmalar(JsonElement bildirimler) =>
+        bildirimler.GetProperty("items").EnumerateArray()
+            .Where(b => b.GetProperty("baslik").GetString() == "Hatırlatma: onayınızı bekleyen izin talebi")
+            .Select(b => b.GetProperty("metin").GetString()!)
+            .ToList();
+
     private T Gorev<T>() where T : GunlukGorev =>
         factory.Services.GetServices<IHostedService>().OfType<T>().Single();
 
