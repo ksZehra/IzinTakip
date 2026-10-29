@@ -10,9 +10,12 @@ import { departmanRoutes } from '@/features/departmanlar/routes'
 import { hakKuraliRoutes } from '@/features/hak-kurallari/routes'
 import { hataRoutes } from '@/features/hatalar/routes'
 import { izinTalebiRoutes } from '@/features/izin-talepleri/routes'
+import { islemKaydiRoutes } from '@/features/islem-kayitlari/routes'
 import { izinTuruRoutes } from '@/features/izin-turleri/routes'
+import { kullaniciRoutes } from '@/features/kullanicilar/routes'
 import { raporRoutes } from '@/features/raporlar/routes'
 import { resmiTatilRoutes } from '@/features/resmi-tatiller/routes'
+import { rolRoutes } from '@/features/roller/routes'
 
 export const routes: RouteRecordRaw[] = [
   ...authRoutes,
@@ -29,6 +32,9 @@ export const routes: RouteRecordRaw[] = [
       ...resmiTatilRoutes,
       ...hakKuraliRoutes,
       ...ayarlarRoutes,
+      ...kullaniciRoutes,
+      ...rolRoutes,
+      ...islemKaydiRoutes,
       ...bildirimRoutes,
       ...hataRoutes,
     ],

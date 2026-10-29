@@ -81,6 +81,7 @@ jobs:
       DEMO_VERI: "true"
       DEMO_PAROLA: CiDemo${{ github.run_id }}Aa1
       E2E_PAROLA: CiDemo${{ github.run_id }}Aa1
+      E2E_ADMIN_PAROLA: CiAdmin${{ github.run_id }}Aa1
       GIRIS_DAKIKADA_DENEME: "100"
     steps:
       - uses: actions/checkout@v7
