@@ -243,6 +243,24 @@ public sealed class IzinTalebiTests(VeritabanliApiFactory factory) : IClassFixtu
         Assert.Equal("14 gün", bakiye.GetProperty("kullanilabilirMetni").GetString());
     }
 
+    [Fact]
+    public async Task Olustur_BakiyeyiAsanIkiTalepAyniAnda_YalnizBiriKabulEdilir()
+    {
+        var admin = await SuperAdminAsync();
+        var calisanId = await TestVeri.CalisanEkleAsync(admin, "Acele", await TestVeri.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}"));
+        await TestVeri.HakEkleAsync(admin, calisanId, 2 * GunlukDakika);
+        var yillik = await TestVeri.IzinTuruIdAsync(admin, "Yıllık");
+
+        var yanitlar = await Task.WhenAll(
+            TalepAcAsync(admin, new { calisanId, izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi, bitisTarihi = Pazartesi.AddDays(1) }),
+            TalepAcAsync(admin, new { calisanId, izinTuruId = yillik, sureTipi = "TamGun", tarih = Pazartesi.AddDays(7), bitisTarihi = Pazartesi.AddDays(8) }));
+        var bakiye = await admin.GetFromJsonAsync<JsonElement>($"/api/calisanlar/{calisanId}/bakiye", TestContext.Current.CancellationToken);
+
+        Assert.Single(yanitlar, y => y.StatusCode == HttpStatusCode.Created);
+        Assert.Contains(yanitlar.Single(y => y.StatusCode != HttpStatusCode.Created).StatusCode, new[] { HttpStatusCode.Conflict, HttpStatusCode.UnprocessableEntity });
+        Assert.Equal(2 * GunlukDakika, bakiye.GetProperty("bekleyenDakika").GetInt32());
+    }
+
     private async Task<(int CalisanId, HttpClient Client)> CalisanKurAsync()
     {
         var admin = await SuperAdminAsync();

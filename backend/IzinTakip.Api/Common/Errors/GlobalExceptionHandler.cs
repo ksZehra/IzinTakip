@@ -30,8 +30,8 @@ public sealed class GlobalExceptionHandler(
             KayitBulunamadiException e => (StatusCodes.Status404NotFound, e.Message),
             YetkiYokException e => (StatusCodes.Status403Forbidden, e.Message),
             DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, CakismaMesaji),
-            DbUpdateException { InnerException: SqlException { Number: 2601 or 2627 } } => (StatusCodes.Status409Conflict, TekrarMesaji),
-            SqlException { Number: 1205 } or DbUpdateException { InnerException: SqlException { Number: 1205 } } => (StatusCodes.Status409Conflict, EsZamanliIslemMesaji),
+            _ when SqlHataNumarasi(exception) is 2601 or 2627 => (StatusCodes.Status409Conflict, TekrarMesaji),
+            _ when SqlHataNumarasi(exception) is 1205 => (StatusCodes.Status409Conflict, EsZamanliIslemMesaji),
             _ => (StatusCodes.Status500InternalServerError, null)
         };
 
@@ -57,5 +57,18 @@ public sealed class GlobalExceptionHandler(
             Exception = exception,
             ProblemDetails = new ProblemDetails { Status = status, Detail = detail }
         });
+    }
+
+    private static int? SqlHataNumarasi(Exception exception)
+    {
+        for (var hata = exception; hata is not null; hata = hata.InnerException)
+        {
+            if (hata is SqlException sql)
+            {
+                return sql.Number;
+            }
+        }
+
+        return null;
     }
 }

@@ -196,6 +196,26 @@ public sealed class IzinOnayTests(VeritabanliApiFactory factory) : IClassFixture
         Assert.EndsWith("Not: Proje teslimi öne alındı", bildirim.GetProperty("metin").GetString());
     }
 
+    [Fact]
+    public async Task OnayVeRed_AyniAnda_YalnizBiriUygulanir()
+    {
+        var ekip = await EkipKurAsync();
+        var talepId = await TalepAcAsync(ekip.Calisan);
+        var ikEposta = $"ik-{Guid.NewGuid():N}@izintakip.test";
+        await TestKimlik.KullaniciOlusturAsync(factory, ikEposta, SistemRolleri.IK);
+        var ik = await TestKimlik.OturumluClientAsync(factory, ikEposta);
+
+        var onayGorevi = KararAsync(ekip.Yonetici, talepId, "onayla", new { });
+        var redGorevi = KararAsync(ik, talepId, "reddet", new { gerekce = "Ekip planı uygun değil" });
+        await Task.WhenAll(onayGorevi, redGorevi);
+        var (onay, red) = (await onayGorevi, await redGorevi);
+        var talep = await ekip.Calisan.GetFromJsonAsync<JsonElement>($"/api/izin-talepleri/{talepId}", TestContext.Current.CancellationToken);
+
+        Assert.Single(new[] { onay, red }, y => y.IsSuccessStatusCode);
+        Assert.Contains((onay.IsSuccessStatusCode ? red : onay).StatusCode, new[] { HttpStatusCode.Conflict, HttpStatusCode.UnprocessableEntity });
+        Assert.Equal(onay.IsSuccessStatusCode ? "Onaylandi" : "Reddedildi", talep.GetProperty("durum").GetString());
+    }
+
     private async Task<Ekip> EkipKurAsync()
     {
         var admin = await SuperAdminAsync();
