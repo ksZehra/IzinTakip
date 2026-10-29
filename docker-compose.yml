@@ -37,6 +37,7 @@ services:
       Seed__SuperAdmin__Parola: ${SUPERADMIN_PAROLA:-}
       Email__Host: mailpit
       Email__Port: "1025"
+      Email__StartTls: "false"
       Uygulama__Adres: http://localhost:${GATEWAY_PORT:-8088}
     volumes:
       - api-belgeler:/app/belgeler
