@@ -51,6 +51,33 @@ public sealed class IzinTalebiOlusturTests
     }
 
     [Fact]
+    public void Olustur_YillikSinirliTurdeYilSonunuAsan_IsKuraliHatasiVerir()
+    {
+        var mazeret = new IzinTuru("Mazeret", false, false, GunHesabi.IsGunu, true, true, false, null, 5 * 480);
+
+        var hata = Assert.Throws<IsKuraliException>(() => Olustur(mazeret, TamGun(new(2026, 12, 30), new(2027, 1, 5))));
+
+        Assert.Equal("Mazeret türünde yıllık sınır olduğu için talep yıl sonunu aşamaz. Talebi 31 Aralık'a kadar ve yeni yıl için iki ayrı talep olarak açın.", hata.Message);
+    }
+
+    [Fact]
+    public void Olustur_YillikSinirliTurdeYilIcindeKalan_Olusur()
+    {
+        var mazeret = new IzinTuru("Mazeret", false, false, GunHesabi.IsGunu, true, true, false, null, 5 * 480);
+
+        Assert.Equal(960, Olustur(mazeret, TamGun(new(2026, 12, 30), new(2026, 12, 31))).Dakika);
+        Assert.Equal(960, Olustur(mazeret, TamGun(new(2027, 1, 4), new(2027, 1, 5))).Dakika);
+    }
+
+    [Fact]
+    public void Olustur_YillikSiniriOlmayanTur_YilSonunuAsabilir()
+    {
+        var talep = Olustur(Yillik, TamGun(new(2026, 12, 30), new(2027, 1, 5)));
+
+        Assert.Equal(2400, talep.Dakika);
+    }
+
+    [Fact]
     public void Olustur_AcikTalepleCakisiyor_IsKuraliHatasiVerir()
     {
         var mevcut = new ZamanAraligi(Pazartesi.ToDateTime(new(9, 0)), Pazartesi.ToDateTime(new(12, 30)));

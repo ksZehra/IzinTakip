@@ -67,10 +67,19 @@ public sealed class IzinTalebi : Entity
                 $"{tur.Ad} türünde bir talepte en çok {SureMetni.Olustur(talepSiniri, gunluk)} izin alınabilir; talep {SureMetni.Olustur(hesap.Dakika, gunluk)}.");
         }
 
-        if (tur.YillikEnFazlaDakika is { } yillikSinir && turunYilIcindeKullanimi + hesap.Dakika > yillikSinir)
+        if (tur.YillikEnFazlaDakika is { } yillikSinir)
         {
-            throw new IsKuraliException(
-                $"{tur.Ad} türünde yılda en çok {SureMetni.Olustur(yillikSinir, gunluk)} izin alınabilir; bu yıl kullanılan {SureMetni.Olustur(turunYilIcindeKullanimi, gunluk)}, talep {SureMetni.Olustur(hesap.Dakika, gunluk)}.");
+            if (hesap.Aralik.Baslangic.Year != hesap.Aralik.Bitis.Year)
+            {
+                throw new IsKuraliException(
+                    $"{tur.Ad} türünde yıllık sınır olduğu için talep yıl sonunu aşamaz. Talebi 31 Aralık'a kadar ve yeni yıl için iki ayrı talep olarak açın.");
+            }
+
+            if (turunYilIcindeKullanimi + hesap.Dakika > yillikSinir)
+            {
+                throw new IsKuraliException(
+                    $"{tur.Ad} türünde yılda en çok {SureMetni.Olustur(yillikSinir, gunluk)} izin alınabilir; bu yıl kullanılan {SureMetni.Olustur(turunYilIcindeKullanimi, gunluk)}, talep {SureMetni.Olustur(hesap.Dakika, gunluk)}.");
+            }
         }
 
         if (acikTalepler.Any(a => a.CakisirMi(hesap.Aralik)))
