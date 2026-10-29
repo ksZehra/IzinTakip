@@ -18,6 +18,7 @@ import PageHeader from '@/common/components/PageHeader.vue'
 import { useFormGonder } from '@/common/composables/useFormGonder'
 import { useKayitFormu } from '@/common/composables/useKayitFormu'
 import { useToast } from '@/common/composables/useToast'
+import { rolEtiketi } from '@/common/utils/etiketler'
 
 const toast = useToast()
 const silme = useFormGonder()
@@ -84,7 +85,7 @@ onMounted(async () => {
     <v-card>
       <v-data-table :headers="basliklar" :items="roller" items-per-page="-1" hide-default-footer>
         <template #[`item.ad`]="{ item }">
-          {{ item.ad }}
+          {{ rolEtiketi(item.ad) }}
           <v-chip v-if="item.sistemRolu" size="x-small" class="ml-1">Sistem</v-chip>
         </template>
         <template #[`item.islemler`]="{ item }">
@@ -93,7 +94,7 @@ onMounted(async () => {
             :icon="mdiPencil"
             variant="text"
             size="small"
-            :aria-label="`${item.ad} düzenle`"
+            :aria-label="`${rolEtiketi(item.ad)} düzenle`"
             @click="duzenle(item)"
           />
           <v-btn
@@ -102,7 +103,7 @@ onMounted(async () => {
             variant="text"
             size="small"
             color="error"
-            :aria-label="`${item.ad} sil`"
+            :aria-label="`${rolEtiketi(item.ad)} sil`"
             @click="silmeyiSor(item)"
           />
         </template>
@@ -135,7 +136,7 @@ onMounted(async () => {
     <ConfirmDialog
       v-model="silmeAcik"
       baslik="Rolü sil"
-      :metin="`${silinecek?.ad ?? ''} rolü silinecek.`"
+      :metin="`${rolEtiketi(silinecek?.ad ?? '')} rolü silinecek.`"
       onay-metni="Sil"
       onay-rengi="error"
       :calisiyor="silme.gonderiliyor.value"

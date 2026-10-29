@@ -40,3 +40,18 @@ export function secenekler<Deger extends string>(etiketler: Record<Deger, string
     title,
   }))
 }
+
+const sistemRolEtiketleri: Record<string, string> = {
+  SuperAdmin: 'Süper yönetici',
+  IK: 'İK',
+  Yonetici: 'Yönetici',
+  Calisan: 'Çalışan',
+}
+
+export function rolEtiketi(rol: string) {
+  return sistemRolEtiketleri[rol] ?? rol
+}
+
+export function rolSecenekleri(roller: string[]) {
+  return roller.map((rol) => ({ value: rol, title: rolEtiketi(rol) }))
+}

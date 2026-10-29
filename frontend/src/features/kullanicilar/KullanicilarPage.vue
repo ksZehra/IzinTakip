@@ -22,6 +22,7 @@ import PageHeader from '@/common/components/PageHeader.vue'
 import { useFormGonder } from '@/common/composables/useFormGonder'
 import { useSayfaliListe } from '@/common/composables/useSayfaliListe'
 import { useToast } from '@/common/composables/useToast'
+import { rolEtiketi, rolSecenekleri } from '@/common/utils/etiketler'
 import { useAuthStore } from '@/stores/authStore'
 
 const auth = useAuthStore()
@@ -163,7 +164,9 @@ onMounted(async () => {
           <v-chip v-if="item.parolaDegistirmeli" size="x-small" class="ml-1">Geçici parola</v-chip>
         </template>
         <template #[`item.roller`]="{ item }">
-          <v-chip v-for="rol in item.roller" :key="rol" size="small" class="mr-1">{{ rol }}</v-chip>
+          <v-chip v-for="rol in item.roller" :key="rol" size="small" class="mr-1">{{
+            rolEtiketi(rol)
+          }}</v-chip>
         </template>
         <template #[`item.aktif`]="{ item }">
           <AktiflikAnahtari
@@ -213,7 +216,7 @@ onMounted(async () => {
       />
       <v-select
         v-model="yeniKullanici.roller"
-        :items="atanabilirRoller"
+        :items="rolSecenekleri(atanabilirRoller)"
         label="Roller"
         multiple
         chips
@@ -229,7 +232,7 @@ onMounted(async () => {
     >
       <v-select
         v-model="secilenRoller"
-        :items="atanabilirRoller"
+        :items="rolSecenekleri(atanabilirRoller)"
         label="Roller"
         multiple
         chips

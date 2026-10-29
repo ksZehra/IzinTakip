@@ -8,7 +8,7 @@ public static class SureMetni
 
         if (dakika == 0)
         {
-            return "0 dk";
+            return "0 gün";
         }
 
         var isaret = dakika < 0 ? "-" : string.Empty;

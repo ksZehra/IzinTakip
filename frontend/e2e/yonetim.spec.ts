@@ -29,7 +29,7 @@ test('SuperAdmin rolleri ve işlem kayıtlarını görür', async ({ page }) => 
 
   await page.goto('/roller')
   await expect(page.getByRole('heading', { level: 1, name: 'Roller' })).toBeVisible()
-  await page.getByRole('button', { name: 'Yonetici düzenle' }).click()
+  await page.getByRole('button', { name: 'Yönetici düzenle' }).click()
   await expect(page.getByRole('dialog').getByLabel('Ad', { exact: true })).toHaveValue('Yonetici')
   await erisilebilirlikDenetle(page)
   await page.keyboard.press('Escape')

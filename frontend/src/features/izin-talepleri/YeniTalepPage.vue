@@ -234,7 +234,11 @@ async function gonderTalep() {
             counter="500"
             maxlength="500"
             :error-messages="alanHatasi('aciklama')"
-          />
+          >
+            <template #counter="{ counter }">
+              <span aria-hidden="true">{{ counter }}</span>
+            </template>
+          </v-textarea>
 
           <div class="d-flex justify-end ga-2">
             <v-btn variant="text" :to="{ name: 'izin-talepleri' }">Vazgeç</v-btn>

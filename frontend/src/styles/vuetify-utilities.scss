@@ -1,0 +1,78 @@
+// Boşluk sınıfları yalnız temel boyutta üretilir; ekran boyuna göre değişen boşluk ve eksi margin kullanılmıyor.
+@use 'vuetify/styles/settings/index' with (
+  $utilities: (
+    'gap': (
+      responsive: false,
+    ),
+    'gap-row': (
+      responsive: false,
+    ),
+    'gap-column': (
+      responsive: false,
+    ),
+    'margin': (
+      responsive: false,
+    ),
+    'margin-x': (
+      responsive: false,
+    ),
+    'margin-y': (
+      responsive: false,
+    ),
+    'margin-top': (
+      responsive: false,
+    ),
+    'margin-right': (
+      responsive: false,
+    ),
+    'margin-bottom': (
+      responsive: false,
+    ),
+    'margin-left': (
+      responsive: false,
+    ),
+    'margin-start': (
+      responsive: false,
+    ),
+    'margin-end': (
+      responsive: false,
+    ),
+    'negative-margin': false,
+    'negative-margin-x': false,
+    'negative-margin-y': false,
+    'negative-margin-top': false,
+    'negative-margin-right': false,
+    'negative-margin-bottom': false,
+    'negative-margin-left': false,
+    'negative-margin-start': false,
+    'negative-margin-end': false,
+    'padding': (
+      responsive: false,
+    ),
+    'padding-x': (
+      responsive: false,
+    ),
+    'padding-y': (
+      responsive: false,
+    ),
+    'padding-top': (
+      responsive: false,
+    ),
+    'padding-right': (
+      responsive: false,
+    ),
+    'padding-bottom': (
+      responsive: false,
+    ),
+    'padding-left': (
+      responsive: false,
+    ),
+    'padding-start': (
+      responsive: false,
+    ),
+    'padding-end': (
+      responsive: false,
+    ),
+  )
+);
+@use 'vuetify/styles/utilities';

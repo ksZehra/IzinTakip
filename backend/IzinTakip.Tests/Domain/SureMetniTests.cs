@@ -5,7 +5,7 @@ namespace IzinTakip.Tests.Domain;
 public sealed class SureMetniTests
 {
     [Theory]
-    [InlineData(0, "0 dk")]
+    [InlineData(0, "0 gün")]
     [InlineData(480, "1 gün")]
     [InlineData(240, "yarım gün")]
     [InlineData(-240, "-yarım gün")]

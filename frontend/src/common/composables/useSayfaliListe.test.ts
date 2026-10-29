@@ -17,8 +17,19 @@ describe('filtreyiOku', () => {
     ).toEqual({ durum: 'Beklemede', izinTuruId: 3, sadeceOkunmamis: true, arama: 'ayşe' })
   })
 
-  it('boş ya da eksik değerde varsayılanı korur', () => {
-    expect(filtreyiOku(varsayilan, { durum: '' })).toEqual(varsayilan)
+  it('eksik değerde varsayılanı korur', () => {
+    expect(filtreyiOku(varsayilan, {})).toEqual(varsayilan)
+  })
+
+  it('boş değeri temizlenmiş filtre olarak okur', () => {
+    expect(filtreyiOku({ aktif: true, arama: 'x' }, { aktif: '', arama: '' })).toEqual({
+      aktif: null,
+      arama: '',
+    })
+  })
+
+  it('varsayılanı boş alanda true/false değerini mantıksal okur', () => {
+    expect(filtreyiOku({ aktif: null }, { aktif: 'false' })).toEqual({ aktif: false })
   })
 })
 
@@ -27,5 +38,9 @@ describe('filtreyiYaz', () => {
     expect(filtreyiYaz({ ...varsayilan, izinTuruId: 3, arama: '' }, varsayilan)).toEqual({
       izinTuruId: '3',
     })
+  })
+
+  it('varsayılanı dolu filtre temizlenince boş değer yazar', () => {
+    expect(filtreyiYaz({ aktif: null }, { aktif: true })).toEqual({ aktif: '' })
   })
 })

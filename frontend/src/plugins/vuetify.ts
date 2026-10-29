@@ -1,5 +1,6 @@
 import '@fontsource-variable/roboto/wght.css'
-import 'vuetify/styles'
+import 'vuetify/styles/core'
+import '@/styles/vuetify-utilities.scss'
 import '@/styles/main.css'
 
 import { createVuetify } from 'vuetify'

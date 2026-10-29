@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
+import { useOdakDonusu } from '@/common/composables/useOdakDonusu'
+
 const props = defineProps<{
   baslik: string
   metin: string
@@ -14,6 +16,7 @@ const props = defineProps<{
 const emit = defineEmits<{ onay: [not: string | null] }>()
 const acik = defineModel<boolean>({ required: true })
 const not = ref('')
+const { odagiGeriVer } = useOdakDonusu(acik)
 
 const onaylanabilir = computed(() => !props.notZorunlu || not.value.trim().length > 0)
 
@@ -27,7 +30,7 @@ function onayla() {
 </script>
 
 <template>
-  <v-dialog v-model="acik" max-width="480">
+  <v-dialog v-model="acik" max-width="480" @after-leave="odagiGeriVer">
     <v-card :title="baslik">
       <v-card-text class="d-flex flex-column ga-4">
         <p>{{ metin }}</p>
@@ -39,7 +42,11 @@ function onayla() {
           auto-grow
           counter="500"
           maxlength="500"
-        />
+        >
+          <template #counter="{ counter }">
+            <span aria-hidden="true">{{ counter }}</span>
+          </template>
+        </v-textarea>
       </v-card-text>
       <v-card-actions>
         <v-spacer />

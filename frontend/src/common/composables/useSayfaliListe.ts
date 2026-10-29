@@ -16,13 +16,20 @@ export function filtreyiOku<Filtre extends Record<string, FiltreDegeri>>(
   const sonuc: Record<string, FiltreDegeri> = { ...varsayilan }
   for (const [alan, ilkDeger] of Object.entries(varsayilan)) {
     const ham = sorgu[alan]
-    if (typeof ham !== 'string' || ham === '') continue
-    if (typeof ilkDeger === 'boolean') sonuc[alan] = ham === 'true'
+    if (typeof ham !== 'string') continue
+    // Boş değer, varsayılanı dolu bir filtrenin bilerek temizlendiğini gösterir.
+    if (ham === '') sonuc[alan] = typeof ilkDeger === 'string' ? '' : null
+    else if (typeof ilkDeger === 'boolean' || (ilkDeger === null && /^(true|false)$/.test(ham)))
+      sonuc[alan] = ham === 'true'
     else if (typeof ilkDeger === 'number' || (ilkDeger === null && /^\d+$/.test(ham)))
       sonuc[alan] = Number(ham)
     else sonuc[alan] = ham
   }
   return sonuc as Filtre
+}
+
+function bos(deger: FiltreDegeri | undefined) {
+  return deger === null || deger === undefined || deger === ''
 }
 
 export function filtreyiYaz(
@@ -31,8 +38,10 @@ export function filtreyiYaz(
 ): Record<string, string> {
   return Object.fromEntries(
     Object.entries(filtre)
-      .filter(([alan, deger]) => deger !== null && deger !== '' && deger !== varsayilan[alan])
-      .map(([alan, deger]) => [alan, String(deger)]),
+      .filter(
+        ([alan, deger]) => deger !== varsayilan[alan] && !(bos(deger) && bos(varsayilan[alan])),
+      )
+      .map(([alan, deger]) => [alan, bos(deger) ? '' : String(deger)]),
   )
 }
 
