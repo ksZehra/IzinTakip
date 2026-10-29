@@ -2,20 +2,27 @@ import { expect, test } from '@playwright/test'
 
 import { erisilebilirlikDenetle, girisYap, kullanicilar } from './yardimcilar'
 
-test('çalışan yönetim menüsünü görmez, yetkisiz sayfaya yönlendirilir', async ({
-  page,
-  isMobile,
-}) => {
+test('çalışan yönetim menüsünü görmez', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Mobilde menü kapalı başlar; ayrı testte denenir.')
   await girisYap(page, kullanicilar.calisan)
   await expect(page.getByRole('heading', { level: 1, name: 'Ana Sayfa' })).toBeVisible()
 
-  if (isMobile) {
-    await page.getByRole('button', { name: 'Menüyü aç' }).click()
-  }
   const menu = page.getByRole('navigation', { name: 'Ana menü' })
-  await expect(menu.getByRole('link', { name: 'Ana Sayfa' })).toBeVisible()
+  await expect(menu.getByRole('link', { name: 'İzin Talepleri' })).toBeVisible()
   await expect(menu.getByText('Yönetim')).toHaveCount(0)
+  await erisilebilirlikDenetle(page)
+})
 
+test('mobilde menü düğmeyle açılır', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'Yalnız mobil görünüm.')
+  await girisYap(page, kullanicilar.calisan)
+  await page.getByRole('button', { name: 'Menüyü aç' }).click()
+
+  await expect(
+    page
+      .getByRole('navigation', { name: 'Ana menü' })
+      .getByRole('link', { name: 'İzin Talepleri' }),
+  ).toBeVisible()
   await erisilebilirlikDenetle(page)
 })
 

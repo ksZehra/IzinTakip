@@ -1,9 +1,10 @@
 import { expect, test } from '@playwright/test'
 
-import { erisilebilirlikDenetle, girisFormunuDoldur, girisYap, kullanicilar } from './yardimcilar'
+import { erisilebilirlikDenetle, girisFormunuDoldur, kullanicilar } from './yardimcilar'
 
 test('hatalı parolada formda uyarı gösterir', async ({ page }) => {
-  await girisYap(page, 'kayitsiz@izintakip.local', 'Yanlis1Parola')
+  await page.goto('/giris')
+  await girisFormunuDoldur(page, 'kayitsiz@izintakip.local', 'Yanlis1Parola')
 
   await expect(page.getByRole('alert')).toContainText('E-posta ya da parola hatalı')
   await expect(page).toHaveURL(/\/giris/)

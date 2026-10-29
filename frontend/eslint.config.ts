@@ -49,5 +49,10 @@ export default defineConfigWithVueTs(
     files: ['e2e/**/*.ts'],
   },
 
+  {
+    files: ['e2e/**/*.ts'],
+    rules: { 'playwright/no-skipped-test': ['error', { allowConditional: true }] },
+  },
+
   skipFormatting,
 )

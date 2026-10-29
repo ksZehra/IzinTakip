@@ -20,6 +20,7 @@ export function demoParolasi(): string {
 export async function girisYap(page: Page, eposta: string, parola = demoParolasi()) {
   await page.goto('/giris')
   await girisFormunuDoldur(page, eposta, parola)
+  await page.waitForURL((adres) => !adres.pathname.startsWith('/giris'))
 }
 
 export async function girisFormunuDoldur(page: Page, eposta: string, parola = demoParolasi()) {
@@ -35,4 +36,9 @@ export async function erisilebilirlikDenetle(page: Page) {
       (ihlal) => `${ihlal.id}: ${ihlal.nodes.map((n) => n.target.join(' ')).join(', ')}`,
     ),
   ).toEqual([])
+}
+
+export async function secimYap(page: Page, alanEtiketi: string, secenek: string) {
+  await page.locator('.v-select, .v-autocomplete').filter({ hasText: alanEtiketi }).first().click()
+  await page.getByRole('option', { name: secenek, exact: true }).click()
 }
