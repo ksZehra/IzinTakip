@@ -144,7 +144,7 @@ public sealed class CalisanService(
     public async Task<IzinHaklariResponse> HaklariAsync(int id, CancellationToken cancellationToken)
     {
         await kapsam.BulAsync(id, cancellationToken);
-        var gunluk = (await db.Ayarlar.AsNoTracking().SingleAsync(cancellationToken)).GunlukCalismaDakikasi;
+        var gunluk = await db.GunlukDakikaAsync(cancellationToken);
         var satirlar = await db.IzinHaklari
             .AsNoTracking()
             .Where(h => h.CalisanId == id)
@@ -172,7 +172,7 @@ public sealed class CalisanService(
     {
         await kapsam.BulAsync(id, cancellationToken);
         var bakiye = await bakiyeSorgusu.HesaplaAsync(id, cancellationToken);
-        var gunluk = (await db.Ayarlar.AsNoTracking().SingleAsync(cancellationToken)).GunlukCalismaDakikasi;
+        var gunluk = await db.GunlukDakikaAsync(cancellationToken);
         return new BakiyeResponse(
             bakiye.HakDakika, SureMetni.Olustur(bakiye.HakDakika, gunluk),
             bakiye.KullanilanDakika, SureMetni.Olustur(bakiye.KullanilanDakika, gunluk),

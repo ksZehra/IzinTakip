@@ -70,7 +70,7 @@ public sealed class IzinTalebiService(
         await db.SaveChangesAsync(cancellationToken);
 
         var ozet = TalepOzeti.Olustur(talep, tur.Ad, takvim.GunlukDakika);
-        var baglanti = $"/izin-talepleri/{talep.Id}";
+        var baglanti = TalepOzeti.Baglanti(talep.Id);
         bildirimYazici.Ekle(onaycilar, "Onayınızı bekleyen izin talebi", $"{calisanAdi} izin talebi açtı. {ozet}", baglanti, "Talebi incele");
         bildirimYazici.Ekle(talepSahibi, "Adınıza izin talebi açıldı", ozet, baglanti, "Talebi görüntüle");
 
@@ -98,7 +98,7 @@ public sealed class IzinTalebiService(
                 t.Baslangic, t.Bitis, t.Dakika, string.Empty, t.Durum))
             .SayfalaAsync(request.Page, request.PageSize, cancellationToken);
 
-        var gunluk = await GunlukDakikaAsync(cancellationToken);
+        var gunluk = await db.GunlukDakikaAsync(cancellationToken);
         return sayfa with { Items = sayfa.Items.Select(t => t with { SureMetni = SureMetni.Olustur(t.Dakika, gunluk) }).ToList() };
     }
 
@@ -110,13 +110,13 @@ public sealed class IzinTalebiService(
             ?? throw new KayitBulunamadiException("İzin talebi bulunamadı.");
 
         var adlar = await kullaniciAdlari.OkuAsync([talep.OlusturanKullaniciId, talep.KararVerenKullaniciId], cancellationToken);
-        return Tamamla(talep, await GunlukDakikaAsync(cancellationToken), adlar);
+        return Tamamla(talep, await db.GunlukDakikaAsync(cancellationToken), adlar);
     }
 
     public async Task<DosyaResponse> ExcelAsync(IzinTalebiFiltreRequest request, CancellationToken cancellationToken)
     {
         var talepler = await Yansit(Sirala(await FiltreliAsync(request, cancellationToken))).ToListAsync(cancellationToken);
-        var gunluk = await GunlukDakikaAsync(cancellationToken);
+        var gunluk = await db.GunlukDakikaAsync(cancellationToken);
         var adlar = await kullaniciAdlari.OkuAsync(talepler.SelectMany(t => new[] { t.OlusturanKullaniciId, t.KararVerenKullaniciId }), cancellationToken);
         const string tarihSaat = "dd.MM.yyyy HH:mm";
 
@@ -244,9 +244,6 @@ public sealed class IzinTalebiService(
 
     private IQueryable<IzinTalebi> AcikTalepler(int calisanId) =>
         db.IzinTalepleri.Where(t => t.CalisanId == calisanId && (t.Durum == IzinDurumu.Beklemede || t.Durum == IzinDurumu.Onaylandi));
-
-    private async Task<int> GunlukDakikaAsync(CancellationToken cancellationToken) =>
-        (await db.Ayarlar.AsNoTracking().SingleAsync(cancellationToken)).GunlukCalismaDakikasi;
 
     private static SureIstegi Sure(SureHesaplaRequest request) => new(
         request.SureTipi, request.Tarih, request.BitisTarihi, request.GunYarisi, request.BaslangicSaati, request.BitisSaati);

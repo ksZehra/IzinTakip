@@ -9,6 +9,8 @@ public static class TalepOzeti
 {
     private static readonly CultureInfo Turkce = CultureInfo.GetCultureInfo("tr-TR");
 
+    public static string Baglanti(int talepId) => $"/izin-talepleri/{talepId}";
+
     public static string Olustur(IzinTalebi talep, string turAdi, int gunlukDakika)
     {
         var tarih = talep.SureTipi switch

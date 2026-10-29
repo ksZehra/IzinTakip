@@ -43,7 +43,7 @@ public sealed class RaporService(
             .SayfalaAsync(request.Page, request.PageSize, cancellationToken);
         var idler = sayfa.Items.Select(s => s.CalisanId).ToList();
         var bakiyeler = await bakiyeSorgusu.HesaplaAsync(db.Calisanlar.Where(c => idler.Contains(c.Id)), cancellationToken);
-        var gunluk = await GunlukDakikaAsync(cancellationToken);
+        var gunluk = await db.GunlukDakikaAsync(cancellationToken);
 
         return new PagedResponse<BakiyeRaporuResponse>(
             sayfa.Items.Select(s => Yanit(s, bakiyeler[s.CalisanId], gunluk)).ToList(),
@@ -57,7 +57,7 @@ public sealed class RaporService(
         var calisanlar = await AktifKapsamdakilerAsync(departmanId, cancellationToken);
         var satirlar = await Satirlar(calisanlar).ToListAsync(cancellationToken);
         var bakiyeler = await bakiyeSorgusu.HesaplaAsync(calisanlar, cancellationToken);
-        var gunluk = await GunlukDakikaAsync(cancellationToken);
+        var gunluk = await db.GunlukDakikaAsync(cancellationToken);
 
         var icerik = ExcelYazici.Yaz(
             "Bakiyeler",
@@ -96,9 +96,6 @@ public sealed class RaporService(
         bakiye.KullanilanDakika, SureMetni.Olustur(bakiye.KullanilanDakika, gunluk),
         bakiye.BekleyenDakika, SureMetni.Olustur(bakiye.BekleyenDakika, gunluk),
         bakiye.KullanilabilirDakika, SureMetni.Olustur(bakiye.KullanilabilirDakika, gunluk));
-
-    private async Task<int> GunlukDakikaAsync(CancellationToken cancellationToken) =>
-        (await db.Ayarlar.AsNoTracking().SingleAsync(cancellationToken)).GunlukCalismaDakikasi;
 
     private sealed record CalisanSatiri(int CalisanId, string AdSoyad, string DepartmanAdi, DateOnly IseGirisTarihi);
 }

@@ -9,6 +9,7 @@ using IzinTakip.Infrastructure.Email;
 using IzinTakip.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using static IzinTakip.Api.Common.Auth.IdentitySonucu;
 
 namespace IzinTakip.Api.Features.Kullanicilar;
 
@@ -234,13 +235,5 @@ public sealed class KullaniciService(
         ];
         RandomNumberGenerator.Shuffle(parola.AsSpan());
         return new string(parola);
-    }
-
-    private static void Dogrula(IdentityResult sonuc)
-    {
-        if (!sonuc.Succeeded)
-        {
-            throw new IsKuraliException(string.Join(" ", sonuc.Errors.Select(e => e.Description).Distinct()));
-        }
     }
 }

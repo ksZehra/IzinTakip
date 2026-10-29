@@ -39,7 +39,7 @@ public sealed class IzinOnayService(
             await onayciBulucu.CalisaninKendisiAsync(talep.CalisanId, cancellationToken),
             "İzin talebiniz onaylandı",
             NotEkle(ozet, talep.KararNotu, "Not"),
-            Baglanti(id),
+            TalepOzeti.Baglanti(id),
             "Talebi görüntüle");
         await KaydetAsync(cancellationToken);
 
@@ -57,7 +57,7 @@ public sealed class IzinOnayService(
             await onayciBulucu.CalisaninKendisiAsync(talep.CalisanId, cancellationToken),
             "İzin talebiniz reddedildi",
             NotEkle(ozet, talep.KararNotu, "Gerekçe"),
-            Baglanti(id),
+            TalepOzeti.Baglanti(id),
             "Talebi görüntüle");
         await KaydetAsync(cancellationToken);
 
@@ -88,7 +88,7 @@ public sealed class IzinOnayService(
                 (await onayciBulucu.OnaycilarAsync(talep.CalisanId, cancellationToken)).Where(a => a.KullaniciId != yetkiler.KullaniciId),
                 "İzin talebi iptal edildi",
                 $"{talep.Calisan.Ad} {talep.Calisan.Soyad} izin talebini iptal etti. {ozet}",
-                Baglanti(id),
+                TalepOzeti.Baglanti(id),
                 "Talebi görüntüle");
         }
         else
@@ -97,7 +97,7 @@ public sealed class IzinOnayService(
                 await onayciBulucu.CalisaninKendisiAsync(talep.CalisanId, cancellationToken),
                 "İzin talebiniz iptal edildi",
                 NotEkle(ozet, talep.KararNotu, "Not"),
-                Baglanti(id),
+                TalepOzeti.Baglanti(id),
                 "Talebi görüntüle");
         }
 
@@ -117,8 +117,7 @@ public sealed class IzinOnayService(
 
     private async Task<string> OzetAsync(IzinTalebi talep, CancellationToken cancellationToken)
     {
-        var gunluk = (await db.Ayarlar.AsNoTracking().SingleAsync(cancellationToken)).GunlukCalismaDakikasi;
-        return TalepOzeti.Olustur(talep, talep.IzinTuru.Ad, gunluk);
+        return TalepOzeti.Olustur(talep, talep.IzinTuru.Ad, await db.GunlukDakikaAsync(cancellationToken));
     }
 
     private async Task KaydetAsync(CancellationToken cancellationToken)
@@ -129,6 +128,4 @@ public sealed class IzinOnayService(
 
     private static string NotEkle(string ozet, string? not, string etiket) =>
         string.IsNullOrWhiteSpace(not) ? ozet : $"{ozet}. {etiket}: {not}";
-
-    private static string Baglanti(int id) => $"/izin-talepleri/{id}";
 }

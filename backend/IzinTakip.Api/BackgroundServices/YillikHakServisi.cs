@@ -1,4 +1,5 @@
 using IzinTakip.Api.Common;
+using IzinTakip.Api.Common.Izin;
 using IzinTakip.Domain.Enums;
 using IzinTakip.Domain.Izin;
 using IzinTakip.Infrastructure.Data;
@@ -21,7 +22,7 @@ public sealed class YillikHakServisi(
         var db = scope.ServiceProvider.GetRequiredService<IzinTakipDbContext>();
 
         var kurallar = await db.IzinHakkiKurallari.AsNoTracking().Where(k => k.Aktif).ToListAsync(cancellationToken);
-        var gunluk = (await db.Ayarlar.AsNoTracking().SingleAsync(cancellationToken)).GunlukCalismaDakikasi;
+        var gunluk = await db.GunlukDakikaAsync(cancellationToken);
         var birYilOnce = bugun.AddYears(-1);
         var calisanlar = await db.Calisanlar
             .AsNoTracking()

@@ -1,3 +1,4 @@
+using IzinTakip.Api.Common.Izin;
 using IzinTakip.Domain;
 using IzinTakip.Domain.Entities;
 using IzinTakip.Domain.Exceptions;
@@ -17,7 +18,7 @@ public sealed class IzinTuruService(IzinTakipDbContext db, ILogger<IzinTuruServi
         }
 
         var turler = await sorgu.OrderBy(t => t.Ad).ToListAsync(cancellationToken);
-        var gunluk = await GunlukDakikaAsync(cancellationToken);
+        var gunluk = await db.GunlukDakikaAsync(cancellationToken);
         return turler.Select(t => Yanit(t, gunluk)).ToList();
     }
 
@@ -25,7 +26,7 @@ public sealed class IzinTuruService(IzinTakipDbContext db, ILogger<IzinTuruServi
     {
         var tur = await db.IzinTurleri.AsNoTracking().SingleOrDefaultAsync(t => t.Id == id, cancellationToken)
             ?? throw new KayitBulunamadiException("İzin türü bulunamadı.");
-        return Yanit(tur, await GunlukDakikaAsync(cancellationToken));
+        return Yanit(tur, await db.GunlukDakikaAsync(cancellationToken));
     }
 
     public async Task<IzinTuruResponse> OlusturAsync(IzinTuruKaydetRequest request, CancellationToken cancellationToken)
@@ -79,9 +80,6 @@ public sealed class IzinTuruService(IzinTakipDbContext db, ILogger<IzinTuruServi
             throw new IsKuraliException("Bu adla bir izin türü zaten var.");
         }
     }
-
-    private async Task<int> GunlukDakikaAsync(CancellationToken cancellationToken) =>
-        (await db.Ayarlar.AsNoTracking().SingleAsync(cancellationToken)).GunlukCalismaDakikasi;
 
     private static IzinTuruResponse Yanit(IzinTuru t, int gunluk) => new(
         t.Id,

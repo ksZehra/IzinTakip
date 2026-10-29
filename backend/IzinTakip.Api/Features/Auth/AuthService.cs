@@ -105,11 +105,7 @@ public sealed class AuthService(
 
         kullanici.ParolaDegistirmeliMi = false;
         kullanici.GeciciParolaBitis = null;
-        var sonuc = await userManager.ChangePasswordAsync(kullanici, request.MevcutParola, request.YeniParola);
-        if (!sonuc.Succeeded)
-        {
-            throw new IsKuraliException(string.Join(" ", sonuc.Errors.Select(e => e.Description)));
-        }
+        IdentitySonucu.Dogrula(await userManager.ChangePasswordAsync(kullanici, request.MevcutParola, request.YeniParola));
 
         yetkiOkuyucu.Unut(kullanici.Id);
         logger.LogInformation("Kullanici parolasini degistirdi {KullaniciId}", kullanici.Id);

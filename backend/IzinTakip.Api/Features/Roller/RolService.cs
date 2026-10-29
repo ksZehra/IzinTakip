@@ -6,6 +6,7 @@ using IzinTakip.Infrastructure.Data;
 using IzinTakip.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using static IzinTakip.Api.Common.Auth.IdentitySonucu;
 
 namespace IzinTakip.Api.Features.Roller;
 
@@ -123,12 +124,4 @@ public sealed class RolService(
             SistemRolleri.Tumu.Contains(r.Name!),
             db.RoleClaims.Where(c => c.RoleId == r.Id && c.ClaimType == Yetkiler.ClaimType).Select(c => c.ClaimValue!).OrderBy(k => k).ToList(),
             db.UserRoles.Count(ur => ur.RoleId == r.Id)));
-
-    private static void Dogrula(IdentityResult sonuc)
-    {
-        if (!sonuc.Succeeded)
-        {
-            throw new IsKuraliException(string.Join(" ", sonuc.Errors.Select(e => e.Description).Distinct()));
-        }
-    }
 }

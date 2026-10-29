@@ -44,7 +44,7 @@ public sealed class HatirlatmaServisi(
                 "Hatırlatma: onayınızı bekleyen izin talebi",
                 $"{talep.Calisan.Ad} {talep.Calisan.Soyad} adlı çalışanın izin talebi {bekledigiGun} gündür onay bekliyor. "
                 + TalepOzeti.Olustur(talep, talep.IzinTuru.Ad, ayar.GunlukCalismaDakikasi),
-                $"/izin-talepleri/{talep.Id}",
+                TalepOzeti.Baglanti(talep.Id),
                 "Talebi incele");
             talep.HatirlatmaYapildi(bugun);
         }
