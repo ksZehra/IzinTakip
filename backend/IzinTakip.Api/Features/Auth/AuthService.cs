@@ -53,6 +53,11 @@ public sealed class AuthService(
         }
 
         var simdi = timeProvider.GetUtcNow().UtcDateTime;
+        if (kullanici.GeciciParolaBitis <= simdi)
+        {
+            throw new KimlikDogrulanamadiException("Geçici parolanızın süresi doldu. Parolanızı yeniden sıfırlaması için İK ile görüşün.");
+        }
+
         var sureBitis = simdi.AddHours(jwtAyarlari.SureSaat);
         var token = new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
         {
@@ -89,7 +94,17 @@ public sealed class AuthService(
     public async Task ParolaDegistirAsync(ParolaDegistirRequest request, CancellationToken cancellationToken)
     {
         var kullanici = await OturumdakiKullaniciAsync(cancellationToken);
+        var kontrol = await signInManager.CheckPasswordSignInAsync(kullanici, request.MevcutParola, lockoutOnFailure: true);
+        if (!kontrol.Succeeded)
+        {
+            logger.LogWarning("Parola degistirmede hatali mevcut parola {KullaniciId} {Kilitli}", kullanici.Id, kontrol.IsLockedOut);
+            throw new IsKuraliException(kontrol.IsLockedOut
+                ? "Çok fazla hatalı deneme yapıldı. Birkaç dakika sonra tekrar deneyin."
+                : "Mevcut parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.");
+        }
+
         kullanici.ParolaDegistirmeliMi = false;
+        kullanici.GeciciParolaBitis = null;
         var sonuc = await userManager.ChangePasswordAsync(kullanici, request.MevcutParola, request.YeniParola);
         if (!sonuc.Succeeded)
         {

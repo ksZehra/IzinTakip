@@ -4,6 +4,9 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using IzinTakip.Domain;
 using IzinTakip.Infrastructure.Email;
+using IzinTakip.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace IzinTakip.Tests.Features.Kullanicilar;
 
@@ -101,6 +104,34 @@ public sealed partial class KullaniciYonetimiTests(VeritabanliApiFactory factory
         Assert.Equal(HttpStatusCode.NoContent, yanit.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, eski.StatusCode);
         Assert.True((await yeni.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken)).GetProperty("parolaDegistirmeli").GetBoolean());
+    }
+
+    [Fact]
+    public async Task ParolaSifirla_GeciciParolaSuresiDolunca_GirisReddedilir()
+    {
+        var ik = await IkAsync();
+        var eposta = $"gec-kalan-{Guid.NewGuid():N}@izintakip.test";
+        var kullaniciId = await TestKimlik.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
+
+        await ik.PostAsync($"/api/kullanicilar/{kullaniciId}/parola-sifirla", null, TestContext.Current.CancellationToken);
+        var mesaj = await factory.EmailSender.BekleAsync(eposta, "İzin Takip parolanız sıfırlandı");
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Kullanici>>();
+            var kullanici = await userManager.FindByEmailAsync(eposta);
+            Assert.InRange(kullanici!.GeciciParolaBitis!.Value, DateTime.UtcNow.AddDays(3).AddMinutes(-5), DateTime.UtcNow.AddDays(3));
+            kullanici.GeciciParolaBitis = DateTime.UtcNow.AddMinutes(-1);
+            await userManager.UpdateAsync(kullanici);
+        }
+
+        var yanit = await factory.CreateClient().PostAsJsonAsync(
+            "/api/auth/login",
+            new { eposta, parola = GeciciParola(mesaj) },
+            TestContext.Current.CancellationToken);
+
+        Assert.Contains("Parola 3 gün geçerlidir", WebUtility.HtmlDecode(mesaj.HtmlGovde));
+        Assert.Equal(HttpStatusCode.Unauthorized, yanit.StatusCode);
+        Assert.Equal("Geçici parolanızın süresi doldu. Parolanızı yeniden sıfırlaması için İK ile görüşün.", await DetayAsync(yanit));
     }
 
     [Fact]

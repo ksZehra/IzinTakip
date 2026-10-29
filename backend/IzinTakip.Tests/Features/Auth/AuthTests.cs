@@ -175,13 +175,28 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
         await TestKimlik.KullaniciOlusturAsync(factory, "parola@izintakip.test", SistemRolleri.Calisan);
         var client = await TestKimlik.OturumluClientAsync(factory, "parola@izintakip.test");
 
-        var yanit = await client.PostAsJsonAsync(
-            "/api/auth/parola-degistir",
-            new { mevcutParola = "YanlisParola1", yeniParola = "YeniParola2026" },
-            TestContext.Current.CancellationToken);
+        var yanit = await ParolaDegistirAsync(client, "YanlisParola1");
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, yanit.StatusCode);
-        Assert.Equal("Mevcut parola hatalı.", await DetayAsync(yanit));
+        Assert.Equal("Mevcut parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.", await DetayAsync(yanit));
+    }
+
+    [Fact]
+    public async Task ParolaDegistir_BesHataliDenemedenSonra_DogruParolaylaBileKilitliKalir()
+    {
+        await TestKimlik.KullaniciOlusturAsync(factory, "tahminci@izintakip.test", SistemRolleri.Calisan);
+        var client = await TestKimlik.OturumluClientAsync(factory, "tahminci@izintakip.test");
+        for (var deneme = 0; deneme < 5; deneme++)
+        {
+            await ParolaDegistirAsync(client, "YanlisParola1");
+        }
+
+        var yanit = await ParolaDegistirAsync(client, TestKimlik.VarsayilanParola);
+        var giris = await GirisYapAsync("tahminci@izintakip.test", TestKimlik.VarsayilanParola);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, yanit.StatusCode);
+        Assert.Equal("Çok fazla hatalı deneme yapıldı. Birkaç dakika sonra tekrar deneyin.", await DetayAsync(yanit));
+        Assert.Equal(HttpStatusCode.Unauthorized, giris.StatusCode);
     }
 
     [Fact]
@@ -217,6 +232,12 @@ public sealed class AuthTests(VeritabanliApiFactory factory) : IClassFixture<Ver
 
     private Task<HttpResponseMessage> GirisYapAsync(string eposta, string parola) =>
         factory.CreateClient().PostAsJsonAsync("/api/auth/login", new { eposta, parola }, TestContext.Current.CancellationToken);
+
+    private static Task<HttpResponseMessage> ParolaDegistirAsync(HttpClient client, string mevcutParola) =>
+        client.PostAsJsonAsync(
+            "/api/auth/parola-degistir",
+            new { mevcutParola, yeniParola = "YeniParola2026" },
+            TestContext.Current.CancellationToken);
 
     private static async Task<string?> DetayAsync(HttpResponseMessage yanit) =>
         (await yanit.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken)).GetProperty("detail").GetString();

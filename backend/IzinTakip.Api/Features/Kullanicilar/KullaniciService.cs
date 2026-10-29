@@ -20,8 +20,11 @@ public sealed class KullaniciService(
     KullaniciKorumasi koruma,
     IEmailQueue emailQueue,
     UygulamaAyarlari uygulama,
+    TimeProvider timeProvider,
     ILogger<KullaniciService> logger)
 {
+    private const int GeciciParolaGun = 3;
+
     public async Task<PagedResponse<KullaniciResponse>> ListeleAsync(KullaniciListeRequest request, CancellationToken cancellationToken)
     {
         var sorgu = db.Users.AsNoTracking();
@@ -68,7 +71,14 @@ public sealed class KullaniciService(
         }
 
         var parola = GeciciParola();
-        var kullanici = new Kullanici { UserName = eposta, Email = eposta, CalisanId = request.CalisanId, ParolaDegistirmeliMi = true };
+        var kullanici = new Kullanici
+        {
+            UserName = eposta,
+            Email = eposta,
+            CalisanId = request.CalisanId,
+            ParolaDegistirmeliMi = true,
+            GeciciParolaBitis = GeciciParolaBitisi()
+        };
         await using (var transaction = await db.Database.BeginTransactionAsync(cancellationToken))
         {
             Dogrula(await userManager.CreateAsync(kullanici, parola));
@@ -150,6 +160,7 @@ public sealed class KullaniciService(
             Dogrula(await userManager.RemovePasswordAsync(kullanici));
             Dogrula(await userManager.AddPasswordAsync(kullanici, parola));
             kullanici.ParolaDegistirmeliMi = true;
+            kullanici.GeciciParolaBitis = GeciciParolaBitisi();
             kullanici.LockoutEnd = null;
             kullanici.AccessFailedCount = 0;
             Dogrula(await userManager.UpdateAsync(kullanici));
@@ -203,9 +214,11 @@ public sealed class KullaniciService(
             konu,
             EmailSablonu.Bildirim(
                 konu,
-                $"Giriş e-postanız: {eposta}. Geçici parolanız: {parola}. İlk girişte yeni bir parola belirlemeniz istenecek.",
+                $"Giriş e-postanız: {eposta}. Geçici parolanız: {parola}. Parola {GeciciParolaGun} gün geçerlidir; ilk girişte yeni bir parola belirlemeniz istenecek.",
                 uygulama.Adres.TrimEnd('/') + "/giris",
                 "Giriş yap")));
+
+    private DateTime GeciciParolaBitisi() => timeProvider.GetUtcNow().UtcDateTime.AddDays(GeciciParolaGun);
 
     private static string GeciciParola()
     {
