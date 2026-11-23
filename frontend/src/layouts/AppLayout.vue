@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify'
 
+import ImzaLogo from '@/common/components/ImzaLogo.vue'
 import { menuOgeleri } from '@/router/menu'
 import { routes } from '@/router/routes'
 import { useAuthStore } from '@/stores/authStore'
@@ -77,9 +78,29 @@ onUnmounted(() => bildirimler.izlemeyiDurdur())
         </template>
       </v-list>
     </nav>
+
+    <template #append>
+      <div class="menu-imza">
+        <ImzaLogo :boyut="28" />
+        <p class="text-body-small text-medium-emphasis">
+          <span class="d-block text-high-emphasis font-weight-semibold">Zehra Nur Köse</span>
+          © 2026
+        </p>
+      </div>
+    </template>
   </v-navigation-drawer>
 
   <v-main id="icerik">
     <RouterView />
   </v-main>
 </template>
+
+<style scoped>
+.menu-imza {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-top: thin solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+</style>

@@ -25,7 +25,7 @@ export async function girisYap(page: Page, eposta: string, parola = demoParolasi
 
 export async function girisFormunuDoldur(page: Page, eposta: string, parola = demoParolasi()) {
   await page.getByLabel('E-posta').fill(eposta)
-  await page.getByLabel('Parola').fill(parola)
+  await page.getByLabel('Parola', { exact: true }).fill(parola)
   await page.getByRole('button', { name: 'Giriş yap' }).click()
 }
 
