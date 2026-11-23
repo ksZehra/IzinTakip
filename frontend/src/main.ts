@@ -25,7 +25,7 @@ oturumDustugundeCalistir(() => {
   }
   auth.temizle()
   useToast().bilgiGoster('Oturumunuz sona erdi. Devam etmek için tekrar giriş yapın.')
-  void router.push({ name: 'giris', query: { donus: router.currentRoute.value.fullPath } })
+  void router.push({ name: 'login', query: { donus: router.currentRoute.value.fullPath } })
 })
 
 app.mount('#app')

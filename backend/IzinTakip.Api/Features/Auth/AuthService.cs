@@ -21,18 +21,18 @@ public sealed class AuthService(
     TimeProvider timeProvider,
     ILogger<AuthService> logger)
 {
-    private const string HataliGiris = "E-posta ya da parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.";
+    private const string HataliLogin = "E-posta ya da parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.";
 
     private static readonly string SahteParolaOzeti = new PasswordHasher<Kullanici>().HashPassword(new Kullanici(), Guid.NewGuid().ToString());
 
-    public async Task<GirisResponse> GirisAsync(GirisRequest request)
+    public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
         var kullanici = await userManager.FindByEmailAsync(request.Eposta);
         if (kullanici is null)
         {
             userManager.PasswordHasher.VerifyHashedPassword(new Kullanici(), SahteParolaOzeti, request.Parola);
             logger.LogWarning("Basarisiz giris: kullanici bulunamadi");
-            throw new UnauthorizedException(HataliGiris);
+            throw new UnauthorizedException(HataliLogin);
         }
 
         var sonuc = await signInManager.CheckPasswordSignInAsync(kullanici, request.Parola, lockoutOnFailure: true);
@@ -44,7 +44,7 @@ public sealed class AuthService(
             }
 
             logger.LogWarning("Basarisiz giris {KullaniciId} {Kilitli}", kullanici.Id, sonuc.IsLockedOut);
-            throw new UnauthorizedException(HataliGiris);
+            throw new UnauthorizedException(HataliLogin);
         }
 
         if (!kullanici.Aktif)
@@ -77,7 +77,7 @@ public sealed class AuthService(
         });
 
         logger.LogInformation("Kullanici giris yapti {KullaniciId}", kullanici.Id);
-        return new GirisResponse(token, sureBitis, kullanici.ParolaDegistirmeliMi);
+        return new LoginResponse(token, sureBitis, kullanici.ParolaDegistirmeliMi);
     }
 
     public async Task<CurrentUserResponse> BenAsync(CancellationToken cancellationToken)

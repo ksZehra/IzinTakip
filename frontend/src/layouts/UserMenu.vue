@@ -9,7 +9,7 @@ const router = useRouter()
 
 async function cikisYap() {
   await auth.cikisYap()
-  await router.replace({ name: 'giris' })
+  await router.replace({ name: 'login' })
 }
 </script>
 

@@ -7,10 +7,10 @@ export function rotaKarari(
   oturum: Oturum | null,
 ): RouteLocationRaw | true {
   if (hedef.meta.herkeseAcik) {
-    return oturum && hedef.name === 'giris' ? { name: 'ana-sayfa' } : true
+    return oturum && hedef.name === 'login' ? { name: 'ana-sayfa' } : true
   }
   if (!oturum) {
-    return { name: 'giris', query: hedef.fullPath === '/' ? {} : { donus: hedef.fullPath } }
+    return { name: 'login', query: hedef.fullPath === '/' ? {} : { donus: hedef.fullPath } }
   }
   if (oturum.parolaDegistirmeli && hedef.name !== 'parola-degistir') {
     return { name: 'parola-degistir' }

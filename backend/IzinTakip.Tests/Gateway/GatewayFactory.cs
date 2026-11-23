@@ -12,7 +12,7 @@ public class GatewayFactory : WebApplicationFactory<GatewayApp::Program>, IAsync
 {
     public DatabaseApiFactory Api { get; } = new();
 
-    protected virtual int DakikadaGirisDenemesi => 1000;
+    protected virtual int DakikadaLoginDenemesi => 1000;
 
     public ValueTask InitializeAsync() => Api.InitializeAsync();
 
@@ -46,7 +46,7 @@ public class GatewayFactory : WebApplicationFactory<GatewayApp::Program>, IAsync
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         TemelAyarlar(builder, "http://api.test");
-        builder.UseSetting("GirisSiniri:DakikadaDeneme", DakikadaGirisDenemesi.ToString(CultureInfo.InvariantCulture));
+        builder.UseSetting("LoginSiniri:DakikadaDeneme", DakikadaLoginDenemesi.ToString(CultureInfo.InvariantCulture));
 
         builder.ConfigureServices(services =>
         {

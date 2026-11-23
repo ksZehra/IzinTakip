@@ -35,13 +35,13 @@ async function kaydet() {
   if (basarili) {
     await auth.cikisYap()
     toast.basariGoster('Parolanız değişti. Yeni parolanızla giriş yapın.')
-    await router.replace({ name: 'giris' })
+    await router.replace({ name: 'login' })
   }
 }
 
 async function cikisYap() {
   await auth.cikisYap()
-  await router.replace({ name: 'giris' })
+  await router.replace({ name: 'login' })
 }
 </script>
 

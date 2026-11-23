@@ -5,7 +5,7 @@ import * as authApi from '@/api/authApi'
 import { ApiError } from '@/common/http/ApiError'
 import { renderWithPlugins } from '@/testing/renderWithPlugins'
 
-import GirisPage from './GirisPage.vue'
+import LoginPage from './LoginPage.vue'
 
 vi.mock('@/api/authApi')
 
@@ -25,7 +25,7 @@ async function formuDoldur(screen: Awaited<ReturnType<typeof renderWithPlugins>>
   await userEvent.click(screen.getByRole('button', { name: 'Giriş yap' }))
 }
 
-describe('GirisPage', () => {
+describe('LoginPage', () => {
   beforeEach(() => {
     vi.resetAllMocks()
   })
@@ -34,7 +34,7 @@ describe('GirisPage', () => {
     vi.mocked(authApi.girisYap).mockRejectedValue(
       new ApiError({ durum: 401, mesaj: 'E-posta ya da parola hatalı.' }),
     )
-    const { screen } = await renderWithPlugins(GirisPage, { yol: '/giris' })
+    const { screen } = await renderWithPlugins(LoginPage, { yol: '/login' })
 
     await formuDoldur(screen)
 
@@ -46,8 +46,8 @@ describe('GirisPage', () => {
   it('başarılı girişte güvenli dönüş adresine gider', async () => {
     vi.mocked(authApi.girisYap).mockResolvedValue()
     vi.mocked(authApi.oturumuGetir).mockResolvedValue(oturum)
-    const { screen, router } = await renderWithPlugins(GirisPage, {
-      yol: '/giris?donus=//kotu.example',
+    const { screen, router } = await renderWithPlugins(LoginPage, {
+      yol: '/login?donus=//kotu.example',
     })
 
     await formuDoldur(screen)

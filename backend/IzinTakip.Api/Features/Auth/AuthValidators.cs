@@ -2,9 +2,9 @@ using FluentValidation;
 
 namespace IzinTakip.Api.Features.Auth;
 
-public sealed class GirisRequestValidator : AbstractValidator<GirisRequest>
+public sealed class LoginRequestValidator : AbstractValidator<LoginRequest>
 {
-    public GirisRequestValidator()
+    public LoginRequestValidator()
     {
         RuleFor(r => r.Eposta)
             .NotEmpty().WithMessage("E-posta zorunludur.")

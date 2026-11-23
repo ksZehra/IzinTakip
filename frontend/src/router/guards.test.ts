@@ -26,13 +26,13 @@ function hedef(name: string, meta: Partial<RouteMeta> = {}, fullPath = `/${name}
 describe('rotaKarari', () => {
   it('oturum yoksa giriş sayfasına dönüş adresiyle yönlendirir', () => {
     expect(rotaKarari(hedef('izin-talepleri', {}, '/izin-talepleri/5'), null)).toEqual({
-      name: 'giris',
+      name: 'login',
       query: { donus: '/izin-talepleri/5' },
     })
   })
 
   it('oturum açıkken giriş sayfasını ana sayfaya çevirir', () => {
-    expect(rotaKarari(hedef('giris', { herkeseAcik: true }), oturum([]))).toEqual({
+    expect(rotaKarari(hedef('login', { herkeseAcik: true }), oturum([]))).toEqual({
       name: 'ana-sayfa',
     })
   })

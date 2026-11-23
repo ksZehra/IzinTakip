@@ -61,7 +61,7 @@ services:
       dockerfile: backend/IzinTakip.Gateway/Dockerfile
     environment:
       Api__Adres: http://api:8080
-      GirisSiniri__DakikadaDeneme: ${GIRIS_DAKIKADA_DENEME:-5}
+      LoginSiniri__DakikadaDeneme: ${LOGIN_DAKIKADA_DENEME:-5}
     ports:
       - "127.0.0.1:${GATEWAY_PORT:-8088}:8080"
     volumes:

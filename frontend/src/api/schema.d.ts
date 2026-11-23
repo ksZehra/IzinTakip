@@ -2392,9 +2392,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["GirisRequest"];
-                    "text/json": components["schemas"]["GirisRequest"];
-                    "application/*+json": components["schemas"]["GirisRequest"];
+                    "application/json": components["schemas"]["LoginRequest"];
+                    "text/json": components["schemas"]["LoginRequest"];
+                    "application/*+json": components["schemas"]["LoginRequest"];
                 };
             };
             responses: {
@@ -2404,9 +2404,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["GirisResponse"];
-                        "application/json": components["schemas"]["GirisResponse"];
-                        "text/json": components["schemas"]["GirisResponse"];
+                        "text/plain": components["schemas"]["LoginResponse"];
+                        "application/json": components["schemas"]["LoginResponse"];
+                        "text/json": components["schemas"]["LoginResponse"];
                     };
                 };
                 /** @description Unauthorized */
@@ -2711,11 +2711,11 @@ export interface components {
             /** Format: int32 */
             aktifCalisanSayisi: number;
         };
-        GirisRequest: {
+        LoginRequest: {
             eposta: string;
             parola: string;
         };
-        GirisResponse: {
+        LoginResponse: {
             accessToken: string;
             /** Format: date-time */
             sureBitis: string;

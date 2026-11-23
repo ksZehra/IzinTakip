@@ -18,9 +18,9 @@ export function demoParolasi(): string {
 }
 
 export async function girisYap(page: Page, eposta: string, parola = demoParolasi()) {
-  await page.goto('/giris')
+  await page.goto('/login')
   await girisFormunuDoldur(page, eposta, parola)
-  await page.waitForURL((adres) => !adres.pathname.startsWith('/giris'))
+  await page.waitForURL((adres) => !adres.pathname.startsWith('/login'))
 }
 
 export async function girisFormunuDoldur(page: Page, eposta: string, parola = demoParolasi()) {

@@ -39,7 +39,7 @@ test('çıkış yapınca giriş sayfasına döner ve korumalı sayfa açılmaz',
   await page.getByRole('button', { name: /^Kullanıcı menüsü/ }).click()
   await page.getByText('Çıkış yap').click()
 
-  await expect(page).toHaveURL(/\/giris$/)
+  await expect(page).toHaveURL(/\/login$/)
   await page.goto('/bildirimler')
-  await expect(page).toHaveURL(/\/giris\?donus=/)
+  await expect(page).toHaveURL(/\/login\?donus=/)
 })

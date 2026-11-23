@@ -1,8 +1,8 @@
 namespace IzinTakip.Api.Features.Auth;
 
-public sealed record GirisRequest(string Eposta, string Parola);
+public sealed record LoginRequest(string Eposta, string Parola);
 
-public sealed record GirisResponse(string AccessToken, DateTime SureBitis, bool ParolaDegistirmeli);
+public sealed record LoginResponse(string AccessToken, DateTime SureBitis, bool ParolaDegistirmeli);
 
 public sealed record CurrentUserResponse(
     int KullaniciId,

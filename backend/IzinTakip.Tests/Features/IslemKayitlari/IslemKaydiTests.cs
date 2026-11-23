@@ -89,18 +89,18 @@ public sealed class IslemKaydiTests(DatabaseApiFactory factory) : IClassFixture<
     }
 
     [Fact]
-    public async Task HataliGiris_ParolaDegistiKaydiYazilmaz()
+    public async Task FailedLogin_DoesNotWriteRecord()
     {
         var eposta = $"hatali-{Guid.NewGuid():N}@izintakip.test";
         var kullaniciId = await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
         var client = factory.CreateClient();
 
-        var giris = await client.PostAsJsonAsync("/api/auth/login", new { eposta, parola = "Yanlis2026" }, TestContext.Current.CancellationToken);
+        var login = await client.PostAsJsonAsync("/api/auth/login", new { eposta, parola = "Yanlis2026" }, TestContext.Current.CancellationToken);
         var kayitlar = await (await SuperAdminAsync()).GetFromJsonAsync<JsonElement>(
             "/api/islem-kayitlari?tablo=Kullanici&pageSize=100",
             TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.Unauthorized, giris.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
         Assert.DoesNotContain(kayitlar.GetProperty("items").EnumerateArray(), k => k.GetProperty("kayitId").ValueKind == JsonValueKind.Number && k.GetProperty("kayitId").GetInt32() == kullaniciId);
     }
 

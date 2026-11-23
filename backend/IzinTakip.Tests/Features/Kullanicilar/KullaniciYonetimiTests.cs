@@ -13,7 +13,7 @@ namespace IzinTakip.Tests.Features.Kullanicilar;
 public sealed partial class KullaniciYonetimiTests(DatabaseApiFactory factory) : IClassFixture<DatabaseApiFactory>
 {
     [Fact]
-    public async Task Olustur_Ik_CalisanaHesapAcarGeciciParolaIleIlkGiristeDegistirmeZorunlu()
+    public async Task IlkGiris_SifreDegistirmeZorunlu()
     {
         var ik = await IkAsync();
         var admin = await SuperAdminAsync();
@@ -107,7 +107,7 @@ public sealed partial class KullaniciYonetimiTests(DatabaseApiFactory factory) :
     }
 
     [Fact]
-    public async Task ParolaSifirla_GeciciParolaSuresiDolunca_GirisReddedilir()
+    public async Task GeciciParolaDoldu_GirisReddedilir()
     {
         var ik = await IkAsync();
         var eposta = $"gec-kalan-{Guid.NewGuid():N}@izintakip.test";

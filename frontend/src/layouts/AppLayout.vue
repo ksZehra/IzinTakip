@@ -49,7 +49,7 @@ onUnmounted(() => bildirimler.izlemeyiDurdur())
       :aria-expanded="menuAcik"
       @click="menuAcik = !menuAcik"
     />
-    <v-app-bar-title>IzinTakip</v-app-bar-title>
+    <v-app-bar-title>Personel İzin Takip Sistemi</v-app-bar-title>
     <NotificationBell />
     <UserMenu />
   </v-app-bar>

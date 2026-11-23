@@ -50,7 +50,7 @@ public sealed class CalisanTests(DatabaseApiFactory factory) : IClassFixture<Dat
     }
 
     [Fact]
-    public async Task Olustur_DogumTarihiIseGiristenSonra_400VeAlanHatasiDoner()
+    public async Task DogumTarihiIseGiristenSonra_Returns400()
     {
         var admin = await SuperAdminAsync();
         var departmanId = await TestData.DepartmanEkleAsync(admin, "Kalite");
@@ -127,7 +127,7 @@ public sealed class CalisanTests(DatabaseApiFactory factory) : IClassFixture<Dat
     }
 
     [Fact]
-    public async Task Pasiflestir_BagliKullanici_ArtikGirisYapamaz()
+    public async Task PasifKullanici_GirisYapamaz()
     {
         var admin = await SuperAdminAsync();
         var departmanId = await TestData.DepartmanEkleAsync(admin, "Üretim");

@@ -64,8 +64,8 @@ try
 
     builder.Services.AddRateLimiter(options =>
     {
-        var dakikadaDeneme = builder.Configuration.GetValue("GirisSiniri:DakikadaDeneme", 5);
-        options.AddPolicy("giris", httpContext => RateLimitPartition.GetFixedWindowLimiter(
+        var dakikadaDeneme = builder.Configuration.GetValue("LoginSiniri:DakikadaDeneme", 5);
+        options.AddPolicy("login", httpContext => RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "bilinmiyor",
             _ => new FixedWindowRateLimiterOptions { PermitLimit = dakikadaDeneme, Window = TimeSpan.FromMinutes(1) }));
         options.OnRejected = async (context, _) =>

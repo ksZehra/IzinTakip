@@ -8,9 +8,9 @@ namespace IzinTakip.Gateway.Bff;
 [Route("bff")]
 public sealed class BffController(IHttpClientFactory httpClientFactory, OturumCerezi oturumCerezi, ILogger<BffController> logger) : ControllerBase
 {
-    [HttpPost("giris")]
-    [EnableRateLimiting("giris")]
-    public async Task<IActionResult> Giris(GirisRequest request, CancellationToken cancellationToken)
+    [HttpPost("login")]
+    [EnableRateLimiting("login")]
+    public async Task<IActionResult> Login(LoginRequest request, CancellationToken cancellationToken)
     {
         using var yanit = await httpClientFactory.CreateClient("api").PostAsJsonAsync("api/auth/login", request, cancellationToken);
         if (!yanit.IsSuccessStatusCode)
@@ -23,9 +23,9 @@ public sealed class BffController(IHttpClientFactory httpClientFactory, OturumCe
             };
         }
 
-        var giris = await yanit.Content.ReadFromJsonAsync<ApiGirisResponse>(cancellationToken)
-            ?? throw new InvalidOperationException("Api giris yaniti okunamadi.");
-        oturumCerezi.Yaz(Response, giris.AccessToken, new DateTimeOffset(giris.SureBitis, TimeSpan.Zero));
+        var login = await yanit.Content.ReadFromJsonAsync<ApiLoginResponse>(cancellationToken)
+            ?? throw new InvalidOperationException("Api login yaniti okunamadi.");
+        oturumCerezi.Yaz(Response, login.AccessToken, new DateTimeOffset(login.SureBitis, TimeSpan.Zero));
 
         logger.LogInformation("Oturum acildi");
         return NoContent();

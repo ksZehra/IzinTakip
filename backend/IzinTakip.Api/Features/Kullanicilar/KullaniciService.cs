@@ -215,7 +215,7 @@ public sealed class KullaniciService(
             EmailTemplate.Bildirim(
                 konu,
                 $"Giriş e-postanız: {eposta}. Geçici parolanız: {parola}. Parola {GeciciParolaGun} gün geçerlidir; ilk girişte yeni bir parola belirlemeniz istenecek.",
-                uygulama.Adres.TrimEnd('/') + "/giris",
+                uygulama.Adres.TrimEnd('/') + "/login",
                 "Giriş yap")));
 
     private DateTime GeciciParolaBitisi() => timeProvider.GetUtcNow().UtcDateTime.AddDays(GeciciParolaGun);

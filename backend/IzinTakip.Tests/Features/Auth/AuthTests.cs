@@ -11,9 +11,9 @@ namespace IzinTakip.Tests.Features.Auth;
 public sealed class AuthTests(DatabaseApiFactory factory) : IClassFixture<DatabaseApiFactory>
 {
     [Fact]
-    public async Task Giris_DogruBilgilerle_TokenVeSureBitisiDoner()
+    public async Task ValidLogin_ReturnsToken()
     {
-        var yanit = await GirisYapAsync(ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
+        var yanit = await LoginAsync(ApiFactory.SuperAdminEposta, ApiFactory.SuperAdminParola);
         var govde = await yanit.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, yanit.StatusCode);
@@ -23,43 +23,43 @@ public sealed class AuthTests(DatabaseApiFactory factory) : IClassFixture<Databa
     }
 
     [Fact]
-    public async Task Giris_HataliParolayla_401VeGenelMesajDoner()
+    public async Task WrongPassword_Returns401()
     {
-        var yanit = await GirisYapAsync(ApiFactory.SuperAdminEposta, "YanlisParola1");
+        var yanit = await LoginAsync(ApiFactory.SuperAdminEposta, "YanlisParola1");
 
         Assert.Equal(HttpStatusCode.Unauthorized, yanit.StatusCode);
         Assert.Equal("E-posta ya da parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.", await DetayAsync(yanit));
     }
 
     [Fact]
-    public async Task Giris_KayitsizEpostayla_HataliParolaylaAyniMesajiDoner()
+    public async Task UnknownEmail_Returns401()
     {
-        var yanit = await GirisYapAsync("olmayan@izintakip.test", "YanlisParola1");
+        var yanit = await LoginAsync("olmayan@izintakip.test", "YanlisParola1");
 
         Assert.Equal(HttpStatusCode.Unauthorized, yanit.StatusCode);
         Assert.Equal("E-posta ya da parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.", await DetayAsync(yanit));
     }
 
     [Fact]
-    public async Task Giris_BesHataliDenemedenSonra_DogruParolaylaBileAyniMesajlaReddedilir()
+    public async Task LockedAfter5Failures_StillRejected()
     {
         const string eposta = "kilit@izintakip.test";
         await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan);
         for (var deneme = 0; deneme < 5; deneme++)
         {
-            await GirisYapAsync(eposta, "YanlisParola1");
+            await LoginAsync(eposta, "YanlisParola1");
         }
 
-        var yanit = await GirisYapAsync(eposta, TestAuth.VarsayilanParola);
+        var yanit = await LoginAsync(eposta, TestAuth.VarsayilanParola);
 
         Assert.Equal(HttpStatusCode.Unauthorized, yanit.StatusCode);
         Assert.Equal("E-posta ya da parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.", await DetayAsync(yanit));
     }
 
     [Fact]
-    public async Task Giris_BosEpostayla_400VeAlanHatasiDoner()
+    public async Task EmptyEmail_Returns400()
     {
-        var yanit = await GirisYapAsync(string.Empty, "Parola2026");
+        var yanit = await LoginAsync(string.Empty, "Parola2026");
         var govde = await yanit.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, yanit.StatusCode);
@@ -192,11 +192,11 @@ public sealed class AuthTests(DatabaseApiFactory factory) : IClassFixture<Databa
         }
 
         var yanit = await ParolaDegistirAsync(client, TestAuth.VarsayilanParola);
-        var giris = await GirisYapAsync("tahminci@izintakip.test", TestAuth.VarsayilanParola);
+        var login = await LoginAsync("tahminci@izintakip.test", TestAuth.VarsayilanParola);
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, yanit.StatusCode);
         Assert.Equal("Çok fazla hatalı deneme yapıldı. Birkaç dakika sonra tekrar deneyin.", await DetayAsync(yanit));
-        Assert.Equal(HttpStatusCode.Unauthorized, giris.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
     }
 
     [Fact]
@@ -230,7 +230,7 @@ public sealed class AuthTests(DatabaseApiFactory factory) : IClassFixture<Databa
         Assert.Equal("application/problem+json", yanit.Content.Headers.ContentType?.MediaType);
     }
 
-    private Task<HttpResponseMessage> GirisYapAsync(string eposta, string parola) =>
+    private Task<HttpResponseMessage> LoginAsync(string eposta, string parola) =>
         factory.CreateClient().PostAsJsonAsync("/api/auth/login", new { eposta, parola }, TestContext.Current.CancellationToken);
 
     private static Task<HttpResponseMessage> ParolaDegistirAsync(HttpClient client, string mevcutParola) =>

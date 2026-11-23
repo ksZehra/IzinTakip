@@ -5,7 +5,7 @@ import type { Schema } from './types'
 export type Oturum = Schema<'CurrentUserResponse'>
 
 export async function girisYap(eposta: string, parola: string): Promise<void> {
-  await httpClient.post('/bff/giris', { eposta, parola }, { sessiz: true })
+  await httpClient.post('/bff/login', { eposta, parola }, { sessiz: true })
 }
 
 export async function cikisYap(): Promise<void> {

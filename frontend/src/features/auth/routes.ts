@@ -2,9 +2,9 @@ import type { RouteRecordRaw } from 'vue-router'
 
 export const authRoutes: RouteRecordRaw[] = [
   {
-    path: '/giris',
-    name: 'giris',
-    component: () => import('./GirisPage.vue'),
+    path: '/login',
+    name: 'login',
+    component: () => import('./LoginPage.vue'),
     meta: { baslik: 'Giriş', herkeseAcik: true },
   },
   {

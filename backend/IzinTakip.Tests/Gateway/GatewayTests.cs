@@ -8,15 +8,15 @@ namespace IzinTakip.Tests.Gateway;
 public sealed class GatewayTests(GatewayFactory factory) : IClassFixture<GatewayFactory>
 {
     [Fact]
-    public async Task Giris_GecerliBilgi_GuvenliCookieYazarVeApiIstegineTokenEkler()
+    public async Task ValidLogin_WritesSecureCookie()
     {
         var tarayici = factory.TarayiciClient();
 
-        var giris = await GirisAsync(tarayici, ApiFactory.SuperAdminParola);
-        var cerez = Assert.Single(giris.Headers.GetValues("Set-Cookie"));
+        var login = await LoginAsync(tarayici, ApiFactory.SuperAdminParola);
+        var cerez = Assert.Single(login.Headers.GetValues("Set-Cookie"));
         var ben = await tarayici.GetFromJsonAsync<JsonElement>("/api/auth/ben", TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.NoContent, giris.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, login.StatusCode);
         Assert.StartsWith("__Host-IzinTakip=", cerez);
         Assert.Contains("httponly", cerez, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("secure", cerez, StringComparison.OrdinalIgnoreCase);
@@ -27,13 +27,13 @@ public sealed class GatewayTests(GatewayFactory factory) : IClassFixture<Gateway
     }
 
     [Fact]
-    public async Task Giris_HataliParola_ApininMesajiDonerCookieYazilmaz()
+    public async Task WrongPassword_NoCookie()
     {
-        var giris = await GirisAsync(factory.TarayiciClient(), "YanlisParola1");
+        var login = await LoginAsync(factory.TarayiciClient(), "YanlisParola1");
 
-        Assert.Equal(HttpStatusCode.Unauthorized, giris.StatusCode);
-        Assert.False(giris.Headers.Contains("Set-Cookie"));
-        Assert.Equal("E-posta ya da parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.", await DetayAsync(giris));
+        Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
+        Assert.False(login.Headers.Contains("Set-Cookie"));
+        Assert.Equal("E-posta ya da parola hatalı. Üst üste hatalı denemede hesap birkaç dakika kilitlenir.", await DetayAsync(login));
     }
 
     [Fact]
@@ -41,11 +41,11 @@ public sealed class GatewayTests(GatewayFactory factory) : IClassFixture<Gateway
     {
         var tarayici = factory.TarayiciClient(csrfBasligi: false);
 
-        var giris = await GirisAsync(tarayici, ApiFactory.SuperAdminParola);
+        var login = await LoginAsync(tarayici, ApiFactory.SuperAdminParola);
         var api = await tarayici.GetAsync("/api/auth/ben", TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.Forbidden, giris.StatusCode);
-        Assert.Equal("İstek doğrulanamadı. Sayfayı yenileyip tekrar deneyin.", await DetayAsync(giris));
+        Assert.Equal(HttpStatusCode.Forbidden, login.StatusCode);
+        Assert.Equal("İstek doğrulanamadı. Sayfayı yenileyip tekrar deneyin.", await DetayAsync(login));
         Assert.Equal(HttpStatusCode.Forbidden, api.StatusCode);
     }
 
@@ -58,10 +58,10 @@ public sealed class GatewayTests(GatewayFactory factory) : IClassFixture<Gateway
     }
 
     [Fact]
-    public async Task Cikis_CookieSilinirVeSonrakiIstek401Doner()
+    public async Task Cikis_CookieSilinir_Returns401()
     {
         var tarayici = factory.TarayiciClient();
-        await GirisAsync(tarayici, ApiFactory.SuperAdminParola);
+        await LoginAsync(tarayici, ApiFactory.SuperAdminParola);
 
         var cikis = await tarayici.PostAsync("/bff/cikis", null, TestContext.Current.CancellationToken);
         var sonrasi = await tarayici.GetAsync("/api/auth/ben", TestContext.Current.CancellationToken);
@@ -72,11 +72,11 @@ public sealed class GatewayTests(GatewayFactory factory) : IClassFixture<Gateway
     }
 
     [Fact]
-    public async Task Cikis_KopyalanmisCookieDeGecersizOlur()
+    public async Task Cikis_KopyaCookie_Gecersiz()
     {
         var tarayici = factory.TarayiciClient();
-        var giris = await GirisAsync(tarayici, ApiFactory.SuperAdminParola);
-        var cerez = Assert.Single(giris.Headers.GetValues("Set-Cookie")).Split(';')[0];
+        var login = await LoginAsync(tarayici, ApiFactory.SuperAdminParola);
+        var cerez = Assert.Single(login.Headers.GetValues("Set-Cookie")).Split(';')[0];
         var kopya = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), HandleCookies = false });
         kopya.DefaultRequestHeaders.Add("X-CSRF", "1");
         kopya.DefaultRequestHeaders.Add("Cookie", cerez);
@@ -133,7 +133,7 @@ public sealed class GatewayTests(GatewayFactory factory) : IClassFixture<Gateway
     public async Task ApiVeBffYanitlari_TarayiciOnbellegineAlinmaz()
     {
         var api = await factory.TarayiciClient().GetAsync("/api/auth/ben", TestContext.Current.CancellationToken);
-        var bff = await GirisAsync(factory.TarayiciClient(), "Yanlis1Parola");
+        var bff = await LoginAsync(factory.TarayiciClient(), "Yanlis1Parola");
 
         Assert.Equal(HttpStatusCode.Unauthorized, api.StatusCode);
         Assert.True(api.Headers.CacheControl?.NoStore);
@@ -152,7 +152,7 @@ public sealed class GatewayTests(GatewayFactory factory) : IClassFixture<Gateway
     [Theory]
     [InlineData("/api/auth/login")]
     [InlineData("/API/Auth/Login/")]
-    public async Task ApiGirisUcu_GatewayUzerindenKapali_404Doner(string yol)
+    public async Task ApiLoginUcu_GatewayUzerindenKapali_404Doner(string yol)
     {
         var yanit = await factory.TarayiciClient().PostAsJsonAsync(
             yol,
@@ -164,8 +164,8 @@ public sealed class GatewayTests(GatewayFactory factory) : IClassFixture<Gateway
         Assert.DoesNotContain("accessToken", govde);
     }
 
-    private static Task<HttpResponseMessage> GirisAsync(HttpClient client, string parola) =>
-        client.PostAsJsonAsync("/bff/giris", new { eposta = ApiFactory.SuperAdminEposta, parola }, TestContext.Current.CancellationToken);
+    private static Task<HttpResponseMessage> LoginAsync(HttpClient client, string parola) =>
+        client.PostAsJsonAsync("/bff/login", new { eposta = ApiFactory.SuperAdminEposta, parola }, TestContext.Current.CancellationToken);
 
     private static async Task<string?> DetayAsync(HttpResponseMessage yanit) =>
         (await yanit.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken)).GetProperty("detail").GetString();

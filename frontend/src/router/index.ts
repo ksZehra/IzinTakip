@@ -20,7 +20,7 @@ router.beforeEach(async (hedef) => {
 })
 
 router.afterEach((hedef) => {
-  document.title = `${hedef.meta.baslik} · IzinTakip`
+  document.title = `${hedef.meta.baslik} · Personel İzin Takip Sistemi`
 })
 
 export default router

@@ -17,10 +17,10 @@ public sealed class ApiUnavailableTests(ApiUnavailableTests.Factory factory) : I
     private const string UlasilamiyorMesaji = "Sunucuya şu anda ulaşılamıyor. Biraz sonra tekrar deneyin.";
 
     [Fact]
-    public async Task Giris_ApiKapaliyken_502VeTurkceMesajDoner()
+    public async Task ApiDown_Returns502()
     {
         var yanit = await factory.Tarayici().PostAsJsonAsync(
-            "/bff/giris",
+            "/bff/login",
             new { eposta = "kisi@izintakip.test", parola = "Parola2026" },
             TestContext.Current.CancellationToken);
 
@@ -39,7 +39,7 @@ public sealed class ApiUnavailableTests(ApiUnavailableTests.Factory factory) : I
     }
 
     [Fact]
-    public async Task Cikis_ApiKapaliyken_CookieYineDeSilinir()
+    public async Task ApiKapali_Cikis_CookieSilinir()
     {
         var http = new DefaultHttpContext();
         factory.Services.GetRequiredService<OturumCerezi>().Yaz(http.Response, "gecerli-token", DateTimeOffset.UtcNow.AddHours(1));

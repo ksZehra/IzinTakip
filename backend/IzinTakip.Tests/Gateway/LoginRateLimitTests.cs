@@ -7,7 +7,7 @@ namespace IzinTakip.Tests.Gateway;
 public sealed class LoginRateLimitTests(LoginRateLimitTests.Factory factory) : IClassFixture<LoginRateLimitTests.Factory>
 {
     [Fact]
-    public async Task Giris_DakikadaBesDenemedenSonra_429Doner()
+    public async Task FiveFailedAttempts_Returns429()
     {
         var tarayici = factory.TarayiciClient();
         var durumlar = new List<HttpStatusCode>();
@@ -16,7 +16,7 @@ public sealed class LoginRateLimitTests(LoginRateLimitTests.Factory factory) : I
         for (var deneme = 0; deneme < 6; deneme++)
         {
             son = await tarayici.PostAsJsonAsync(
-                "/bff/giris",
+                "/bff/login",
                 new { eposta = "olmayan@izintakip.test", parola = "Parola2026" },
                 TestContext.Current.CancellationToken);
             durumlar.Add(son.StatusCode);
@@ -31,6 +31,6 @@ public sealed class LoginRateLimitTests(LoginRateLimitTests.Factory factory) : I
 
     public sealed class Factory : GatewayFactory
     {
-        protected override int DakikadaGirisDenemesi => 5;
+        protected override int DakikadaLoginDenemesi => 5;
     }
 }
