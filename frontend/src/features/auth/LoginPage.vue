@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-  mdiCheck,
-  mdiCheckCircleOutline,
-  mdiEmailOutline,
-  mdiEye,
-  mdiEyeOff,
-  mdiLockOutline,
-} from '@mdi/js'
+import { mdiCheckCircleOutline, mdiEmailOutline, mdiEye, mdiEyeOff, mdiLockOutline } from '@mdi/js'
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -26,7 +19,7 @@ const parola = ref('')
 const parolaGorunur = ref(false)
 
 const ozellikler = [
-  'Talebinizi açın, onaya kendiliğinden gitsin',
+  'Talep açın, onaya gönderin',
   'Bakiyenizi her an görün',
   'Ekibinizin izin takvimini izleyin',
 ]
@@ -46,40 +39,32 @@ async function girisYap() {
   <v-main>
     <div class="login">
       <section class="login-marka d-none d-md-flex">
-        <div class="d-flex align-center ga-3 text-title-medium font-weight-semibold">
-          <UrunLogo :boyut="40" />
-          İzinTakip
+        <svg class="login-desen" viewBox="0 0 280 200" aria-hidden="true" fill="none">
+          <g stroke="#fff" stroke-opacity="0.08" stroke-width="1">
+            <path d="M40 0v200M80 0v200M120 0v200M160 0v200M200 0v200M240 0v200" />
+          </g>
+          <rect x="30" y="30" width="110" height="22" rx="11" fill="#4c8bd0" fill-opacity="0.32" />
+          <rect x="110" y="68" width="90" height="22" rx="11" fill="#5ccbc5" fill-opacity="0.3" />
+          <rect x="60" y="106" width="70" height="22" rx="11" fill="#e57c9f" fill-opacity="0.3" />
+          <rect x="150" y="144" width="110" height="22" rx="11" fill="#f9c8d6" fill-opacity="0.2" />
+        </svg>
+
+        <div class="login-marka-ust d-flex align-center ga-3 text-title-large font-weight-semibold">
+          <UrunLogo :boyut="44" />
+          Personel İzin Takip Sistemi
         </div>
 
-        <div class="login-kartlar" aria-hidden="true">
-          <div class="login-kart login-kart-bakiye">
-            <span class="text-body-small text-medium-emphasis">Kalan yıllık izin</span>
-            <span class="d-block text-title-large font-weight-bold text-primary"
-              >12 gün 4 saat</span
-            >
-            <span class="login-kart-cubuk"><span /></span>
-          </div>
-          <div class="login-kart login-kart-onay">
-            <span class="login-kart-onay-ikon"><v-icon :icon="mdiCheck" size="18" /></span>
-            <span>
-              <span class="d-block text-body-medium font-weight-semibold">Talebiniz onaylandı</span>
-              <span class="text-body-small text-medium-emphasis">3–5 Mart · Yıllık izin</span>
-            </span>
-          </div>
-        </div>
-
-        <div>
-          <p class="text-display-small font-weight-bold login-baslik">
-            Personel İzin<br />Takip Sistemi
+        <div class="login-marka-orta">
+          <p class="text-headline-medium font-weight-semibold login-baslik mb-6">
+            İzin Süreçleriniz Tek Ekranda
           </p>
-          <p class="text-title-medium login-alt-baslik mt-3 mb-8">İzin süreçleriniz tek ekranda.</p>
           <ul class="login-ozellikler">
             <li
               v-for="ozellik in ozellikler"
               :key="ozellik"
               class="d-flex align-center ga-3 text-body-large"
             >
-              <v-icon :icon="mdiCheckCircleOutline" size="20" />
+              <v-icon :icon="mdiCheckCircleOutline" size="22" />
               {{ ozellik }}
             </li>
           </ul>
@@ -92,13 +77,13 @@ async function girisYap() {
             <div
               class="d-flex d-md-none align-center ga-3 text-title-large font-weight-semibold text-primary mb-10"
             >
-              <UrunLogo :boyut="44" />
+              <UrunLogo :boyut="40" />
               Personel İzin Takip Sistemi
             </div>
 
-            <h1 class="text-headline-small font-weight-semibold">Giriş yap</h1>
+            <h1 class="text-headline-small font-weight-semibold">Hoş geldiniz</h1>
             <p class="text-body-medium text-medium-emphasis mt-1 mb-8">
-              Kurumsal e-posta adresinizle devam edin.
+              Kurumsal e-posta adresinizle giriş yapın.
             </p>
 
             <v-form class="d-flex flex-column ga-4" @submit.prevent="girisYap">
@@ -145,7 +130,7 @@ async function girisYap() {
             </v-form>
 
             <p class="text-body-small text-medium-emphasis text-center mt-6">
-              Parolanızı unuttuysanız İK birimiyle görüşünüz.
+              Parolanızı unuttuysanız İK birimiyle görüşün.
             </p>
           </div>
         </div>
@@ -177,85 +162,50 @@ async function girisYap() {
 
 .login-marka {
   flex-direction: column;
-  padding: 48px 56px;
+  padding: 40px 48px;
+  position: relative;
+  overflow: hidden;
   color: #fff;
   background:
-    radial-gradient(circle at 85% 15%, rgb(66 165 245 / 0.6), transparent 45%),
-    radial-gradient(circle at 10% 95%, rgb(38 198 218 / 0.3), transparent 40%),
-    linear-gradient(150deg, #0b2e6b 0%, #1565c0 65%, #1e88e5 100%);
+    radial-gradient(circle at 100% 100%, rgb(42 167 161 / 0.5), transparent 55%),
+    linear-gradient(160deg, #0f2a4f 0%, #1f5fa8 100%);
+}
+
+.login-desen {
+  position: absolute;
+  right: -10%;
+  bottom: -6%;
+  width: 88%;
+  height: auto;
+}
+
+.login-marka-ust,
+.login-marka-orta {
+  position: relative;
+}
+
+.login-marka-ust {
+  margin-bottom: 24vh;
+}
+
+.login-marka-orta {
+  margin-bottom: auto;
 }
 
 .login-baslik {
-  line-height: 1.15;
-  letter-spacing: -0.5px;
-}
-
-.login-alt-baslik {
-  opacity: 0.9;
-}
-
-.login-kartlar {
-  position: relative;
-  flex: 1;
-  min-height: 200px;
-}
-
-.login-kart {
-  position: absolute;
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: #fff;
-  color: rgb(var(--v-theme-on-surface));
-  box-shadow: 0 16px 40px rgb(8 30 70 / 0.35);
-}
-
-.login-kart-bakiye {
-  top: 18%;
-  right: 0;
-  width: 220px;
-}
-
-.login-kart-cubuk {
-  display: block;
-  height: 6px;
-  margin-top: 10px;
-  border-radius: 3px;
-  background: #e3eefb;
-}
-
-.login-kart-cubuk span {
-  display: block;
-  width: 62%;
-  height: 100%;
-  border-radius: 3px;
-  background: rgb(var(--v-theme-primary));
-}
-
-.login-kart-onay {
-  top: 52%;
-  right: 18%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.login-kart-onay-ikon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #e8f5e9;
-  color: rgb(var(--v-theme-success));
+  line-height: 1.25;
 }
 
 .login-ozellikler {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  list-style: none;
+  gap: 14px;
   padding: 0;
+  list-style: none;
+}
+
+.login-ozellikler {
+  color: #b5d4f4;
 }
 
 .login-form {

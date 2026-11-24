@@ -12,7 +12,7 @@ test('hatalı parolada formda uyarı gösterir', async ({ page }) => {
 
 test('giriş sayfası erişilebilirlik denetiminden geçer', async ({ page }) => {
   await page.goto('/login')
-  await expect(page.getByRole('heading', { name: 'Giriş' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Hoş geldiniz' })).toBeVisible()
 
   await erisilebilirlikDenetle(page)
 })

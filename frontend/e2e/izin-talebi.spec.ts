@@ -30,6 +30,7 @@ test('çalışan talep açar, yönetici onaylar ve iptal eder', async ({ page })
 
   await page.getByRole('button', { name: /^Kullanıcı menüsü/ }).click()
   await page.getByText('Çıkış yap').click()
+  await expect(page).toHaveURL(/\/login/)
   await girisYap(page, kullanicilar.yonetici)
   await page.goto(talepAdresi)
   await page.getByRole('button', { name: 'Onayla' }).click()
