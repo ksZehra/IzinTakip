@@ -1,6 +1,10 @@
+<img src="docs/logo.svg" alt="ZK logosu" width="80">
+
 # İzin Takip
 
 [![CI](https://github.com/ksZehra/IzinTakip/actions/workflows/ci.yml/badge.svg)](https://github.com/ksZehra/IzinTakip/actions/workflows/ci.yml)
+
+Geliştiren: [Zehra Nur Köse](https://github.com/ksZehra)
 
 Şirketlerin izin sürecini baştan sona yöneten web uygulaması. Çalışan izin talebini açar, yöneticisi onaylar,
 İK bakiyeleri ve raporları izler. Süreler iş takvimine göre dakika hassasiyetinde hesaplanır; her değişiklik kayıt altındadır.

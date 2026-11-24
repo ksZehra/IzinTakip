@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { mdiAccountCircle, mdiKeyVariant, mdiLogout } from '@mdi/js'
+import { mdiAccountCircle, mdiInformationOutline, mdiKeyVariant, mdiLogout } from '@mdi/js'
 import { useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/stores/authStore'
 
+const emit = defineEmits<{ hakkinda: [] }>()
 const auth = useAuthStore()
 const router = useRouter()
 
@@ -31,6 +32,11 @@ async function cikisYap() {
         :prepend-icon="mdiKeyVariant"
         title="Parola değiştir"
         :to="{ name: 'parola-degistir' }"
+      />
+      <v-list-item
+        :prepend-icon="mdiInformationOutline"
+        title="Hakkında"
+        @click="emit('hakkinda')"
       />
       <v-list-item :prepend-icon="mdiLogout" title="Çıkış yap" @click="cikisYap" />
     </v-list>

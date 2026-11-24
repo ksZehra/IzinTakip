@@ -30,6 +30,9 @@ export async function girisFormunuDoldur(page: Page, eposta: string, parola = de
 }
 
 export async function erisilebilirlikDenetle(page: Page) {
+  await page.evaluate(
+    'Promise.all(document.getAnimations().filter((a) => a.effect.getComputedTiming().iterations !== Infinity).map((a) => a.finished.catch(() => null)))',
+  )
   const sonuc = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
   expect(
     sonuc.violations.map(

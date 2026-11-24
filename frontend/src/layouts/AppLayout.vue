@@ -4,11 +4,13 @@ import { useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify'
 
 import ImzaLogo from '@/common/components/ImzaLogo.vue'
+import UrunLogo from '@/common/components/UrunLogo.vue'
 import { menuOgeleri } from '@/router/menu'
 import { routes } from '@/router/routes'
 import { useAuthStore } from '@/stores/authStore'
 import { useBildirimStore } from '@/stores/bildirimStore'
 
+import HakkindaDialog from './HakkindaDialog.vue'
 import NotificationBell from './NotificationBell.vue'
 import UserMenu from './UserMenu.vue'
 
@@ -18,6 +20,7 @@ const route = useRoute()
 const { mobile } = useDisplay()
 
 const menuAcik = ref(!mobile.value)
+const hakkindaAcik = ref(false)
 const ogeler = computed(() => menuOgeleri(routes, auth.yetkiVar))
 const anaOgeler = computed(() => ogeler.value.filter((oge) => !oge.grup))
 const yonetimOgeleri = computed(() => ogeler.value.filter((oge) => oge.grup === 'Yönetim'))
@@ -50,9 +53,10 @@ onUnmounted(() => bildirimler.izlemeyiDurdur())
       :aria-expanded="menuAcik"
       @click="menuAcik = !menuAcik"
     />
+    <UrunLogo :boyut="32" class="ms-1" />
     <v-app-bar-title>Personel İzin Takip Sistemi</v-app-bar-title>
     <NotificationBell />
-    <UserMenu />
+    <UserMenu @hakkinda="hakkindaAcik = true" />
   </v-app-bar>
 
   <v-navigation-drawer v-model="menuAcik" :permanent="!mobile" :temporary="mobile">
@@ -80,15 +84,17 @@ onUnmounted(() => bildirimler.izlemeyiDurdur())
     </nav>
 
     <template #append>
-      <div class="menu-imza">
+      <button type="button" class="menu-imza" aria-haspopup="dialog" @click="hakkindaAcik = true">
         <ImzaLogo :boyut="28" />
-        <p class="text-body-small text-medium-emphasis">
+        <span class="text-body-small text-medium-emphasis">
           <span class="d-block text-high-emphasis font-weight-semibold">Zehra Nur Köse</span>
           © 2026
-        </p>
-      </div>
+        </span>
+      </button>
     </template>
   </v-navigation-drawer>
+
+  <HakkindaDialog v-model="hakkindaAcik" />
 
   <v-main id="icerik">
     <RouterView />
@@ -100,7 +106,14 @@ onUnmounted(() => bildirimler.izlemeyiDurdur())
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
   padding: 12px 16px;
   border-top: thin solid rgba(var(--v-border-color), var(--v-border-opacity));
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-imza:hover {
+  background: rgba(var(--v-theme-on-surface), 0.04);
 }
 </style>
