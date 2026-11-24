@@ -1,5 +1,6 @@
 // Boşluk sınıfları yalnız temel boyutta üretilir; ekran boyuna göre değişen boşluk ve eksi margin kullanılmıyor.
 @use 'vuetify/styles/settings/index' with (
+  $border-radius-root: 8px,
   $utilities: (
     'gap': (
       responsive: false,

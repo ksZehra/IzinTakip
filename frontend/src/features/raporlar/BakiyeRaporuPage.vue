@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiMicrosoftExcel } from '@mdi/js'
+import { FileSpreadsheetIcon } from '@lucide/vue'
 import { onMounted, shallowRef } from 'vue'
 
 import { departmanlariGetir, type Departman } from '@/api/departmanlarApi'
@@ -42,7 +42,7 @@ onMounted(async () => {
     >
       <v-btn
         variant="tonal"
-        :prepend-icon="mdiMicrosoftExcel"
+        :prepend-icon="FileSpreadsheetIcon"
         @click="bakiyeleriExceleAktar({ ...filtre })"
       >
         Excel

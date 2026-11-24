@@ -25,7 +25,7 @@ const rotalar: RouteRecordRaw[] = [
         meta: {
           baslik: 'Kullanıcılar',
           yetki: [Yetkiler.KullaniciYonet],
-          menu: { baslik: 'Kullanıcılar', ikon: 'k', grup: 'Yönetim' },
+          menu: { baslik: 'Kullanıcılar', ikon: 'a', grup: 'Yönetim' },
         },
       },
       { path: 'yetkisiz', name: 'yetkisiz', component: bos, meta: { baslik: 'Yetkiniz Yok' } },

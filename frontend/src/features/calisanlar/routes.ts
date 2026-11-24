@@ -1,4 +1,4 @@
-import { mdiAccountGroup } from '@mdi/js'
+import { UsersIcon } from '@lucide/vue'
 import type { RouteRecordRaw } from 'vue-router'
 
 import { Yetkiler } from '@/common/auth/yetkiler'
@@ -11,7 +11,7 @@ export const calisanRoutes: RouteRecordRaw[] = [
     meta: {
       baslik: 'Çalışanlar',
       yetki: [Yetkiler.CalisanYonet],
-      menu: { baslik: 'Çalışanlar', ikon: mdiAccountGroup, grup: 'Yönetim' },
+      menu: { baslik: 'Çalışanlar', ikon: UsersIcon, grup: 'Yönetim' },
     },
   },
   {

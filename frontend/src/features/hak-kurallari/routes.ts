@@ -1,4 +1,4 @@
-import { mdiScaleBalance } from '@mdi/js'
+import { ScaleIcon } from '@lucide/vue'
 import type { RouteRecordRaw } from 'vue-router'
 
 import { Yetkiler } from '@/common/auth/yetkiler'
@@ -11,7 +11,7 @@ export const hakKuraliRoutes: RouteRecordRaw[] = [
     meta: {
       baslik: 'Hak Kuralları',
       yetki: [Yetkiler.TanimYonet],
-      menu: { baslik: 'Hak Kuralları', ikon: mdiScaleBalance, grup: 'Yönetim' },
+      menu: { baslik: 'Hak Kuralları', ikon: ScaleIcon, grup: 'Yönetim' },
     },
   },
 ]

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiBell } from '@mdi/js'
+import { BellIcon } from '@lucide/vue'
 import { computed } from 'vue'
 
 import { useBildirimStore } from '@/stores/bildirimStore'
@@ -21,7 +21,7 @@ const etiket = computed(() =>
       color="error"
       max="99"
     >
-      <v-icon :icon="mdiBell" />
+      <v-icon :icon="BellIcon" />
     </v-badge>
   </v-btn>
 </template>

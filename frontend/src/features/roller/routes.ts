@@ -1,4 +1,4 @@
-import { mdiShieldAccount } from '@mdi/js'
+import { ShieldCheckIcon } from '@lucide/vue'
 import type { RouteRecordRaw } from 'vue-router'
 
 import { Yetkiler } from '@/common/auth/yetkiler'
@@ -11,7 +11,7 @@ export const rolRoutes: RouteRecordRaw[] = [
     meta: {
       baslik: 'Roller',
       yetki: [Yetkiler.RolYonetimi],
-      menu: { baslik: 'Roller', ikon: mdiShieldAccount, grup: 'Yönetim' },
+      menu: { baslik: 'Roller', ikon: ShieldCheckIcon, grup: 'Yönetim' },
     },
   },
 ]

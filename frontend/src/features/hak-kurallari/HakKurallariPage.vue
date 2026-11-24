@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiPencil, mdiPlus } from '@mdi/js'
+import { PencilIcon, PlusIcon } from '@lucide/vue'
 import { onMounted, shallowRef } from 'vue'
 
 import {
@@ -78,7 +78,7 @@ onMounted(yukle)
       baslik="Hak Kuralları"
       aciklama="Yıllık izin hakkı, koşulu tutan aktif kuralların en yükseğidir."
     >
-      <v-btn color="primary" :prepend-icon="mdiPlus" @click="yeni">Yeni kural</v-btn>
+      <v-btn color="primary" :prepend-icon="PlusIcon" @click="yeni">Yeni kural</v-btn>
     </PageHeader>
 
     <v-card>
@@ -92,7 +92,7 @@ onMounted(yukle)
         </template>
         <template #[`item.islemler`]="{ item }">
           <v-btn
-            :icon="mdiPencil"
+            :icon="PencilIcon"
             variant="text"
             size="small"
             :aria-label="`${item.ad} düzenle`"

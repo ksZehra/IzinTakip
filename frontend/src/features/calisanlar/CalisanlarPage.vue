@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiPlus } from '@mdi/js'
+import { PlusIcon } from '@lucide/vue'
 import { onMounted, ref, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -72,7 +72,7 @@ onMounted(async () => {
 <template>
   <v-container fluid>
     <PageHeader baslik="Çalışanlar">
-      <v-btn color="primary" :prepend-icon="mdiPlus" @click="yeni">Yeni çalışan</v-btn>
+      <v-btn color="primary" :prepend-icon="PlusIcon" @click="yeni">Yeni çalışan</v-btn>
     </PageHeader>
 
     <v-row density="compact" class="mb-2">

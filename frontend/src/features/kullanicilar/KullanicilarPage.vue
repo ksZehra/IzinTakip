@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiAccountKey, mdiLockReset, mdiPlus } from '@mdi/js'
+import { ShieldCheckIcon, KeyRoundIcon, PlusIcon } from '@lucide/vue'
 import { computed, onMounted, ref, shallowRef } from 'vue'
 
 import {
@@ -130,7 +130,7 @@ onMounted(async () => {
 <template>
   <v-container fluid>
     <PageHeader baslik="Kullanıcılar">
-      <v-btn color="primary" :prepend-icon="mdiPlus" @click="eklemeyiAc">Yeni kullanıcı</v-btn>
+      <v-btn color="primary" :prepend-icon="PlusIcon" @click="eklemeyiAc">Yeni kullanıcı</v-btn>
     </PageHeader>
 
     <v-row density="compact" class="mb-2">
@@ -178,7 +178,7 @@ onMounted(async () => {
         </template>
         <template #[`item.islemler`]="{ item }">
           <v-btn
-            :icon="mdiAccountKey"
+            :icon="ShieldCheckIcon"
             variant="text"
             size="small"
             :aria-label="`${item.eposta} rollerini düzenle`"
@@ -186,7 +186,7 @@ onMounted(async () => {
             @click="rolleriAc(item)"
           />
           <v-btn
-            :icon="mdiLockReset"
+            :icon="KeyRoundIcon"
             variant="text"
             size="small"
             :aria-label="`${item.eposta} parolasını sıfırla`"

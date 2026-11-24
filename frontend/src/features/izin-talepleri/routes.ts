@@ -1,4 +1,4 @@
-import { mdiCalendarCheck } from '@mdi/js'
+import { CalendarCheckIcon } from '@lucide/vue'
 import type { RouteRecordRaw } from 'vue-router'
 
 import { Yetkiler } from '@/common/auth/yetkiler'
@@ -13,7 +13,7 @@ export const izinTalebiRoutes: RouteRecordRaw[] = [
     meta: {
       baslik: 'İzin Talepleri',
       yetki,
-      menu: { baslik: 'İzin Talepleri', ikon: mdiCalendarCheck },
+      menu: { baslik: 'İzin Talepleri', ikon: CalendarCheckIcon },
     },
   },
   {

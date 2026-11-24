@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiCalendarBlankOutline, mdiChevronLeft, mdiChevronRight } from '@mdi/js'
+import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from '@lucide/vue'
 import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 
 import { departmanlariGetir, type Departman } from '@/api/departmanlarApi'
@@ -86,10 +86,15 @@ onMounted(async () => {
     </PageHeader>
 
     <div class="d-flex align-center justify-space-between mb-4">
-      <v-btn :icon="mdiChevronLeft" variant="text" aria-label="Önceki ay" @click="ayDegistir(-1)" />
+      <v-btn
+        :icon="ChevronLeftIcon"
+        variant="text"
+        aria-label="Önceki ay"
+        @click="ayDegistir(-1)"
+      />
       <h2 class="text-title-large" aria-live="polite">{{ ayBasligi(yil, ay) }}</h2>
       <v-btn
-        :icon="mdiChevronRight"
+        :icon="ChevronRightIcon"
         variant="text"
         aria-label="Sonraki ay"
         @click="ayDegistir(1)"
@@ -118,7 +123,7 @@ onMounted(async () => {
     </div>
     <v-empty-state
       v-else-if="!yukleniyor"
-      :icon="mdiCalendarBlankOutline"
+      :icon="CalendarIcon"
       title="Bu ay izinli yok"
       text="Seçilen ayda beklemede ya da onaylı izin bulunmuyor."
     />

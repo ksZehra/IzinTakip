@@ -1,4 +1,4 @@
-import { mdiCalendarMonth, mdiChartBox } from '@mdi/js'
+import { CalendarDaysIcon, ChartColumnIcon } from '@lucide/vue'
 import type { RouteRecordRaw } from 'vue-router'
 
 import { Yetkiler } from '@/common/auth/yetkiler'
@@ -11,7 +11,7 @@ export const raporRoutes: RouteRecordRaw[] = [
     meta: {
       baslik: 'İzin Takvimi',
       yetki: [Yetkiler.IzinTalebiOlustur, Yetkiler.IzinTalebiYonet],
-      menu: { baslik: 'Takvim', ikon: mdiCalendarMonth },
+      menu: { baslik: 'Takvim', ikon: CalendarDaysIcon },
     },
   },
   {
@@ -21,7 +21,7 @@ export const raporRoutes: RouteRecordRaw[] = [
     meta: {
       baslik: 'Bakiye Raporu',
       yetki: [Yetkiler.RaporGor],
-      menu: { baslik: 'Bakiye Raporu', ikon: mdiChartBox },
+      menu: { baslik: 'Bakiye Raporu', ikon: ChartColumnIcon },
     },
   },
 ]

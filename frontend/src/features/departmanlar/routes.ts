@@ -1,4 +1,4 @@
-import { mdiDomain } from '@mdi/js'
+import { Building2Icon } from '@lucide/vue'
 import type { RouteRecordRaw } from 'vue-router'
 
 import { Yetkiler } from '@/common/auth/yetkiler'
@@ -11,7 +11,7 @@ export const departmanRoutes: RouteRecordRaw[] = [
     meta: {
       baslik: 'Departmanlar',
       yetki: [Yetkiler.TanimYonet],
-      menu: { baslik: 'Departmanlar', ikon: mdiDomain, grup: 'Yönetim' },
+      menu: { baslik: 'Departmanlar', ikon: Building2Icon, grup: 'Yönetim' },
     },
   },
 ]

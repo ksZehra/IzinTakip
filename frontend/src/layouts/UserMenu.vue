@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiAccountCircle, mdiInformationOutline, mdiKeyVariant, mdiLogout } from '@mdi/js'
+import { CircleUserIcon, InfoIcon, KeyRoundIcon, LogOutIcon } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/stores/authStore'
@@ -19,7 +19,7 @@ async function cikisYap() {
     <template #activator="{ props }">
       <v-btn
         v-bind="props"
-        :prepend-icon="mdiAccountCircle"
+        :prepend-icon="CircleUserIcon"
         :aria-label="`Kullanıcı menüsü: ${auth.oturum?.gorunenAd ?? ''}`"
       >
         <span class="d-none d-sm-inline">{{ auth.oturum?.gorunenAd }}</span>
@@ -29,16 +29,12 @@ async function cikisYap() {
       <v-list-item :subtitle="auth.oturum?.eposta" :title="auth.oturum?.gorunenAd" />
       <v-divider />
       <v-list-item
-        :prepend-icon="mdiKeyVariant"
+        :prepend-icon="KeyRoundIcon"
         title="Parola değiştir"
         :to="{ name: 'parola-degistir' }"
       />
-      <v-list-item
-        :prepend-icon="mdiInformationOutline"
-        title="Hakkında"
-        @click="emit('hakkinda')"
-      />
-      <v-list-item :prepend-icon="mdiLogout" title="Çıkış yap" @click="cikisYap" />
+      <v-list-item :prepend-icon="InfoIcon" title="Hakkında" @click="emit('hakkinda')" />
+      <v-list-item :prepend-icon="LogOutIcon" title="Çıkış yap" @click="cikisYap" />
     </v-list>
   </v-menu>
 </template>

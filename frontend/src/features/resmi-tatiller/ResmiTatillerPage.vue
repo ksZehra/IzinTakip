@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiDelete, mdiPencil, mdiPlus } from '@mdi/js'
+import { Trash2Icon, PencilIcon, PlusIcon } from '@lucide/vue'
 import { ref, shallowRef, watch } from 'vue'
 
 import {
@@ -85,7 +85,7 @@ watch(yil, yukle, { immediate: true })
         density="compact"
         style="max-width: 140px"
       />
-      <v-btn color="primary" :prepend-icon="mdiPlus" @click="yeni">Yeni tatil</v-btn>
+      <v-btn color="primary" :prepend-icon="PlusIcon" @click="yeni">Yeni tatil</v-btn>
     </PageHeader>
 
     <v-card>
@@ -98,14 +98,14 @@ watch(yil, yukle, { immediate: true })
       >
         <template #[`item.islemler`]="{ item }">
           <v-btn
-            :icon="mdiPencil"
+            :icon="PencilIcon"
             variant="text"
             size="small"
             :aria-label="`${item.ad} düzenle`"
             @click="duzenle(item)"
           />
           <v-btn
-            :icon="mdiDelete"
+            :icon="Trash2Icon"
             variant="text"
             size="small"
             color="error"

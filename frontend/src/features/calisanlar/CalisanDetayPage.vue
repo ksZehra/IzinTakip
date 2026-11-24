@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiArrowLeft, mdiPencil, mdiPlus } from '@mdi/js'
+import { ArrowLeftIcon, PencilIcon, PlusIcon } from '@lucide/vue'
 import { ref, shallowRef, watch } from 'vue'
 
 import {
@@ -137,10 +137,10 @@ watch(() => props.id, yukle, { immediate: true })
         calisan ? `${calisan.departmanAdi} · ${calisan.aktif ? 'Aktif' : 'Pasif'}` : undefined
       "
     >
-      <v-btn variant="text" :prepend-icon="mdiArrowLeft" :to="{ name: 'calisanlar' }"
+      <v-btn variant="text" :prepend-icon="ArrowLeftIcon" :to="{ name: 'calisanlar' }"
         >Çalışanlar</v-btn
       >
-      <v-btn v-if="calisan" variant="tonal" :prepend-icon="mdiPencil" @click="duzenlemeyiAc">
+      <v-btn v-if="calisan" variant="tonal" :prepend-icon="PencilIcon" @click="duzenlemeyiAc">
         Düzenle
       </v-btn>
       <v-btn v-if="calisan" variant="text" @click="aktiflikAcik = true">
@@ -193,7 +193,7 @@ watch(() => props.id, yukle, { immediate: true })
             <v-card-title>Hak satırları</v-card-title>
             <v-card-subtitle v-if="haklar">Toplam {{ haklar.toplamSureMetni }}</v-card-subtitle>
             <template #append>
-              <v-btn :prepend-icon="mdiPlus" variant="tonal" @click="hakEklemeyiAc"
+              <v-btn :prepend-icon="PlusIcon" variant="tonal" @click="hakEklemeyiAc"
                 >Hak satırı ekle</v-btn
               >
             </template>

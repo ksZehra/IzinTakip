@@ -13,6 +13,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useBildirimStore } from '@/stores/bildirimStore'
 
 import NotificationBell from './NotificationBell.vue'
+import TemaMenu from '@/common/components/TemaMenu.vue'
 import UserMenu from './UserMenu.vue'
 
 const auth = useAuthStore()
@@ -48,14 +49,15 @@ onUnmounted(() => bildirimler.izlemeyiDurdur())
 <template>
   <a class="atlama-baglantisi" href="#icerik">İçeriğe geç</a>
 
-  <v-app-bar color="primary" density="comfortable">
+  <v-app-bar density="comfortable">
     <v-app-bar-nav-icon
       :aria-label="menuAcik ? 'Menüyü kapat' : 'Menüyü aç'"
       :aria-expanded="menuAcik"
       @click="menuAcik = !menuAcik"
     />
     <UrunLogo :boyut="32" class="ms-1" />
-    <v-app-bar-title>Personel İzin Takip Sistemi</v-app-bar-title>
+    <v-app-bar-title class="font-weight-semibold">Personel İzin Takip Sistemi</v-app-bar-title>
+    <TemaMenu />
     <NotificationBell />
     <UserMenu @hakkinda="hakkindaAcik = true" />
   </v-app-bar>
@@ -70,6 +72,7 @@ onUnmounted(() => bildirimler.izlemeyiDurdur())
           :prepend-icon="oge.ikon"
           :title="oge.baslik"
           :exact="oge.rotaAdi === 'ana-sayfa'"
+          color="primary"
         />
         <template v-if="yonetimOgeleri.length > 0">
           <v-list-subheader>Yönetim</v-list-subheader>
@@ -79,6 +82,7 @@ onUnmounted(() => bildirimler.izlemeyiDurdur())
             :to="{ name: oge.rotaAdi }"
             :prepend-icon="oge.ikon"
             :title="oge.baslik"
+            color="primary"
           />
         </template>
       </v-list>

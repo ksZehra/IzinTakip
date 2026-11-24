@@ -1,4 +1,4 @@
-import { mdiAccountMultiple } from '@mdi/js'
+import { UserRoundCogIcon } from '@lucide/vue'
 import type { RouteRecordRaw } from 'vue-router'
 
 import { Yetkiler } from '@/common/auth/yetkiler'
@@ -11,7 +11,7 @@ export const kullaniciRoutes: RouteRecordRaw[] = [
     meta: {
       baslik: 'Kullanıcılar',
       yetki: [Yetkiler.KullaniciYonet],
-      menu: { baslik: 'Kullanıcılar', ikon: mdiAccountMultiple, grup: 'Yönetim' },
+      menu: { baslik: 'Kullanıcılar', ikon: UserRoundCogIcon, grup: 'Yönetim' },
     },
   },
 ]

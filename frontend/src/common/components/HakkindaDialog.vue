@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiClose, mdiGithub } from '@mdi/js'
+import { XIcon, ExternalLinkIcon } from '@lucide/vue'
 
 import ImzaLogo from '@/common/components/ImzaLogo.vue'
 import { TELIF_YILI } from '@/common/utils/uygulamaBilgisi'
@@ -12,7 +12,7 @@ const surum = __UYGULAMA_SURUMU__
   <v-dialog v-model="acik" max-width="340">
     <v-card class="text-center px-6 pt-8 pb-6" rounded="lg" aria-labelledby="hakkinda-baslik">
       <v-btn
-        :icon="mdiClose"
+        :icon="XIcon"
         variant="text"
         size="small"
         density="comfortable"
@@ -34,7 +34,7 @@ const surum = __UYGULAMA_SURUMU__
           rel="noopener noreferrer"
           class="hakkinda-baglanti d-flex align-center ga-1"
         >
-          <v-icon :icon="mdiGithub" size="18" />
+          <v-icon :icon="ExternalLinkIcon" size="18" />
           github.com/ksZehra
         </a>
       </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiMicrosoftExcel, mdiPlus } from '@mdi/js'
+import { FileSpreadsheetIcon, PlusIcon } from '@lucide/vue'
 import { onMounted, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -61,12 +61,12 @@ function detayaGit(_olay: unknown, { item }: { item: IzinTalebiSatiri }) {
       <v-btn
         v-if="excelAlabilir"
         variant="tonal"
-        :prepend-icon="mdiMicrosoftExcel"
+        :prepend-icon="FileSpreadsheetIcon"
         @click="talepleriExceleAktar({ ...filtre })"
       >
         Excel
       </v-btn>
-      <v-btn color="primary" :prepend-icon="mdiPlus" :to="{ name: 'yeni-izin-talebi' }">
+      <v-btn color="primary" :prepend-icon="PlusIcon" :to="{ name: 'yeni-izin-talebi' }">
         Yeni talep
       </v-btn>
     </PageHeader>

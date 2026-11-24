@@ -1,4 +1,4 @@
-import { mdiCog } from '@mdi/js'
+import { SettingsIcon } from '@lucide/vue'
 import type { RouteRecordRaw } from 'vue-router'
 
 import { Yetkiler } from '@/common/auth/yetkiler'
@@ -11,7 +11,7 @@ export const ayarlarRoutes: RouteRecordRaw[] = [
     meta: {
       baslik: 'İş Takvimi Ayarları',
       yetki: [Yetkiler.TanimYonet],
-      menu: { baslik: 'Ayarlar', ikon: mdiCog, grup: 'Yönetim' },
+      menu: { baslik: 'Ayarlar', ikon: SettingsIcon, grup: 'Yönetim' },
     },
   },
 ]

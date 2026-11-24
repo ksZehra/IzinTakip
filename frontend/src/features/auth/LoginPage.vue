@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { mdiCheckCircleOutline, mdiEmailOutline, mdiEye, mdiEyeOff, mdiLockOutline } from '@mdi/js'
+import { CircleCheckIcon, MailIcon, EyeIcon, EyeOffIcon, LockIcon } from '@lucide/vue'
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import TemaMenu from '@/common/components/TemaMenu.vue'
 import HakkindaDialog from '@/common/components/HakkindaDialog.vue'
 import ImzaLogo from '@/common/components/ImzaLogo.vue'
 import UrunLogo from '@/common/components/UrunLogo.vue'
@@ -46,10 +47,18 @@ async function girisYap() {
           <g stroke="#fff" stroke-opacity="0.08" stroke-width="1">
             <path d="M40 0v200M80 0v200M120 0v200M160 0v200M200 0v200M240 0v200" />
           </g>
-          <rect x="30" y="30" width="110" height="22" rx="11" fill="#4c8bd0" fill-opacity="0.32" />
-          <rect x="110" y="68" width="90" height="22" rx="11" fill="#5ccbc5" fill-opacity="0.3" />
-          <rect x="60" y="106" width="70" height="22" rx="11" fill="#e57c9f" fill-opacity="0.3" />
-          <rect x="150" y="144" width="110" height="22" rx="11" fill="#f9c8d6" fill-opacity="0.2" />
+          <rect x="30" y="30" width="110" height="22" rx="11" class="login-cubuk" />
+          <rect x="110" y="68" width="90" height="22" rx="11" class="login-cubuk" />
+          <rect x="60" y="106" width="70" height="22" rx="11" class="login-cubuk" />
+          <rect
+            x="150"
+            y="144"
+            width="110"
+            height="22"
+            rx="11"
+            fill="#e0f2fe"
+            fill-opacity="0.18"
+          />
         </svg>
 
         <div class="login-marka-ust d-flex align-center ga-3 text-title-large font-weight-semibold">
@@ -67,7 +76,7 @@ async function girisYap() {
               :key="ozellik"
               class="d-flex align-center ga-3 text-body-large"
             >
-              <v-icon :icon="mdiCheckCircleOutline" size="22" />
+              <v-icon :icon="CircleCheckIcon" size="22" />
               {{ ozellik }}
             </li>
           </ul>
@@ -75,6 +84,7 @@ async function girisYap() {
       </section>
 
       <section class="login-form">
+        <div class="login-tema"><TemaMenu /></div>
         <div class="login-form-govde">
           <div class="w-100" style="max-width: 380px">
             <div
@@ -97,7 +107,7 @@ async function girisYap() {
                 label="E-posta"
                 type="email"
                 autocomplete="username"
-                :prepend-inner-icon="mdiEmailOutline"
+                :prepend-inner-icon="MailIcon"
                 :error-messages="alanHatasi('eposta')"
               />
               <v-text-field
@@ -105,12 +115,12 @@ async function girisYap() {
                 label="Parola"
                 :type="parolaGorunur ? 'text' : 'password'"
                 autocomplete="current-password"
-                :prepend-inner-icon="mdiLockOutline"
+                :prepend-inner-icon="LockIcon"
                 :error-messages="alanHatasi('parola')"
               >
                 <template #append-inner>
                   <v-btn
-                    :icon="parolaGorunur ? mdiEyeOff : mdiEye"
+                    :icon="parolaGorunur ? EyeOffIcon : EyeIcon"
                     :aria-label="parolaGorunur ? 'Parolayı gizle' : 'Parolayı göster'"
                     :aria-pressed="parolaGorunur"
                     variant="text"
@@ -178,9 +188,21 @@ async function girisYap() {
   position: relative;
   overflow: hidden;
   color: #fff;
-  background:
-    radial-gradient(circle at 100% 100%, rgb(42 167 161 / 0.5), transparent 55%),
-    linear-gradient(160deg, #0f2a4f 0%, #1f5fa8 100%);
+  background: rgb(var(--v-theme-deep));
+}
+
+.login-marka {
+  --login-cubuk: rgb(255 255 255 / 0.14);
+  --login-yazi: #f1f6fb;
+}
+
+:global(.v-theme--dark) .login-marka {
+  --login-cubuk: rgb(143 176 208 / 0.14);
+  --login-yazi: #c5d6e6;
+}
+
+.login-cubuk {
+  fill: var(--login-cubuk);
 }
 
 .login-desen {
@@ -214,7 +236,13 @@ async function girisYap() {
 }
 
 .login-ozellikler {
-  color: #b5d4f4;
+  color: var(--login-yazi);
+}
+
+.login-tema {
+  position: absolute;
+  top: 16px;
+  right: 16px;
 }
 
 .login-form {

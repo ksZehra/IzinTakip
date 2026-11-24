@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiDelete, mdiPencil, mdiPlus } from '@mdi/js'
+import { Trash2Icon, PencilIcon, PlusIcon } from '@lucide/vue'
 import { onMounted, ref, shallowRef } from 'vue'
 
 import {
@@ -79,7 +79,7 @@ onMounted(async () => {
       baslik="Roller"
       aciklama="Korumalı rolleri yalnız SuperAdmin atar; İK korumalı rolü olan kullanıcıya dokunamaz."
     >
-      <v-btn color="primary" :prepend-icon="mdiPlus" @click="yeni">Yeni rol</v-btn>
+      <v-btn color="primary" :prepend-icon="PlusIcon" @click="yeni">Yeni rol</v-btn>
     </PageHeader>
 
     <v-card>
@@ -91,7 +91,7 @@ onMounted(async () => {
         <template #[`item.islemler`]="{ item }">
           <v-btn
             v-if="item.ad !== 'SuperAdmin'"
-            :icon="mdiPencil"
+            :icon="PencilIcon"
             variant="text"
             size="small"
             :aria-label="`${rolEtiketi(item.ad)} düzenle`"
@@ -99,7 +99,7 @@ onMounted(async () => {
           />
           <v-btn
             v-if="!item.sistemRolu"
-            :icon="mdiDelete"
+            :icon="Trash2Icon"
             variant="text"
             size="small"
             color="error"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiBellOutline, mdiCheckAll } from '@mdi/js'
+import { BellIcon, CheckCheckIcon } from '@lucide/vue'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -46,7 +46,7 @@ async function tumunuOku() {
     <PageHeader baslik="Bildirimler">
       <v-btn
         variant="tonal"
-        :prepend-icon="mdiCheckAll"
+        :prepend-icon="CheckCheckIcon"
         :disabled="bildirimSayisi.okunmamisSayisi === 0"
         @click="tumunuOku"
       >
@@ -80,7 +80,7 @@ async function tumunuOku() {
       </v-list>
       <v-empty-state
         v-else-if="!yukleniyor"
-        :icon="mdiBellOutline"
+        :icon="BellIcon"
         title="Bildirim yok"
         text="Yeni bir gelişme olduğunda burada görünür."
       />

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiDelete, mdiDownload, mdiFileDocumentOutline, mdiUpload } from '@mdi/js'
+import { Trash2Icon, DownloadIcon, FileTextIcon, UploadIcon } from '@lucide/vue'
 import { onMounted, ref, shallowRef } from 'vue'
 
 import {
@@ -74,13 +74,13 @@ onMounted(yukle)
         <v-list-item
           v-for="belge in belgeler"
           :key="belge.id"
-          :prepend-icon="mdiFileDocumentOutline"
+          :prepend-icon="FileTextIcon"
           :title="belge.dosyaAdi"
           :subtitle="boyutMetni(belge.boyut)"
         >
           <template #append>
             <v-btn
-              :icon="mdiDownload"
+              :icon="DownloadIcon"
               variant="text"
               size="small"
               :aria-label="`${belge.dosyaAdi} dosyasını indir`"
@@ -88,7 +88,7 @@ onMounted(yukle)
             />
             <v-btn
               v-if="degistirilebilir"
-              :icon="mdiDelete"
+              :icon="Trash2Icon"
               variant="text"
               size="small"
               color="error"
@@ -111,7 +111,7 @@ onMounted(yukle)
         />
         <v-btn
           type="submit"
-          :prepend-icon="mdiUpload"
+          :prepend-icon="UploadIcon"
           :disabled="!secilenDosya"
           :loading="gonderiliyor"
           class="align-self-start mt-1"

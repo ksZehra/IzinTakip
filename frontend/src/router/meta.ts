@@ -1,10 +1,12 @@
 import 'vue-router'
 
+import type { Ikon } from '@/common/utils/ikon'
+
 import type { Yetki } from '@/common/auth/yetkiler'
 
 export interface MenuMeta {
   baslik: string
-  ikon: string
+  ikon: Ikon
   grup?: 'Yönetim'
 }
 

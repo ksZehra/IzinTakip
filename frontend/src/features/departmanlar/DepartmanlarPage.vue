@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiPencil, mdiPlus } from '@mdi/js'
+import { PencilIcon, PlusIcon } from '@lucide/vue'
 import { onMounted, shallowRef } from 'vue'
 
 import {
@@ -65,7 +65,7 @@ onMounted(yukle)
 <template>
   <v-container>
     <PageHeader baslik="Departmanlar">
-      <v-btn color="primary" :prepend-icon="mdiPlus" @click="yeni">Yeni departman</v-btn>
+      <v-btn color="primary" :prepend-icon="PlusIcon" @click="yeni">Yeni departman</v-btn>
     </PageHeader>
 
     <v-card>
@@ -87,7 +87,7 @@ onMounted(yukle)
         </template>
         <template #[`item.islemler`]="{ item }">
           <v-btn
-            :icon="mdiPencil"
+            :icon="PencilIcon"
             variant="text"
             size="small"
             :aria-label="`${item.ad} düzenle`"

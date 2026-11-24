@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { mdiArrowLeft } from '@mdi/js'
+import { ArrowLeftIcon } from '@lucide/vue'
 import { computed, ref, shallowRef, watch } from 'vue'
 
 import {
@@ -127,7 +127,7 @@ watch(() => props.id, yukle, { immediate: true })
 <template>
   <v-container style="max-width: 960px">
     <PageHeader baslik="İzin Talebi" :aciklama="talep ? `#${talep.id}` : undefined">
-      <v-btn variant="text" :prepend-icon="mdiArrowLeft" :to="{ name: 'izin-talepleri' }">
+      <v-btn variant="text" :prepend-icon="ArrowLeftIcon" :to="{ name: 'izin-talepleri' }">
         Talepler
       </v-btn>
     </PageHeader>
