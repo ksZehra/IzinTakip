@@ -29,6 +29,12 @@ Vue 3, TypeScript ve Vuetify ile yazılmış arayüz. Tarayıcı yalnız `IzinTa
 | `src/stores/`   | Pinia store'ları: oturum, ayarlar, bildirimler                               |
 | `e2e/`          | Playwright senaryoları                                                       |
 
+## Sürüm
+
+Sürüm numarası `package.json` içindeki `version` alanından okunur ve derleme sırasında koda gömülür.
+Menü altındaki imzaya (giriş sayfasında alttaki imzaya) tıklanınca açılan pencerede `Sürüm X.Y.Z · 2026` biçiminde görünür; yıl sabit olarak 2026 yazılır.
+Sürümü yükseltmek için yalnız `package.json` içindeki `version` değerini değiştirin; başka yerde güncelleme gerekmez.
+
 ## Kurallar
 
 - Doğrulama backend'de yapılır; 400 yanıtındaki alan hataları ilgili alanın altına yazılır.

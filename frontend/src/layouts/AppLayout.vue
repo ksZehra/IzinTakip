@@ -3,14 +3,15 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify'
 
+import HakkindaDialog from '@/common/components/HakkindaDialog.vue'
 import ImzaLogo from '@/common/components/ImzaLogo.vue'
 import UrunLogo from '@/common/components/UrunLogo.vue'
+import { TELIF_YILI } from '@/common/utils/uygulamaBilgisi'
 import { menuOgeleri } from '@/router/menu'
 import { routes } from '@/router/routes'
 import { useAuthStore } from '@/stores/authStore'
 import { useBildirimStore } from '@/stores/bildirimStore'
 
-import HakkindaDialog from './HakkindaDialog.vue'
 import NotificationBell from './NotificationBell.vue'
 import UserMenu from './UserMenu.vue'
 
@@ -85,10 +86,10 @@ onUnmounted(() => bildirimler.izlemeyiDurdur())
 
     <template #append>
       <button type="button" class="menu-imza" aria-haspopup="dialog" @click="hakkindaAcik = true">
-        <ImzaLogo :boyut="28" />
+        <ImzaLogo :boyut="22" />
         <span class="text-body-small text-medium-emphasis">
-          <span class="d-block text-high-emphasis font-weight-semibold">Zehra Nur Köse</span>
-          © 2026
+          © {{ TELIF_YILI }}
+          <span class="text-high-emphasis font-weight-medium">Zehra Nur Köse</span>
         </span>
       </button>
     </template>
@@ -105,15 +106,22 @@ onUnmounted(() => bildirimler.izlemeyiDurdur())
 .menu-imza {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  padding: 12px 16px;
+  padding: 14px 16px;
+  border: 0;
   border-top: thin solid rgba(var(--v-border-color), var(--v-border-opacity));
+  background: transparent;
   text-align: left;
   cursor: pointer;
+  transition: background-color 0.15s;
 }
 
-.menu-imza:hover {
-  background: rgba(var(--v-theme-on-surface), 0.04);
+.menu-imza:hover,
+.menu-imza:focus-visible {
+  background: rgba(
+    var(--v-theme-on-surface),
+    calc(var(--v-hover-opacity) * var(--v-high-emphasis-opacity))
+  );
 }
 </style>

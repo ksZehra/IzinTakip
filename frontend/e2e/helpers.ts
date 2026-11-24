@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import process from 'node:process'
 
 import AxeBuilder from '@axe-core/playwright'
@@ -29,11 +30,20 @@ export async function girisFormunuDoldur(page: Page, eposta: string, parola = de
   await page.getByRole('button', { name: 'Giriş yap' }).click()
 }
 
-export async function erisilebilirlikDenetle(page: Page) {
-  await page.evaluate(
-    'Promise.all(document.getAnimations().filter((a) => a.effect.getComputedTiming().iterations !== Infinity).map((a) => a.finished.catch(() => null)))',
+export async function erisilebilirlikDenetle(page: Page, kapsam?: string) {
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((animasyon) => animasyon.effect?.getComputedTiming().iterations !== Infinity)
+        .map((animasyon) => animasyon.finished.catch(() => null)),
+    ),
   )
-  const sonuc = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
+  const denetim = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa'])
+  if (kapsam) {
+    denetim.include(kapsam)
+  }
+  const sonuc = await denetim.analyze()
   expect(
     sonuc.violations.map(
       (ihlal) => `${ihlal.id}: ${ihlal.nodes.map((n) => n.target.join(' ')).join(', ')}`,
@@ -44,4 +54,14 @@ export async function erisilebilirlikDenetle(page: Page) {
 export async function secimYap(page: Page, alanEtiketi: string, secenek: string) {
   await page.locator('.v-select, .v-autocomplete').filter({ hasText: alanEtiketi }).first().click()
   await page.getByRole('option', { name: secenek, exact: true }).click()
+}
+
+export async function hakkindaPenceresiniDogrula(page: Page) {
+  await page.getByRole('button', { name: /Zehra Nur Köse/ }).click()
+
+  const pencere = page.getByRole('dialog')
+  await expect(pencere.getByRole('heading', { name: 'Personel İzin Takip Sistemi' })).toBeVisible()
+  await expect(pencere.getByText(/^Sürüm \d+\.\d+\.\d+ · 2026$/)).toBeVisible()
+  await expect(pencere.getByRole('link', { name: 'github.com/ksZehra' })).toBeVisible()
+  await erisilebilirlikDenetle(page, '[role=dialog]')
 }

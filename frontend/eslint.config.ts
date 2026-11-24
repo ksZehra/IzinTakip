@@ -52,7 +52,13 @@ export default defineConfigWithVueTs(
 
   {
     files: ['e2e/**/*.ts'],
-    rules: { 'playwright/no-skipped-test': ['error', { allowConditional: true }] },
+    rules: {
+      'playwright/no-skipped-test': ['error', { allowConditional: true }],
+      'playwright/expect-expect': [
+        'warn',
+        { assertFunctionNames: ['expect', 'hakkindaPenceresiniDogrula'] },
+      ],
+    },
   },
 
   skipFormatting,

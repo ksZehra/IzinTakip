@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test'
 
-import { erisilebilirlikDenetle, girisYap, kullanicilar } from './helpers'
+import {
+  erisilebilirlikDenetle,
+  girisYap,
+  hakkindaPenceresiniDogrula,
+  kullanicilar,
+} from './helpers'
 
 test('çalışan yönetim menüsünü görmez', async ({ page, isMobile }) => {
   test.skip(isMobile, 'Mobilde menü kapalı başlar; ayrı testte denenir.')
@@ -42,4 +47,10 @@ test('çıkış yapınca giriş sayfasına döner ve korumalı sayfa açılmaz',
   await expect(page).toHaveURL(/\/login$/)
   await page.goto('/bildirimler')
   await expect(page).toHaveURL(/\/login\?donus=/)
+})
+
+test('menü altındaki imza hakkında penceresini açar', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Mobilde menü kapalı başlar; ayrı testte denenir.')
+  await girisYap(page, kullanicilar.calisan)
+  await hakkindaPenceresiniDogrula(page)
 })

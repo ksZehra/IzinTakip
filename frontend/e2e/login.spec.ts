@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test'
 
-import { erisilebilirlikDenetle, girisFormunuDoldur, kullanicilar } from './helpers'
+import {
+  erisilebilirlikDenetle,
+  girisFormunuDoldur,
+  hakkindaPenceresiniDogrula,
+  kullanicilar,
+} from './helpers'
 
 test('hatalı parolada formda uyarı gösterir', async ({ page }) => {
   await page.goto('/login')
@@ -15,6 +20,11 @@ test('giriş sayfası erişilebilirlik denetiminden geçer', async ({ page }) =>
   await expect(page.getByRole('heading', { name: 'Hoş geldiniz' })).toBeVisible()
 
   await erisilebilirlikDenetle(page)
+})
+
+test('giriş sayfasındaki imza hakkında penceresini açar', async ({ page }) => {
+  await page.goto('/login')
+  await hakkindaPenceresiniDogrula(page)
 })
 
 test('oturumsuz istenen sayfaya girişten sonra döner', async ({ page }) => {

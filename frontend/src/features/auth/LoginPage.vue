@@ -3,9 +3,11 @@ import { mdiCheckCircleOutline, mdiEmailOutline, mdiEye, mdiEyeOff, mdiLockOutli
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import HakkindaDialog from '@/common/components/HakkindaDialog.vue'
 import ImzaLogo from '@/common/components/ImzaLogo.vue'
 import UrunLogo from '@/common/components/UrunLogo.vue'
 import { useFormSubmit } from '@/common/composables/useFormSubmit'
+import { TELIF_YILI } from '@/common/utils/uygulamaBilgisi'
 import { guvenliDonusAdresi } from '@/router/guards'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -17,6 +19,7 @@ const { gonder, gonderiliyor, hataMesaji, alanHatasi } = useFormSubmit()
 const eposta = ref('')
 const parola = ref('')
 const parolaGorunur = ref(false)
+const hakkindaAcik = ref(false)
 
 const ozellikler = [
   'Talep açın, onaya gönderin',
@@ -135,15 +138,23 @@ async function girisYap() {
           </div>
         </div>
 
-        <footer class="login-imza">
+        <button
+          type="button"
+          class="login-imza"
+          aria-haspopup="dialog"
+          @click="hakkindaAcik = true"
+        >
           <ImzaLogo :boyut="32" />
-          <p class="text-body-small text-medium-emphasis">
-            © 2026 <span class="text-high-emphasis font-weight-semibold">Zehra Nur Köse</span>. Tüm
-            hakları saklıdır.
-          </p>
-        </footer>
+          <span class="text-body-small text-medium-emphasis">
+            © {{ TELIF_YILI }}
+            <span class="text-high-emphasis font-weight-semibold">Zehra Nur Köse</span>. Tüm hakları
+            saklıdır.
+          </span>
+        </button>
       </section>
     </div>
+
+    <HakkindaDialog v-model="hakkindaAcik" />
   </v-main>
 </template>
 
@@ -162,6 +173,7 @@ async function girisYap() {
 
 .login-marka {
   flex-direction: column;
+  justify-content: center;
   padding: 40px 48px;
   position: relative;
   overflow: hidden;
@@ -179,17 +191,14 @@ async function girisYap() {
   height: auto;
 }
 
-.login-marka-ust,
 .login-marka-orta {
   position: relative;
 }
 
 .login-marka-ust {
-  margin-bottom: 24vh;
-}
-
-.login-marka-orta {
-  margin-bottom: auto;
+  position: absolute;
+  top: 40px;
+  left: 48px;
 }
 
 .login-baslik {
@@ -209,6 +218,7 @@ async function girisYap() {
 }
 
 .login-form {
+  position: relative;
   display: flex;
   flex-direction: column;
 }
@@ -228,6 +238,24 @@ async function girisYap() {
   justify-content: center;
   gap: 8px;
   padding: 0 24px 24px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
   text-align: center;
+  cursor: pointer;
+}
+
+.login-imza:hover {
+  opacity: 0.75;
+}
+
+@media (min-width: 960px) {
+  .login-imza {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
 }
 </style>

@@ -56,6 +56,7 @@ Geliştiren: [Zehra Nur Köse](https://github.com/ksZehra)
 - Türkçe; telefon, tablet ve masaüstüne uyumlu.
 - Erişilebilir: klavyeyle ve ekran okuyucuyla kullanılır, sayfalar WCAG 2 AA için otomatik denetlenir.
 - Sayfalar ihtiyaç anında yüklenir; filtreler adres satırında tutulur, paylaşılan bağlantı aynı listeyi açar.
+- Menü altındaki imza, geliştirici ve sürüm bilgisini gösteren pencereyi açar; sürüm `frontend/package.json`'dan derlemeye gömülür.
 
 ## Roller
 
