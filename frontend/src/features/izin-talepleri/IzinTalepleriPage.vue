@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { FileSpreadsheetIcon, PlusIcon } from '@lucide/vue'
-import { onMounted, shallowRef } from 'vue'
+import { computed, onMounted, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
 
 import {
@@ -11,13 +11,14 @@ import {
 } from '@/api/izinTalepleriApi'
 import { izinTurleriniGetir, type IzinTuru } from '@/api/izinTurleriApi'
 import { Yetkiler } from '@/common/auth/yetkiler'
+import DataGrid from '@/common/components/DataGrid.vue'
+import type { GridKolon } from '@/common/components/dataGridTipleri'
 import DurumChip from '@/common/components/DurumChip.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
 import { usePagedList } from '@/common/composables/usePagedList'
 import { durumEtiketleri, secenekler } from '@/common/utils/etiketler'
-import { useAuthStore } from '@/stores/authStore'
-
 import { talepAraligiMetni } from '@/common/utils/talepAraligi'
+import { useAuthStore } from '@/stores/authStore'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -25,33 +26,67 @@ const ekibiGorur = auth.yetkiVar(Yetkiler.IzinTalebiYonet)
 const excelAlabilir = auth.yetkiVar(Yetkiler.RaporGor)
 
 const varsayilanFiltre: TalepFilter = {
-  calisanId: null,
-  durum: null,
-  izinTuruId: null,
-  baslangic: null,
-  bitis: null,
+  calisanArama: '',
+  durum: [],
+  izinTuruId: [],
+  baslangic: '',
+  bitis: '',
+  sort: '',
 }
-const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor } = usePagedList(
-  talepleriGetir,
-  varsayilanFiltre,
-)
+const {
+  filtre,
+  sayfa,
+  sayfaBoyutu,
+  satirlar,
+  toplam,
+  yukleniyor,
+  varsayilandanFarkli,
+  filtreyiAyarla,
+  filtreyiSifirla,
+} = usePagedList(talepleriGetir, varsayilanFiltre, { sayiListeleri: ['izinTuruId'] })
 const izinTurleri = shallowRef<IzinTuru[]>([])
-const durumlar = secenekler(durumEtiketleri)
 
-const basliklar = [
-  ...(ekibiGorur ? [{ title: 'Çalışan', key: 'calisanAdSoyad' }] : []),
-  { title: 'İzin Türü', key: 'izinTuruAdi' },
-  { title: 'Tarih', key: 'aralik' },
-  { title: 'Süre', key: 'sureMetni' },
-  { title: 'Durum', key: 'durum' },
-]
+const calisanKolonu: GridKolon<IzinTalebiSatiri> = {
+  key: 'calisanAdSoyad',
+  title: 'Çalışan',
+  sirala: true,
+  filtre: { tur: 'metin', anahtar: 'calisanArama' },
+}
+
+const kolonlar = computed<GridKolon<IzinTalebiSatiri>[]>(() => [
+  ...(ekibiGorur ? [calisanKolonu] : []),
+  {
+    key: 'izinTuruAdi',
+    title: 'İzin Türü',
+    sirala: true,
+    filtre: {
+      tur: 'cokluSecim',
+      anahtar: 'izinTuruId',
+      secenekler: izinTurleri.value.map((t) => ({ title: t.ad, value: t.id })),
+    },
+  },
+  {
+    key: 'baslangic',
+    title: 'Tarih',
+    deger: talepAraligiMetni,
+    sirala: true,
+    filtre: { tur: 'tarih', baslangicAnahtari: 'baslangic', bitisAnahtari: 'bitis' },
+  },
+  { key: 'dakika', title: 'Süre', deger: (t) => t.sureMetni, sirala: true },
+  {
+    key: 'durum',
+    title: 'Durum',
+    sirala: true,
+    filtre: { tur: 'cokluSecim', anahtar: 'durum', secenekler: secenekler(durumEtiketleri) },
+  },
+])
 
 onMounted(async () => {
   izinTurleri.value = await izinTurleriniGetir()
 })
 
-function detayaGit(_olay: unknown, { item }: { item: IzinTalebiSatiri }) {
-  void router.push({ name: 'izin-talebi', params: { id: item.id } })
+function detayaGit(satir: IzinTalebiSatiri) {
+  void router.push({ name: 'izin-talebi', params: { id: satir.id } })
 }
 </script>
 
@@ -71,68 +106,34 @@ function detayaGit(_olay: unknown, { item }: { item: IzinTalebiSatiri }) {
       </v-btn>
     </PageHeader>
 
-    <v-row density="compact" class="mb-2">
-      <v-col cols="12" sm="6" md="3">
-        <v-select v-model="filtre.durum" :items="durumlar" label="Durum" clearable hide-details />
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <v-select
-          v-model="filtre.izinTuruId"
-          :items="izinTurleri"
-          item-title="ad"
-          item-value="id"
-          label="İzin Türü"
-          clearable
-          hide-details
-        />
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <v-text-field
-          v-model="filtre.baslangic"
-          label="Başlangıç (En Erken)"
-          type="date"
-          clearable
-          hide-details
-        />
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <v-text-field
-          v-model="filtre.bitis"
-          label="Bitiş (En Geç)"
-          type="date"
-          clearable
-          hide-details
-        />
-      </v-col>
-    </v-row>
-
-    <v-card>
-      <v-data-table-server
-        v-model:page="sayfa"
-        v-model:items-per-page="sayfaBoyutu"
-        :headers="basliklar"
-        :items="satirlar"
-        :items-length="toplam"
-        :loading="yukleniyor"
-        :items-per-page-options="[10, 20, 50, 100]"
-        :row-props="{ class: 'cursor-pointer' }"
-        hover
-        no-data-text="Kayıtlı talep yok."
-        @click:row="detayaGit"
-      >
-        <template #[`item.aralik`]="{ item }">
-          <router-link
-            :to="{ name: 'izin-talebi', params: { id: item.id } }"
-            class="text-high-emphasis"
-            @click.stop
-          >
-            {{ talepAraligiMetni(item) }}
-          </router-link>
-        </template>
-        <template #[`item.durum`]="{ item }">
-          <DurumChip :durum="item.durum" />
-        </template>
-      </v-data-table-server>
-    </v-card>
+    <DataGrid
+      v-model:sayfa="sayfa"
+      v-model:sayfa-boyutu="sayfaBoyutu"
+      v-model:sirala="filtre.sort"
+      :kolonlar="kolonlar"
+      :satirlar="satirlar"
+      :toplam="toplam"
+      :yukleniyor="yukleniyor"
+      :filtre="filtre"
+      :sifirlanabilir="varsayilandanFarkli"
+      bos-metin="Kayıtlı talep yok."
+      satir-tiklanir
+      @filtre-degisti="filtreyiAyarla"
+      @sifirla="filtreyiSifirla"
+      @satir-tikla="detayaGit"
+    >
+      <template #[`item.baslangic`]="{ item }">
+        <router-link
+          :to="{ name: 'izin-talebi', params: { id: item.id } }"
+          class="text-high-emphasis"
+          @click.stop
+        >
+          {{ talepAraligiMetni(item) }}
+        </router-link>
+      </template>
+      <template #[`item.durum`]="{ item }">
+        <DurumChip :durum="item.durum" />
+      </template>
+    </DataGrid>
   </v-container>
 </template>

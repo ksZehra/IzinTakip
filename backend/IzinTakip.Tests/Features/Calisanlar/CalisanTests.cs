@@ -293,6 +293,96 @@ public sealed class CalisanTests(DatabaseApiFactory factory) : IClassFixture<Dat
         Assert.Equal(HttpStatusCode.Forbidden, sil.StatusCode);
     }
 
+    [Fact]
+    public async Task Listele_AdSoyadAramasi_TamAdlaBulur()
+    {
+        var admin = await SuperAdminAsync();
+        var departmanId = await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}");
+        await TestData.CalisanEkleAsync(admin, "Aranan Ali", departmanId);
+        await TestData.CalisanEkleAsync(admin, "Başka Veli", departmanId);
+
+        var liste = await ListeAsync(admin, $"departmanId={departmanId}&arama=Ali Test");
+
+        Assert.Equal(["Aranan Ali"], Adlar(liste));
+    }
+
+    [Fact]
+    public async Task Listele_CokluDepartman_YalnizSecilenleriGetirir()
+    {
+        var admin = await SuperAdminAsync();
+        var ilk = await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}");
+        var ikinci = await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}");
+        var ucuncu = await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}");
+        await TestData.CalisanEkleAsync(admin, "Birinci", ilk);
+        await TestData.CalisanEkleAsync(admin, "İkinci", ikinci);
+        await TestData.CalisanEkleAsync(admin, "Üçüncü", ucuncu);
+
+        var liste = await ListeAsync(admin, $"departmanId={ilk}&departmanId={ucuncu}");
+
+        Assert.Equal(["Birinci", "Üçüncü"], Adlar(liste));
+        Assert.Equal(2, liste.GetProperty("totalCount").GetInt32());
+    }
+
+    [Fact]
+    public async Task Listele_IseGirisAraligi_BaslangicVeBitisiKapsar()
+    {
+        var admin = await SuperAdminAsync();
+        var departmanId = await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}");
+        await TestData.CalisanEkleAsync(admin, "Eski", departmanId, new DateOnly(2018, 3, 5));
+        await TestData.CalisanEkleAsync(admin, "Orta", departmanId, new DateOnly(2020, 6, 1));
+        await TestData.CalisanEkleAsync(admin, "Yeni", departmanId, new DateOnly(2022, 9, 1));
+
+        var arasi = await ListeAsync(admin, $"departmanId={departmanId}&iseGirisBaslangic=2019-01-01&iseGirisBitis=2021-12-31");
+        var sonrasi = await ListeAsync(admin, $"departmanId={departmanId}&iseGirisBaslangic=2020-06-01");
+        var oncesi = await ListeAsync(admin, $"departmanId={departmanId}&iseGirisBitis=2020-06-01");
+
+        Assert.Equal(["Orta"], Adlar(arasi));
+        Assert.Equal(["Orta", "Yeni"], Adlar(sonrasi));
+        Assert.Equal(["Eski", "Orta"], Adlar(oncesi));
+    }
+
+    [Fact]
+    public async Task Listele_Sirala_SecilenAlanaGoreArtanVeAzalanDoner()
+    {
+        var admin = await SuperAdminAsync();
+        var departmanId = await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}");
+        await TestData.CalisanEkleAsync(admin, "Ahmet", departmanId, new DateOnly(2022, 1, 3));
+        await TestData.CalisanEkleAsync(admin, "Zeynep", departmanId, new DateOnly(2019, 1, 7));
+        await TestData.CalisanEkleAsync(admin, "Mert", departmanId, new DateOnly(2021, 1, 4));
+
+        var adaGore = await ListeAsync(admin, $"departmanId={departmanId}&sort=adSoyad:desc");
+        var tarihe = await ListeAsync(admin, $"departmanId={departmanId}&sort=iseGirisTarihi:asc");
+        var varsayilan = await ListeAsync(admin, $"departmanId={departmanId}");
+
+        Assert.Equal(["Zeynep", "Mert", "Ahmet"], Adlar(adaGore));
+        Assert.Equal(["Zeynep", "Mert", "Ahmet"], Adlar(tarihe));
+        Assert.Equal(["Ahmet", "Mert", "Zeynep"], Adlar(varsayilan));
+    }
+
+    [Theory]
+    [InlineData("sort=sifre:asc", "sort")]
+    [InlineData("sort=adSoyad", "sort")]
+    [InlineData("sort=adSoyad:yukari", "sort")]
+    [InlineData("iseGirisBaslangic=2022-01-01&iseGirisBitis=2021-01-01", "iseGirisBitis")]
+    public async Task Listele_GecersizSiralamaVeAralik_400Doner(string sorgu, string alan)
+    {
+        var admin = await SuperAdminAsync();
+
+        var yanit = await admin.GetAsync($"/api/calisanlar?{sorgu}", TestContext.Current.CancellationToken);
+        var govde = await yanit.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, yanit.StatusCode);
+        Assert.True(govde.GetProperty("errors").TryGetProperty(alan, out _));
+    }
+
+    private static async Task<JsonElement> ListeAsync(HttpClient istemci, string sorgu) =>
+        await istemci.GetFromJsonAsync<JsonElement>($"/api/calisanlar?{sorgu}", TestContext.Current.CancellationToken);
+
+    private static string[] Adlar(JsonElement liste) =>
+        liste.GetProperty("items").EnumerateArray()
+            .Select(c => c.GetProperty("ad").GetString()!)
+            .ToArray();
+
     private static async Task<int> HakEkleAsync(HttpClient istemci, int calisanId, int dakika, string aciklama)
     {
         var yanit = await istemci.PostAsJsonAsync($"/api/calisanlar/{calisanId}/haklar", new { dakika, aciklama }, TestContext.Current.CancellationToken);

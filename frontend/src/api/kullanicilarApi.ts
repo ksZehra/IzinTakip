@@ -1,5 +1,5 @@
 import { httpClient } from '@/common/http/httpClient'
-import type { ListQuery, Page } from '@/common/composables/usePagedList'
+import type { FilterValue, ListQuery, Page } from '@/common/composables/usePagedList'
 
 import type { Schema } from './types'
 
@@ -10,16 +10,21 @@ export type RolKaydetRequest = Schema<'RolKaydetRequest'>
 export type YetkiTanimi = Schema<'YetkiTanimi'>
 export type IslemKaydi = Schema<'IslemKaydiResponse'>
 
-export interface KullaniciFilter extends Record<string, string | boolean | null> {
+export interface KullaniciFilter extends Record<string, FilterValue> {
   arama: string
   aktif: boolean | null
+  rol: string[]
+  sort: string
 }
 
-export interface IslemKaydiFilter extends Record<string, string | boolean | null> {
-  tablo: string | null
-  baslangic: string | null
-  bitis: string | null
-  sadeceKendiKaydi: boolean
+export interface IslemKaydiFilter extends Record<string, FilterValue> {
+  ilgiliArama: string
+  tablo: string[]
+  islem: string[]
+  baslangic: string
+  bitis: string
+  sadeceKendiKaydi: boolean | null
+  sort: string
 }
 
 export async function kullanicilariGetir(

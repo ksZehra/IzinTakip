@@ -142,6 +142,13 @@ namespace IzinTakip.Infrastructure.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("AdSoyad")
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(201)
+                        .HasColumnType("nvarchar(201)")
+                        .HasComputedColumnSql("[Ad] + N' ' + [Soyad]", true);
+
                     b.Property<bool>("Aktif")
                         .HasColumnType("bit");
 
@@ -175,6 +182,8 @@ namespace IzinTakip.Infrastructure.Data.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AdSoyad");
 
                     b.HasIndex("DepartmanId");
 

@@ -3,6 +3,19 @@ using IzinTakip.Api.Common.Validation;
 
 namespace IzinTakip.Api.Features.Calisanlar;
 
+public sealed class CalisanListeRequestValidator : AbstractValidator<CalisanListeRequest>
+{
+    public CalisanListeRequestValidator()
+    {
+        RuleFor(r => r.Arama).MaximumLength(200).WithMessage("Arama metni en çok 200 karakter olabilir.");
+        RuleFor(r => r.Sort).GecerliSiralama(CalisanService.SiralamaAlanlari.Keys);
+        RuleFor(r => r.IseGirisBaslangic).GecerliTarih();
+        RuleFor(r => r.IseGirisBitis).GecerliTarih();
+        RuleFor(r => r.IseGirisBitis).BaslangictanOnceDegil(r => r.IseGirisBaslangic);
+        RuleFor(r => r.DepartmanId).SinirliSecim();
+    }
+}
+
 public sealed class CalisanKaydetRequestValidator : AbstractValidator<CalisanKaydetRequest>
 {
     public CalisanKaydetRequestValidator()

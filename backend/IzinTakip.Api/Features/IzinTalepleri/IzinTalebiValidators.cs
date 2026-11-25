@@ -47,8 +47,13 @@ public sealed class IzinTalebiFiltreRequestValidator : AbstractValidator<IzinTal
 {
     public IzinTalebiFiltreRequestValidator()
     {
+        RuleFor(r => r.CalisanArama).MaximumLength(200).WithMessage("Arama metni en çok 200 karakter olabilir.");
+        RuleFor(r => r.Sort).GecerliSiralama(IzinTalebiService.SiralamaAlanlari.Keys);
         RuleFor(r => r.Baslangic).GecerliTarih();
         RuleFor(r => r.Bitis).GecerliTarih();
+        RuleFor(r => r.Bitis).BaslangictanOnceDegil(r => r.Baslangic);
+        RuleFor(r => r.Durum).SinirliSecim();
+        RuleFor(r => r.IzinTuruId).SinirliSecim();
     }
 }
 

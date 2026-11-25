@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Cryptography;
 using IzinTakip.Api.Common;
 using IzinTakip.Api.Common.Auth;
@@ -25,6 +26,20 @@ public sealed class KullaniciService(
 {
     private const int GeciciParolaGun = 3;
 
+    public static readonly IReadOnlyList<string> SiralamaAlanAdlari = ["eposta", "calisanAdSoyad", "aktif"];
+
+    // Kullanıcının çalışan navigation'ı yok; çalışan adına göre sıralama DbContext üzerinden alt sorguyla yapılır.
+    // Sözlük SiralamaAlanAdlari'ndan kurulur; validator'ın kabul ettiği her alanın karşılığı olmak zorundadır.
+    private Dictionary<string, Func<IQueryable<Kullanici>, bool, IOrderedQueryable<Kullanici>>> SiralamaAlanlari() =>
+        SiralamaAlanAdlari.ToDictionary(ad => ad, ad => ad switch
+        {
+            "eposta" => SiralamaExtensions.SiralamaAlani<Kullanici, string?>(k => k.Email),
+            "calisanAdSoyad" => SiralamaExtensions.SiralamaAlani<Kullanici, string?>(k =>
+                db.Calisanlar.Where(c => c.Id == k.CalisanId).Select(c => c.AdSoyad).FirstOrDefault()),
+            "aktif" => SiralamaExtensions.SiralamaAlani<Kullanici, bool>(k => k.Aktif),
+            _ => throw new UnreachableException($"Sıralama alanı tanımsız: {ad}")
+        });
+
     public async Task<PagedResponse<KullaniciResponse>> ListeleAsync(KullaniciListeRequest request, CancellationToken cancellationToken)
     {
         var sorgu = db.Users.AsNoTracking();
@@ -32,7 +47,7 @@ public sealed class KullaniciService(
         {
             var arama = request.Arama.Trim();
             sorgu = sorgu.Where(k => k.Email!.Contains(arama)
-                                     || db.Calisanlar.Any(c => c.Id == k.CalisanId && (c.Ad + " " + c.Soyad).Contains(arama)));
+                                     || db.Calisanlar.Any(c => c.Id == k.CalisanId && c.AdSoyad.Contains(arama)));
         }
 
         if (request.Aktif is not null)
@@ -40,7 +55,14 @@ public sealed class KullaniciService(
             sorgu = sorgu.Where(k => k.Aktif == request.Aktif);
         }
 
-        return await Yansit(sorgu.OrderBy(k => k.Email).ThenBy(k => k.Id)).SayfalaAsync(request.Page, request.PageSize, cancellationToken);
+        if (request.Rol is { Length: > 0 } roller)
+        {
+            sorgu = sorgu.Where(k => db.UserRoles.Any(ur => ur.UserId == k.Id
+                                                            && db.Roles.Any(r => r.Id == ur.RoleId && roller.Contains(r.Name!))));
+        }
+
+        var sirali = sorgu.Sirala(request.Sort, SiralamaAlanlari(), q => q.OrderBy(k => k.Email).ThenBy(k => k.Id), k => k.Id);
+        return await Yansit(sirali).SayfalaAsync(request.Page, request.PageSize, cancellationToken);
     }
 
     public async Task<KullaniciResponse> DetayAsync(int id, CancellationToken cancellationToken) =>

@@ -11,7 +11,7 @@ namespace IzinTakip.Api.Features.IslemKayitlari;
 public sealed class IslemKayitlariController(IslemKaydiService service) : ControllerBase
 {
     [HttpGet]
-    [EndpointSummary("Yönetim işlemlerinin kaydını (kim, ne zaman, hangi kaydı nasıl değiştirdi) yeniden eskiye sayfalı listeler")]
+    [EndpointSummary("Yönetim işlemlerinin kaydını (kim, ne zaman, hangi kaydı nasıl değiştirdi) çoklu kayıt türü ve işlem, ilgili çalışan, tarih aralığıyla süzer; seçilen alana göre (varsayılan yeniden eskiye) sıralı ve sayfalı listeler")]
     public async Task<ActionResult<PagedResponse<IslemKaydiResponse>>> Listele(
         [FromQuery] IslemKaydiListeRequest request,
         CancellationToken cancellationToken) =>

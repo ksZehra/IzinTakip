@@ -2,7 +2,15 @@ using IzinTakip.Domain.Enums;
 
 namespace IzinTakip.Api.Features.Calisanlar;
 
-public sealed record CalisanListeRequest(string? Arama, int? DepartmanId, bool? Aktif, int Page = 1, int PageSize = 20);
+public sealed record CalisanListeRequest(
+    string? Arama,
+    int[]? DepartmanId,
+    bool? Aktif,
+    DateOnly? IseGirisBaslangic,
+    DateOnly? IseGirisBitis,
+    string? Sort,
+    int Page = 1,
+    int PageSize = 20);
 
 public sealed record CalisanKaydetRequest(
     string Ad,

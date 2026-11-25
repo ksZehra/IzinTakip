@@ -19,7 +19,7 @@ public sealed class RaporlarController(RaporService service) : ControllerBase
 
     [HttpGet("bakiyeler")]
     [Permission(Yetkiler.Rapor.Gor)]
-    [EndpointSummary("Kapsamdaki aktif çalışanların bakiyelerini sayfalı listeler")]
+    [EndpointSummary("Kapsamdaki aktif çalışanların bakiyelerini ad, çoklu departman ve işe giriş aralığıyla süzer; seçilen alana göre sıralı ve sayfalı listeler")]
     public async Task<ActionResult<PagedResponse<BakiyeRaporuResponse>>> Bakiyeler(
         [FromQuery] BakiyeRaporuRequest request,
         CancellationToken cancellationToken) =>
@@ -27,11 +27,11 @@ public sealed class RaporlarController(RaporService service) : ControllerBase
 
     [HttpGet("bakiyeler/excel")]
     [Permission(Yetkiler.Rapor.Gor)]
-    [EndpointSummary("Bakiye raporunu Excel dosyası olarak indirir")]
+    [EndpointSummary("Bakiye raporunu liste filtreleri ve sıralamasıyla Excel dosyası olarak indirir")]
     [ProducesResponseType<Stream>(StatusCodes.Status200OK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
-    public async Task<IActionResult> BakiyeExcel([FromQuery] int? departmanId, CancellationToken cancellationToken)
+    public async Task<IActionResult> BakiyeExcel([FromQuery] BakiyeRaporuFiltreRequest request, CancellationToken cancellationToken)
     {
-        var dosya = await service.BakiyeExcelAsync(departmanId, cancellationToken);
+        var dosya = await service.BakiyeExcelAsync(request, cancellationToken);
         return File(dosya.Icerik, dosya.IcerikTuru, dosya.DosyaAdi);
     }
 }

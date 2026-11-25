@@ -15,6 +15,10 @@ public sealed class Calisan : Entity
 
     public string Ad { get; private set; }
     public string Soyad { get; private set; }
+
+    // Veritabanında Ad ve Soyad'dan hesaplanan persisted column; arama ve sıralama index'i bunun üzerindedir.
+    public string AdSoyad { get; private set; } = null!;
+
     public int DepartmanId { get; private set; }
     public DateOnly IseGirisTarihi { get; private set; }
     public DateOnly DogumTarihi { get; private set; }

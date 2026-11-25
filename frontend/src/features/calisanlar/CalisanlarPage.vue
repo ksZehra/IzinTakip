@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PlusIcon } from '@lucide/vue'
-import { onMounted, ref, shallowRef } from 'vue'
+import { computed, onMounted, ref, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
 
 import {
@@ -10,10 +10,13 @@ import {
   type CalisanSatiri,
 } from '@/api/calisanlarApi'
 import { departmanlariGetir, type Departman } from '@/api/departmanlarApi'
+import DataGrid from '@/common/components/DataGrid.vue'
+import type { GridKolon } from '@/common/components/dataGridTipleri'
 import PageHeader from '@/common/components/PageHeader.vue'
 import { useFormSubmit } from '@/common/composables/useFormSubmit'
 import { usePagedList } from '@/common/composables/usePagedList'
 import { useToast } from '@/common/composables/useToast'
+import { aktiflikSecenekleri } from '@/common/utils/etiketler'
 import { tarihGoster } from '@/common/utils/tarih'
 
 import CalisanForm from './CalisanForm.vue'
@@ -23,29 +26,67 @@ const router = useRouter()
 const toast = useToast()
 const { gonder, gonderiliyor, alanHatasi } = useFormSubmit()
 
-const varsayilanFiltre: CalisanFilter = { arama: '', departmanId: null, aktif: true }
-const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor, yukle } = usePagedList(
-  calisanlariGetir,
-  varsayilanFiltre,
-)
+const varsayilanFiltre: CalisanFilter = {
+  arama: '',
+  departmanId: [],
+  aktif: true,
+  iseGirisBaslangic: '',
+  iseGirisBitis: '',
+  sort: '',
+}
+const {
+  filtre,
+  sayfa,
+  sayfaBoyutu,
+  satirlar,
+  toplam,
+  yukleniyor,
+  varsayilandanFarkli,
+  yukle,
+  filtreyiAyarla,
+  filtreyiSifirla,
+} = usePagedList(calisanlariGetir, varsayilanFiltre, { sayiListeleri: ['departmanId'] })
 const departmanlar = shallowRef<Departman[]>([])
 const dialogAcik = shallowRef(false)
 const form = ref(bosCalisanFormu())
 
-const basliklar = [
-  { title: 'Ad Soyad', key: 'adSoyad', value: (c: CalisanSatiri) => `${c.ad} ${c.soyad}` },
-  { title: 'Departman', key: 'departmanAdi' },
+const kolonlar = computed<GridKolon<CalisanSatiri>[]>(() => [
   {
-    title: 'İşe Giriş Tarihi',
-    key: 'iseGirisTarihi',
-    value: (c: CalisanSatiri) => tarihGoster(c.iseGirisTarihi),
+    key: 'adSoyad',
+    title: 'Ad Soyad',
+    deger: (c) => `${c.ad} ${c.soyad}`,
+    sirala: true,
+    filtre: { tur: 'metin', anahtar: 'arama' },
   },
-  { title: 'Durum', key: 'aktif', value: (c: CalisanSatiri) => (c.aktif ? 'Aktif' : 'Pasif') },
-]
-const aktiflikSecenekleri = [
-  { title: 'Aktif', value: true },
-  { title: 'Pasif', value: false },
-]
+  {
+    key: 'departmanAdi',
+    title: 'Departman',
+    sirala: true,
+    filtre: {
+      tur: 'cokluSecim',
+      anahtar: 'departmanId',
+      secenekler: departmanlar.value.map((d) => ({ title: d.ad, value: d.id })),
+    },
+  },
+  {
+    key: 'iseGirisTarihi',
+    title: 'İşe Giriş Tarihi',
+    deger: (c) => tarihGoster(c.iseGirisTarihi),
+    sirala: true,
+    filtre: {
+      tur: 'tarih',
+      baslangicAnahtari: 'iseGirisBaslangic',
+      bitisAnahtari: 'iseGirisBitis',
+    },
+  },
+  {
+    key: 'aktif',
+    title: 'Durum',
+    deger: (c) => (c.aktif ? 'Aktif' : 'Pasif'),
+    sirala: true,
+    filtre: { tur: 'tekliSecim', anahtar: 'aktif', secenekler: aktiflikSecenekleri },
+  },
+])
 
 function yeni() {
   form.value = bosCalisanFormu()
@@ -60,8 +101,8 @@ async function ekle() {
   await yukle()
 }
 
-function detayaGit(_olay: unknown, { item }: { item: CalisanSatiri }) {
-  void router.push({ name: 'calisan', params: { id: item.id } })
+function detayaGit(satir: CalisanSatiri) {
+  void router.push({ name: 'calisan', params: { id: satir.id } })
 }
 
 onMounted(async () => {
@@ -75,53 +116,28 @@ onMounted(async () => {
       <v-btn color="primary" :prepend-icon="PlusIcon" @click="yeni">Yeni çalışan</v-btn>
     </PageHeader>
 
-    <v-row density="compact" class="mb-2">
-      <v-col cols="12" md="4">
-        <v-text-field v-model="filtre.arama" label="Ad ya da Soyad Ara" clearable hide-details />
-      </v-col>
-      <v-col cols="12" sm="6" md="4">
-        <v-select
-          v-model="filtre.departmanId"
-          :items="departmanlar"
-          item-title="ad"
-          item-value="id"
-          label="Departman"
-          clearable
-          hide-details
-        />
-      </v-col>
-      <v-col cols="12" sm="6" md="4">
-        <v-select
-          v-model="filtre.aktif"
-          :items="aktiflikSecenekleri"
-          label="Durum"
-          clearable
-          hide-details
-        />
-      </v-col>
-    </v-row>
-
-    <v-card>
-      <v-data-table-server
-        v-model:page="sayfa"
-        v-model:items-per-page="sayfaBoyutu"
-        :headers="basliklar"
-        :items="satirlar"
-        :items-length="toplam"
-        :loading="yukleniyor"
-        :items-per-page-options="[10, 20, 50, 100]"
-        :row-props="{ class: 'cursor-pointer' }"
-        hover
-        no-data-text="Çalışan bulunamadı."
-        @click:row="detayaGit"
-      >
-        <template #[`item.adSoyad`]="{ item }">
-          <router-link :to="{ name: 'calisan', params: { id: item.id } }" @click.stop>
-            {{ item.ad }} {{ item.soyad }}
-          </router-link>
-        </template>
-      </v-data-table-server>
-    </v-card>
+    <DataGrid
+      v-model:sayfa="sayfa"
+      v-model:sayfa-boyutu="sayfaBoyutu"
+      v-model:sirala="filtre.sort"
+      :kolonlar="kolonlar"
+      :satirlar="satirlar"
+      :toplam="toplam"
+      :yukleniyor="yukleniyor"
+      :filtre="filtre"
+      :sifirlanabilir="varsayilandanFarkli"
+      bos-metin="Çalışan bulunamadı."
+      satir-tiklanir
+      @filtre-degisti="filtreyiAyarla"
+      @sifirla="filtreyiSifirla"
+      @satir-tikla="detayaGit"
+    >
+      <template #[`item.adSoyad`]="{ item }">
+        <router-link :to="{ name: 'calisan', params: { id: item.id } }" @click.stop>
+          {{ item.ad }} {{ item.soyad }}
+        </router-link>
+      </template>
+    </DataGrid>
 
     <CalisanForm
       v-model="dialogAcik"

@@ -20,15 +20,11 @@ const bakiye = shallowRef<Bakiye | null>(null)
 const sonTaleplerim = shallowRef<IzinTalebiSatiri[]>([])
 const onayBekleyenler = shallowRef<IzinTalebiSatiri[]>([])
 
-const bos = { durum: null, izinTuruId: null, baslangic: null, bitis: null }
-
 onMounted(async () => {
   const [bakiyeSonucu, taleplerim, bekleyenler] = await Promise.all([
     calisanId && talepAcabilir ? bakiyeGetir(calisanId) : null,
-    calisanId && talepAcabilir ? talepleriGetir({ ...bos, calisanId, page: 1, pageSize: 5 }) : null,
-    onaylayabilir
-      ? talepleriGetir({ ...bos, calisanId: null, durum: 'Beklemede', page: 1, pageSize: 5 })
-      : null,
+    calisanId && talepAcabilir ? talepleriGetir({ calisanId, page: 1, pageSize: 5 }) : null,
+    onaylayabilir ? talepleriGetir({ durum: ['Beklemede'], page: 1, pageSize: 5 }) : null,
   ])
   bakiye.value = bakiyeSonucu
   sonTaleplerim.value = taleplerim?.items ?? []

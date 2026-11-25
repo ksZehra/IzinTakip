@@ -1,33 +1,73 @@
 <script setup lang="ts">
 import { FileSpreadsheetIcon } from '@lucide/vue'
-import { onMounted, shallowRef } from 'vue'
+import { computed, onMounted, shallowRef } from 'vue'
 
 import { departmanlariGetir, type Departman } from '@/api/departmanlarApi'
-import { bakiyeleriExceleAktar, bakiyeleriGetir, type BakiyeFilter } from '@/api/raporlarApi'
+import {
+  bakiyeleriExceleAktar,
+  bakiyeleriGetir,
+  type BakiyeFilter,
+  type BakiyeSatiri,
+} from '@/api/raporlarApi'
+import DataGrid from '@/common/components/DataGrid.vue'
+import type { GridKolon } from '@/common/components/dataGridTipleri'
 import PageHeader from '@/common/components/PageHeader.vue'
 import { usePagedList } from '@/common/composables/usePagedList'
 import { tarihGoster } from '@/common/utils/tarih'
 
-const varsayilanFiltre: BakiyeFilter = { departmanId: null }
-const { filtre, sayfa, sayfaBoyutu, satirlar, toplam, yukleniyor } = usePagedList(
-  bakiyeleriGetir,
-  varsayilanFiltre,
-)
+const varsayilanFiltre: BakiyeFilter = {
+  arama: '',
+  departmanId: [],
+  iseGirisBaslangic: '',
+  iseGirisBitis: '',
+  sort: '',
+}
+const {
+  filtre,
+  sayfa,
+  sayfaBoyutu,
+  satirlar,
+  toplam,
+  yukleniyor,
+  varsayilandanFarkli,
+  filtreyiAyarla,
+  filtreyiSifirla,
+} = usePagedList(bakiyeleriGetir, varsayilanFiltre, { sayiListeleri: ['departmanId'] })
 const departmanlar = shallowRef<Departman[]>([])
 
-const basliklar = [
-  { title: 'Çalışan', key: 'calisanAdSoyad' },
-  { title: 'Departman', key: 'departmanAdi' },
+const kolonlar = computed<GridKolon<BakiyeSatiri>[]>(() => [
   {
-    title: 'İşe Giriş Tarihi',
-    key: 'iseGirisTarihi',
-    value: (s: { iseGirisTarihi: string }) => tarihGoster(s.iseGirisTarihi),
+    key: 'calisanAdSoyad',
+    title: 'Çalışan',
+    sirala: true,
+    filtre: { tur: 'metin', anahtar: 'arama' },
   },
-  { title: 'Toplam Hak', key: 'hakMetni' },
-  { title: 'Kullanılan', key: 'kullanilanMetni' },
-  { title: 'Bekleyen', key: 'bekleyenMetni' },
-  { title: 'Kullanılabilir', key: 'kullanilabilirMetni' },
-]
+  {
+    key: 'departmanAdi',
+    title: 'Departman',
+    sirala: true,
+    filtre: {
+      tur: 'cokluSecim',
+      anahtar: 'departmanId',
+      secenekler: departmanlar.value.map((d) => ({ title: d.ad, value: d.id })),
+    },
+  },
+  {
+    key: 'iseGirisTarihi',
+    title: 'İşe Giriş Tarihi',
+    deger: (s) => tarihGoster(s.iseGirisTarihi),
+    sirala: true,
+    filtre: {
+      tur: 'tarih',
+      baslangicAnahtari: 'iseGirisBaslangic',
+      bitisAnahtari: 'iseGirisBitis',
+    },
+  },
+  { key: 'hakMetni', title: 'Toplam Hak' },
+  { key: 'kullanilanMetni', title: 'Kullanılan' },
+  { key: 'bekleyenMetni', title: 'Bekleyen' },
+  { key: 'kullanilabilirMetni', title: 'Kullanılabilir' },
+])
 
 onMounted(async () => {
   departmanlar.value = (await departmanlariGetir()).filter((departman) => departman.aktif)
@@ -49,31 +89,19 @@ onMounted(async () => {
       </v-btn>
     </PageHeader>
 
-    <v-row density="compact" class="mb-2">
-      <v-col cols="12" sm="6" md="4">
-        <v-select
-          v-model="filtre.departmanId"
-          :items="departmanlar"
-          item-title="ad"
-          item-value="id"
-          label="Departman"
-          clearable
-          hide-details
-        />
-      </v-col>
-    </v-row>
-
-    <v-card>
-      <v-data-table-server
-        v-model:page="sayfa"
-        v-model:items-per-page="sayfaBoyutu"
-        :headers="basliklar"
-        :items="satirlar"
-        :items-length="toplam"
-        :loading="yukleniyor"
-        :items-per-page-options="[10, 20, 50, 100]"
-        no-data-text="Kayıt yok."
-      />
-    </v-card>
+    <DataGrid
+      v-model:sayfa="sayfa"
+      v-model:sayfa-boyutu="sayfaBoyutu"
+      v-model:sirala="filtre.sort"
+      :kolonlar="kolonlar"
+      :satirlar="satirlar"
+      :toplam="toplam"
+      :yukleniyor="yukleniyor"
+      :filtre="filtre"
+      :sifirlanabilir="varsayilandanFarkli"
+      bos-metin="Kayıt yok."
+      @filtre-degisti="filtreyiAyarla"
+      @sifirla="filtreyiSifirla"
+    />
   </v-container>
 </template>

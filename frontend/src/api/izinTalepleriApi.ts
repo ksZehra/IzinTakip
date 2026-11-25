@@ -1,6 +1,6 @@
 import { dosyaIndir } from '@/common/http/dosyaIndir'
 import { httpClient } from '@/common/http/httpClient'
-import type { ListQuery, Page } from '@/common/composables/usePagedList'
+import type { FilterValue, ListQuery, Page } from '@/common/composables/usePagedList'
 
 import type { Schema } from './types'
 
@@ -13,16 +13,17 @@ export type SureHesaplaRequest = Schema<'SureHesaplaRequest'>
 export type TalepOlusturRequest = Schema<'IzinTalebiOlusturRequest'>
 export type SureOnizlemesi = Schema<'SureHesaplaResponse'>
 
-export interface TalepFilter extends Record<string, string | number | null> {
-  calisanId: number | null
-  durum: IzinDurumu | null
-  izinTuruId: number | null
-  baslangic: string | null
-  bitis: string | null
+export interface TalepFilter extends Record<string, FilterValue> {
+  calisanArama: string
+  durum: IzinDurumu[]
+  izinTuruId: number[]
+  baslangic: string
+  bitis: string
+  sort: string
 }
 
 export async function talepleriGetir(
-  sorgu: ListQuery<TalepFilter>,
+  sorgu: Partial<ListQuery<TalepFilter>> & { calisanId?: number },
   signal?: AbortSignal,
 ): Promise<Page<IzinTalebiSatiri>> {
   const { data } = await httpClient.get<Page<IzinTalebiSatiri>>('/api/izin-talepleri', {

@@ -4,7 +4,22 @@ namespace IzinTakip.Api.Features.Raporlar;
 
 public sealed record TakvimRequest(DateOnly Baslangic, DateOnly Bitis, int? DepartmanId);
 
-public sealed record BakiyeRaporuRequest(int? DepartmanId, int Page = 1, int PageSize = 20);
+public record BakiyeRaporuFiltreRequest(
+    string? Arama,
+    int[]? DepartmanId,
+    DateOnly? IseGirisBaslangic,
+    DateOnly? IseGirisBitis,
+    string? Sort);
+
+public sealed record BakiyeRaporuRequest(
+    string? Arama,
+    int[]? DepartmanId,
+    DateOnly? IseGirisBaslangic,
+    DateOnly? IseGirisBitis,
+    string? Sort,
+    int Page = 1,
+    int PageSize = 20)
+    : BakiyeRaporuFiltreRequest(Arama, DepartmanId, IseGirisBaslangic, IseGirisBitis, Sort);
 
 public sealed record TakvimKaydiResponse(
     int IzinTalebiId,

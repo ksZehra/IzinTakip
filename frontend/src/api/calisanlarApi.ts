@@ -1,5 +1,5 @@
 import { httpClient } from '@/common/http/httpClient'
-import type { ListQuery, Page } from '@/common/composables/usePagedList'
+import type { FilterValue, ListQuery, Page } from '@/common/composables/usePagedList'
 
 import type { Schema } from './types'
 
@@ -10,10 +10,13 @@ export type Bakiye = Schema<'BakiyeResponse'>
 export type IzinHaklari = Schema<'IzinHaklariResponse'>
 export type IzinHakkiKaydetRequest = Schema<'IzinHakkiKaydetRequest'>
 
-export interface CalisanFilter extends Record<string, string | number | boolean | null> {
+export interface CalisanFilter extends Record<string, FilterValue> {
   arama: string
-  departmanId: number | null
+  departmanId: number[]
   aktif: boolean | null
+  iseGirisBaslangic: string
+  iseGirisBitis: string
+  sort: string
 }
 
 export async function calisanlariGetir(

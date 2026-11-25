@@ -20,6 +20,7 @@ export function oturumDustugundeCalistir(islem: () => void) {
 export const httpClient = axios.create({
   headers: { 'X-CSRF': '1' },
   timeout: 30_000,
+  paramsSerializer: { indexes: null },
 })
 
 httpClient.interceptors.response.use(undefined, async (hata: unknown) => {

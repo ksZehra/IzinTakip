@@ -55,3 +55,8 @@ export function rolEtiketi(rol: string) {
 export function rolSecenekleri(roller: string[]) {
   return roller.map((rol) => ({ value: rol, title: rolEtiketi(rol) }))
 }
+
+export const aktiflikSecenekleri = [
+  { title: 'Aktif', value: true },
+  { title: 'Pasif', value: false },
+]

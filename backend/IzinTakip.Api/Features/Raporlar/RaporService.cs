@@ -37,9 +37,19 @@ public sealed class RaporService(
             .ToListAsync(cancellationToken);
     }
 
+    public static readonly IReadOnlyDictionary<string, Func<IQueryable<Calisan>, bool, IOrderedQueryable<Calisan>>> BakiyeSiralamaAlanlari =
+        new Dictionary<string, Func<IQueryable<Calisan>, bool, IOrderedQueryable<Calisan>>>
+        {
+            ["calisanAdSoyad"] = (sorgu, azalan) => azalan
+                ? sorgu.OrderByDescending(c => c.AdSoyad)
+                : sorgu.OrderBy(c => c.AdSoyad),
+            ["departmanAdi"] = SiralamaExtensions.SiralamaAlani<Calisan, string>(c => c.Departman.Ad),
+            ["iseGirisTarihi"] = SiralamaExtensions.SiralamaAlani<Calisan, DateOnly>(c => c.IseGirisTarihi)
+        };
+
     public async Task<PagedResponse<BakiyeRaporuResponse>> BakiyelerAsync(BakiyeRaporuRequest request, CancellationToken cancellationToken)
     {
-        var sayfa = await Satirlar(await AktifKapsamdakilerAsync(request.DepartmanId, cancellationToken))
+        var sayfa = await Satirlar(await BakiyeFiltreliAsync(request, cancellationToken), request.Sort)
             .SayfalaAsync(request.Page, request.PageSize, cancellationToken);
         var idler = sayfa.Items.Select(s => s.CalisanId).ToList();
         var bakiyeler = await bakiyeSorgusu.HesaplaAsync(db.Calisanlar.Where(c => idler.Contains(c.Id)), cancellationToken);
@@ -52,10 +62,10 @@ public sealed class RaporService(
             sayfa.PageSize);
     }
 
-    public async Task<DosyaResponse> BakiyeExcelAsync(int? departmanId, CancellationToken cancellationToken)
+    public async Task<DosyaResponse> BakiyeExcelAsync(BakiyeRaporuFiltreRequest request, CancellationToken cancellationToken)
     {
-        var calisanlar = await AktifKapsamdakilerAsync(departmanId, cancellationToken);
-        var satirlar = await Satirlar(calisanlar).ToListAsync(cancellationToken);
+        var calisanlar = await BakiyeFiltreliAsync(request, cancellationToken);
+        var satirlar = await Satirlar(calisanlar, request.Sort).ToListAsync(cancellationToken);
         var bakiyeler = await bakiyeSorgusu.HesaplaAsync(calisanlar, cancellationToken);
         var gunluk = await db.GunlukDakikaAsync(cancellationToken);
 
@@ -81,13 +91,38 @@ public sealed class RaporService(
         return departmanId is null ? calisanlar : calisanlar.Where(c => c.DepartmanId == departmanId);
     }
 
-    private async Task<IQueryable<Calisan>> AktifKapsamdakilerAsync(int? departmanId, CancellationToken cancellationToken) =>
-        (await KapsamdakilerAsync(departmanId, cancellationToken)).Where(c => c.Aktif);
+    private async Task<IQueryable<Calisan>> BakiyeFiltreliAsync(BakiyeRaporuFiltreRequest request, CancellationToken cancellationToken)
+    {
+        var sorgu = (await kapsam.CalisanlarAsync(cancellationToken)).Where(c => c.Aktif);
+        if (!string.IsNullOrWhiteSpace(request.Arama))
+        {
+            var arama = request.Arama.Trim();
+            sorgu = sorgu.Where(c => c.AdSoyad.Contains(arama));
+        }
 
-    private static IQueryable<CalisanSatiri> Satirlar(IQueryable<Calisan> calisanlar) =>
+        if (request.DepartmanId is { Length: > 0 } departmanlar)
+        {
+            sorgu = sorgu.Where(c => departmanlar.Contains(c.DepartmanId));
+        }
+
+        if (request.IseGirisBaslangic is not null)
+        {
+            sorgu = sorgu.Where(c => c.IseGirisTarihi >= request.IseGirisBaslangic);
+        }
+
+        if (request.IseGirisBitis is not null)
+        {
+            sorgu = sorgu.Where(c => c.IseGirisTarihi <= request.IseGirisBitis);
+        }
+
+        return sorgu;
+    }
+
+    // Bakiye tutarları veritabanında değil bellekte hesaplandığı için yalnız çalışan alanlarıyla sıralanır.
+    private static IQueryable<CalisanSatiri> Satirlar(IQueryable<Calisan> calisanlar, string? sort) =>
         calisanlar
             .AsNoTracking()
-            .OrderBy(c => c.Ad).ThenBy(c => c.Soyad).ThenBy(c => c.Id)
+            .Sirala(sort, BakiyeSiralamaAlanlari, q => q.OrderBy(c => c.AdSoyad).ThenBy(c => c.Id))
             .Select(c => new CalisanSatiri(c.Id, c.Ad + " " + c.Soyad, c.Departman.Ad, c.IseGirisTarihi));
 
     private static BakiyeRaporuResponse Yanit(CalisanSatiri satir, Bakiye bakiye, int gunluk) => new(

@@ -17,6 +17,8 @@ import {
 } from '@/api/calisanlarApi'
 import { departmanlariGetir, type Departman } from '@/api/departmanlarApi'
 import ConfirmDialog from '@/common/components/ConfirmDialog.vue'
+import DataGrid from '@/common/components/DataGrid.vue'
+import type { GridKolon } from '@/common/components/dataGridTipleri'
 import FormDialog from '@/common/components/FormDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
 import { ApiError } from '@/common/http/ApiError'
@@ -24,6 +26,7 @@ import SureInput from '@/common/components/SureInput.vue'
 import { useCrudForm } from '@/common/composables/useCrudForm'
 import { useFormSubmit } from '@/common/composables/useFormSubmit'
 import { useToast } from '@/common/composables/useToast'
+import { useYerelFiltre } from '@/common/composables/useYerelFiltre'
 import { tarihGoster } from '@/common/utils/tarih'
 
 import CalisanForm from './CalisanForm.vue'
@@ -83,20 +86,49 @@ const {
   kaydedildi: () => yukle(),
 })
 
-const hakBasliklari = [
+const {
+  filtre: hakFiltresi,
+  varsayilandanFarkli: hakFiltresiDolu,
+  filtreyiAyarla: hakFiltresiniAyarla,
+  filtreyiSifirla: hakFiltresiniSifirla,
+} = useYerelFiltre({
+  hakBaslangic: '',
+  hakBitis: '',
+  kaynak: null as string | null,
+  aciklama: '',
+  sort: '',
+})
+
+const hakKolonlari: GridKolon<HakSatiri>[] = [
   {
-    title: 'Tarih',
     key: 'kazanimTarihi',
-    value: (h: { kazanimTarihi: string }) => tarihGoster(h.kazanimTarihi),
+    title: 'Tarih',
+    deger: (h) => tarihGoster(h.kazanimTarihi),
+    sirala: true,
+    filtre: { tur: 'tarih', baslangicAnahtari: 'hakBaslangic', bitisAnahtari: 'hakBitis' },
   },
-  { title: 'Süre', key: 'sureMetni' },
+  { key: 'sureMetni', title: 'Süre', ham: (h) => h.dakika, sirala: true },
   {
-    title: 'Kaynak',
     key: 'kaynak',
-    value: (h: { kaynak: string }) => (h.kaynak === 'Kural' ? 'Otomatik' : 'Elle'),
+    title: 'Kaynak',
+    deger: (h) => (h.kaynak === 'Kural' ? 'Otomatik' : 'Elle'),
+    sirala: true,
+    filtre: {
+      tur: 'tekliSecim',
+      anahtar: 'kaynak',
+      secenekler: [
+        { title: 'Otomatik', value: 'Kural' },
+        { title: 'Elle', value: 'Elle' },
+      ],
+    },
   },
-  { title: 'Açıklama', key: 'aciklama' },
-  { title: '', key: 'islemler', sortable: false, align: 'end' as const },
+  {
+    key: 'aciklama',
+    title: 'Açıklama',
+    sirala: true,
+    filtre: { tur: 'metin', anahtar: 'aciklama' },
+  },
+  { key: 'islemler', title: '', hizala: 'end' },
 ]
 
 const yuklenemedi = ref(false)
@@ -232,12 +264,16 @@ watch(() => props.id, yukle, { immediate: true })
               >
             </template>
           </v-card-item>
-          <v-data-table
-            :headers="hakBasliklari"
-            :items="haklar?.satirlar ?? []"
-            items-per-page="-1"
-            hide-default-footer
-            no-data-text="Hak satırı yok."
+          <DataGrid
+            v-model:sirala="hakFiltresi.sort"
+            yerel
+            :kolonlar="hakKolonlari"
+            :satirlar="haklar?.satirlar ?? []"
+            :filtre="hakFiltresi"
+            :sifirlanabilir="hakFiltresiDolu"
+            bos-metin="Hak satırı yok."
+            @filtre-degisti="hakFiltresiniAyarla"
+            @sifirla="hakFiltresiniSifirla"
           >
             <template #[`item.islemler`]="{ item }">
               <template v-if="item.kaynak === 'Elle'">
@@ -258,7 +294,7 @@ watch(() => props.id, yukle, { immediate: true })
                 />
               </template>
             </template>
-          </v-data-table>
+          </DataGrid>
         </v-card>
       </v-col>
     </v-row>

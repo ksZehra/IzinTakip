@@ -1,14 +1,18 @@
 import { dosyaIndir } from '@/common/http/dosyaIndir'
 import { httpClient } from '@/common/http/httpClient'
-import type { ListQuery, Page } from '@/common/composables/usePagedList'
+import type { FilterValue, ListQuery, Page } from '@/common/composables/usePagedList'
 
 import type { Schema } from './types'
 
 export type TakvimKaydi = Schema<'TakvimKaydiResponse'>
 export type BakiyeSatiri = Schema<'BakiyeRaporuResponse'>
 
-export interface BakiyeFilter extends Record<string, number | null> {
-  departmanId: number | null
+export interface BakiyeFilter extends Record<string, FilterValue> {
+  arama: string
+  departmanId: number[]
+  iseGirisBaslangic: string
+  iseGirisBitis: string
+  sort: string
 }
 
 export async function takvimiGetir(sorgu: {

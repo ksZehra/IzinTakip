@@ -17,42 +17,67 @@ public sealed class IslemKaydiService(IzinTakipDbContext db, KullaniciAdlariProv
     private static readonly HashSet<string> DepartmanAlanlari = ["DepartmanId"];
     private static readonly HashSet<string> KullaniciAlanlari = ["UserId"];
 
+    public static readonly IReadOnlyDictionary<string, Func<IQueryable<IslemKaydi>, bool, IOrderedQueryable<IslemKaydi>>> SiralamaAlanlari =
+        new Dictionary<string, Func<IQueryable<IslemKaydi>, bool, IOrderedQueryable<IslemKaydi>>>
+        {
+            ["tarih"] = SiralamaExtensions.SiralamaAlani<IslemKaydi, DateTime>(k => k.Tarih),
+            ["islem"] = SiralamaExtensions.SiralamaAlani<IslemKaydi, string>(k => k.Islem),
+            ["tablo"] = SiralamaExtensions.SiralamaAlani<IslemKaydi, string>(k => k.Tablo),
+            ["ilgiliCalisanAdi"] = (sorgu, azalan) => azalan
+                ? sorgu.OrderByDescending(k => k.IlgiliCalisan!.AdSoyad)
+                : sorgu.OrderBy(k => k.IlgiliCalisan!.AdSoyad)
+        };
+
     public async Task<PagedResponse<IslemKaydiResponse>> ListeleAsync(IslemKaydiListeRequest request, CancellationToken cancellationToken)
     {
-        var sorgu = db.IslemKayitlari.AsNoTracking().Select(k => new
-        {
-            Kayit = k,
-            KendiKaydi = k.KullaniciId != null
-                         && (k.IlgiliKullaniciId == k.KullaniciId
-                             || db.Users.Any(u => u.Id == k.KullaniciId && u.CalisanId != null && u.CalisanId == k.IlgiliCalisanId))
-        });
-
+        var kayitlar = db.IslemKayitlari.AsNoTracking();
         if (request.KullaniciId is not null)
         {
-            sorgu = sorgu.Where(x => x.Kayit.KullaniciId == request.KullaniciId);
+            kayitlar = kayitlar.Where(k => k.KullaniciId == request.KullaniciId);
         }
 
         if (request.CalisanId is not null)
         {
-            sorgu = sorgu.Where(x => x.Kayit.IlgiliCalisanId == request.CalisanId);
+            kayitlar = kayitlar.Where(k => k.IlgiliCalisanId == request.CalisanId);
         }
 
-        if (!string.IsNullOrWhiteSpace(request.Tablo))
+        if (!string.IsNullOrWhiteSpace(request.IlgiliArama))
         {
-            sorgu = sorgu.Where(x => x.Kayit.Tablo == request.Tablo);
+            var arama = request.IlgiliArama.Trim();
+            kayitlar = kayitlar.Where(k => k.IlgiliCalisan != null && k.IlgiliCalisan.AdSoyad.Contains(arama));
+        }
+
+        if (request.Tablo is { Length: > 0 } tablolar)
+        {
+            kayitlar = kayitlar.Where(k => tablolar.Contains(k.Tablo));
+        }
+
+        if (request.Islem is { Length: > 0 } islemler)
+        {
+            kayitlar = kayitlar.Where(k => islemler.Contains(k.Islem));
         }
 
         if (request.Baslangic is { } baslangic)
         {
             var sinir = sirketSaati.Utc(baslangic.ToDateTime(TimeOnly.MinValue));
-            sorgu = sorgu.Where(x => x.Kayit.Tarih >= sinir);
+            kayitlar = kayitlar.Where(k => k.Tarih >= sinir);
         }
 
         if (request.Bitis is { } bitis)
         {
             var sinir = sirketSaati.Utc(bitis.AddDays(1).ToDateTime(TimeOnly.MinValue));
-            sorgu = sorgu.Where(x => x.Kayit.Tarih < sinir);
+            kayitlar = kayitlar.Where(k => k.Tarih < sinir);
         }
+
+        var sorgu = kayitlar
+            .Sirala(request.Sort, SiralamaAlanlari, q => q.OrderByDescending(k => k.Id), k => k.Id)
+            .Select(k => new
+            {
+                Kayit = k,
+                KendiKaydi = k.KullaniciId != null
+                             && (k.IlgiliKullaniciId == k.KullaniciId
+                                 || db.Users.Any(u => u.Id == k.KullaniciId && u.CalisanId != null && u.CalisanId == k.IlgiliCalisanId))
+            });
 
         if (request.SadeceKendiKaydi)
         {
@@ -60,7 +85,6 @@ public sealed class IslemKaydiService(IzinTakipDbContext db, KullaniciAdlariProv
         }
 
         var sayfa = await sorgu
-            .OrderByDescending(x => x.Kayit.Id)
             .Select(x => new IslemKaydiSatiri(
                 x.Kayit.Id,
                 x.Kayit.Tarih,

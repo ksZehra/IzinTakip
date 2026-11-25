@@ -12,7 +12,7 @@ namespace IzinTakip.Api.Features.Kullanicilar;
 public sealed class KullanicilarController(KullaniciService service) : ControllerBase
 {
     [HttpGet]
-    [EndpointSummary("Kullanıcıları e-posta ya da çalışan adıyla arar, sayfalı listeler")]
+    [EndpointSummary("Kullanıcıları e-posta ya da çalışan adıyla arar, aktiflik ve çoklu rolle süzer; seçilen alana göre sıralı ve sayfalı listeler")]
     public async Task<ActionResult<PagedResponse<KullaniciResponse>>> Listele(
         [FromQuery] KullaniciListeRequest request,
         CancellationToken cancellationToken) =>

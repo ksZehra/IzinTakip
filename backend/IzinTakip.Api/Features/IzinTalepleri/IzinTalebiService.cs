@@ -28,6 +28,23 @@ public sealed class IzinTalebiService(
     SirketSaati sirketSaati,
     ILogger<IzinTalebiService> logger)
 {
+    public static readonly IReadOnlyDictionary<string, Func<IQueryable<IzinTalebi>, bool, IOrderedQueryable<IzinTalebi>>> SiralamaAlanlari =
+        new Dictionary<string, Func<IQueryable<IzinTalebi>, bool, IOrderedQueryable<IzinTalebi>>>
+        {
+            ["calisanAdSoyad"] = (sorgu, azalan) => azalan
+                ? sorgu.OrderByDescending(t => t.Calisan.AdSoyad)
+                : sorgu.OrderBy(t => t.Calisan.AdSoyad),
+            ["izinTuruAdi"] = SiralamaExtensions.SiralamaAlani<IzinTalebi, string>(t => t.IzinTuru.Ad),
+            ["baslangic"] = SiralamaExtensions.SiralamaAlani<IzinTalebi, DateTime>(t => t.Baslangic),
+            ["dakika"] = SiralamaExtensions.SiralamaAlani<IzinTalebi, int>(t => t.Dakika),
+            // Enum değeri yerine ekrandaki etiketin alfabetik sırası: Beklemede, İptal edildi, Onaylandı, Reddedildi.
+            ["durum"] = SiralamaExtensions.SiralamaAlani<IzinTalebi, int>(t =>
+                t.Durum == IzinDurumu.Beklemede ? 1
+                : t.Durum == IzinDurumu.IptalEdildi ? 2
+                : t.Durum == IzinDurumu.Onaylandi ? 3
+                : 4)
+        };
+
     public async Task<IzinTalebiResponse> OlusturAsync(IzinTalebiOlusturRequest request, CancellationToken cancellationToken)
     {
         var yetkiler = await gecerliKullanici.YetkileriAsync(cancellationToken);
@@ -92,7 +109,7 @@ public sealed class IzinTalebiService(
 
     public async Task<PagedResponse<IzinTalebiListeResponse>> ListeleAsync(IzinTalebiListeRequest request, CancellationToken cancellationToken)
     {
-        var sayfa = await Sirala(await FiltreliAsync(request, cancellationToken))
+        var sayfa = await Sirala(await FiltreliAsync(request, cancellationToken), request.Sort)
             .Select(t => new IzinTalebiListeResponse(
                 t.Id, t.CalisanId, t.Calisan.Ad + " " + t.Calisan.Soyad, t.IzinTuru.Ad, t.SureTipi,
                 t.Baslangic, t.Bitis, t.Dakika, string.Empty, t.Durum))
@@ -115,7 +132,7 @@ public sealed class IzinTalebiService(
 
     public async Task<DosyaResponse> ExcelAsync(IzinTalebiFiltreRequest request, CancellationToken cancellationToken)
     {
-        var talepler = await Yansit(Sirala(await FiltreliAsync(request, cancellationToken))).ToListAsync(cancellationToken);
+        var talepler = await Yansit(Sirala(await FiltreliAsync(request, cancellationToken), request.Sort)).ToListAsync(cancellationToken);
         var gunluk = await db.GunlukDakikaAsync(cancellationToken);
         var adlar = await kullaniciAdlari.OkuAsync(talepler.SelectMany(t => new[] { t.OlusturanKullaniciId, t.KararVerenKullaniciId }), cancellationToken);
         const string tarihSaat = "dd.MM.yyyy HH:mm";
@@ -186,14 +203,20 @@ public sealed class IzinTalebiService(
             sorgu = sorgu.Where(t => t.CalisanId == request.CalisanId);
         }
 
-        if (request.Durum is not null)
+        if (!string.IsNullOrWhiteSpace(request.CalisanArama))
         {
-            sorgu = sorgu.Where(t => t.Durum == request.Durum);
+            var arama = request.CalisanArama.Trim();
+            sorgu = sorgu.Where(t => t.Calisan.AdSoyad.Contains(arama));
         }
 
-        if (request.IzinTuruId is not null)
+        if (request.Durum is { Length: > 0 } durumlar)
         {
-            sorgu = sorgu.Where(t => t.IzinTuruId == request.IzinTuruId);
+            sorgu = sorgu.Where(t => durumlar.Contains(t.Durum));
+        }
+
+        if (request.IzinTuruId is { Length: > 0 } turler)
+        {
+            sorgu = sorgu.Where(t => turler.Contains(t.IzinTuruId));
         }
 
         if (request.Baslangic is { } baslangic)
@@ -211,8 +234,8 @@ public sealed class IzinTalebiService(
         return sorgu;
     }
 
-    private static IQueryable<IzinTalebi> Sirala(IQueryable<IzinTalebi> talepler) =>
-        talepler.OrderByDescending(t => t.Baslangic).ThenByDescending(t => t.Id);
+    private static IQueryable<IzinTalebi> Sirala(IQueryable<IzinTalebi> talepler, string? sort) =>
+        talepler.Sirala(sort, SiralamaAlanlari, q => q.OrderByDescending(t => t.Baslangic).ThenByDescending(t => t.Id));
 
     private static IQueryable<IzinTalebiResponse> Yansit(IQueryable<IzinTalebi> talepler) =>
         talepler.Select(t => new IzinTalebiResponse(

@@ -12,10 +12,14 @@ import {
 } from '@/api/departmanlarApi'
 import CalisanSelect from '@/common/components/CalisanSelect.vue'
 import AktiflikSwitch from '@/common/components/AktiflikSwitch.vue'
+import DataGrid from '@/common/components/DataGrid.vue'
+import type { GridKolon } from '@/common/components/dataGridTipleri'
 import FormDialog from '@/common/components/FormDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
 import { useCrudForm } from '@/common/composables/useCrudForm'
 import { useToast } from '@/common/composables/useToast'
+import { useYerelFiltre } from '@/common/composables/useYerelFiltre'
+import { aktiflikSecenekleri } from '@/common/utils/etiketler'
 
 const toast = useToast()
 const departmanlar = shallowRef<Departman[]>([])
@@ -51,12 +55,30 @@ async function aktiflikDegistir(departman: Departman, aktif: boolean) {
   await yukle()
 }
 
-const basliklar = [
-  { title: 'Ad', key: 'ad' },
-  { title: 'Yönetici', key: 'yoneticiAdSoyad' },
-  { title: 'Aktif Çalışan', key: 'aktifCalisanSayisi' },
-  { title: 'Aktif', key: 'aktif', sortable: false },
-  { title: '', key: 'islemler', sortable: false, align: 'end' as const },
+const { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla } = useYerelFiltre({
+  ad: '',
+  yonetici: '',
+  aktif: null as boolean | null,
+  sort: '',
+})
+
+const kolonlar: GridKolon<Departman>[] = [
+  { key: 'ad', title: 'Ad', sirala: true, filtre: { tur: 'metin', anahtar: 'ad' } },
+  {
+    key: 'yoneticiAdSoyad',
+    title: 'Yönetici',
+    deger: (d) => d.yoneticiAdSoyad ?? '—',
+    sirala: true,
+    filtre: { tur: 'metin', anahtar: 'yonetici' },
+  },
+  { key: 'aktifCalisanSayisi', title: 'Aktif Çalışan', sirala: true },
+  {
+    key: 'aktif',
+    title: 'Aktif',
+    sirala: true,
+    filtre: { tur: 'tekliSecim', anahtar: 'aktif', secenekler: aktiflikSecenekleri },
+  },
+  { key: 'islemler', title: '', hizala: 'end' },
 ]
 
 onMounted(yukle)
@@ -68,34 +90,35 @@ onMounted(yukle)
       <v-btn color="primary" :prepend-icon="PlusIcon" @click="yeni">Yeni departman</v-btn>
     </PageHeader>
 
-    <v-card>
-      <v-data-table
-        :headers="basliklar"
-        :items="departmanlar"
-        :loading="yukleniyor"
-        items-per-page="-1"
-        hide-default-footer
-        no-data-text="Departman yok."
-      >
-        <template #[`item.yoneticiAdSoyad`]="{ item }">{{ item.yoneticiAdSoyad ?? '—' }}</template>
-        <template #[`item.aktif`]="{ item }">
-          <AktiflikSwitch
-            :aktif="item.aktif"
-            :etiket="`${item.ad} aktif`"
-            :degistir="(aktif) => aktiflikDegistir(item, aktif)"
-          />
-        </template>
-        <template #[`item.islemler`]="{ item }">
-          <v-btn
-            :icon="PencilIcon"
-            variant="text"
-            size="small"
-            :aria-label="`${item.ad} düzenle`"
-            @click="duzenle(item)"
-          />
-        </template>
-      </v-data-table>
-    </v-card>
+    <DataGrid
+      v-model:sirala="filtre.sort"
+      yerel
+      :kolonlar="kolonlar"
+      :satirlar="departmanlar"
+      :yukleniyor="yukleniyor"
+      :filtre="filtre"
+      :sifirlanabilir="varsayilandanFarkli"
+      bos-metin="Departman yok."
+      @filtre-degisti="filtreyiAyarla"
+      @sifirla="filtreyiSifirla"
+    >
+      <template #[`item.aktif`]="{ item }">
+        <AktiflikSwitch
+          :aktif="item.aktif"
+          :etiket="`${item.ad} aktif`"
+          :degistir="(aktif) => aktiflikDegistir(item, aktif)"
+        />
+      </template>
+      <template #[`item.islemler`]="{ item }">
+        <v-btn
+          :icon="PencilIcon"
+          variant="text"
+          size="small"
+          :aria-label="`${item.ad} düzenle`"
+          @click="duzenle(item)"
+        />
+      </template>
+    </DataGrid>
 
     <FormDialog
       v-model="acik"

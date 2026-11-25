@@ -14,4 +14,9 @@ public static class DateRuleExtensions
 
     public static IRuleBuilderOptions<T, DateOnly?> GecerliTarih<T>(this IRuleBuilder<T, DateOnly?> kural) =>
         kural.Must(tarih => tarih is null || (tarih >= EnErken && tarih <= EnGec)).WithMessage(Mesaj);
+
+    public static IRuleBuilderOptions<T, DateOnly?> BaslangictanOnceDegil<T>(this IRuleBuilder<T, DateOnly?> kural, Func<T, DateOnly?> baslangic) =>
+        kural
+            .Must((istek, bitis) => bitis is null || baslangic(istek) is not { } bas || bitis >= bas)
+            .WithMessage("Bitiş tarihi başlangıç tarihinden önce olamaz.");
 }

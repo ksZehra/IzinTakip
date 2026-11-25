@@ -12,7 +12,7 @@ public sealed class CalisanlarController(CalisanService service) : ControllerBas
 {
     [HttpGet]
     [Permission(Yetkiler.Calisan.Yonet, Yetkiler.IzinTalebi.Yonet)]
-    [EndpointSummary("Kapsamdaki çalışanları arama, departman ve aktiflik filtresiyle sayfalı listeler")]
+    [EndpointSummary("Kapsamdaki çalışanları arama, çoklu departman, aktiflik ve işe giriş aralığı filtresiyle, seçilen alana göre sıralı ve sayfalı listeler")]
     public async Task<ActionResult<PagedResponse<CalisanListeResponse>>> Listele(
         [FromQuery] CalisanListeRequest request,
         CancellationToken cancellationToken) =>

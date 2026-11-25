@@ -13,11 +13,14 @@ import {
   type YetkiTanimi,
 } from '@/api/kullanicilarApi'
 import ConfirmDialog from '@/common/components/ConfirmDialog.vue'
+import DataGrid from '@/common/components/DataGrid.vue'
+import type { GridKolon } from '@/common/components/dataGridTipleri'
 import FormDialog from '@/common/components/FormDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
 import { useFormSubmit } from '@/common/composables/useFormSubmit'
 import { useCrudForm } from '@/common/composables/useCrudForm'
 import { useToast } from '@/common/composables/useToast'
+import { useYerelFiltre } from '@/common/composables/useYerelFiltre'
 import { rolEtiketi } from '@/common/utils/etiketler'
 
 const toast = useToast()
@@ -60,12 +63,44 @@ async function sil() {
   await yukle()
 }
 
-const basliklar = [
-  { title: 'Ad', key: 'ad' },
-  { title: 'Korumalı', key: 'korumali', value: (r: Rol) => (r.korumali ? 'Evet' : 'Hayır') },
-  { title: 'Yetki', key: 'yetkiler', value: (r: Rol) => `${r.yetkiler.length} yetki` },
-  { title: 'Kullanıcı', key: 'kullaniciSayisi' },
-  { title: '', key: 'islemler', sortable: false, align: 'end' as const },
+const { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla } = useYerelFiltre({
+  ad: '',
+  korumali: null as boolean | null,
+  sort: '',
+})
+
+const kolonlar: GridKolon<Rol>[] = [
+  {
+    key: 'ad',
+    title: 'Ad',
+    deger: (r) => rolEtiketi(r.ad),
+    ham: (r) => rolEtiketi(r.ad),
+    sirala: true,
+    filtre: { tur: 'metin', anahtar: 'ad' },
+  },
+  {
+    key: 'korumali',
+    title: 'Korumalı',
+    deger: (r) => (r.korumali ? 'Evet' : 'Hayır'),
+    sirala: true,
+    filtre: {
+      tur: 'tekliSecim',
+      anahtar: 'korumali',
+      secenekler: [
+        { title: 'Evet', value: true },
+        { title: 'Hayır', value: false },
+      ],
+    },
+  },
+  {
+    key: 'yetkiler',
+    title: 'Yetki',
+    deger: (r) => `${r.yetkiler.length} yetki`,
+    ham: (r) => r.yetkiler.length,
+    sirala: true,
+  },
+  { key: 'kullaniciSayisi', title: 'Kullanıcı', sirala: true },
+  { key: 'islemler', title: '', hizala: 'end' },
 ]
 
 onMounted(async () => {
@@ -82,33 +117,41 @@ onMounted(async () => {
       <v-btn color="primary" :prepend-icon="PlusIcon" @click="yeni">Yeni rol</v-btn>
     </PageHeader>
 
-    <v-card>
-      <v-data-table :headers="basliklar" :items="roller" items-per-page="-1" hide-default-footer>
-        <template #[`item.ad`]="{ item }">
-          {{ rolEtiketi(item.ad) }}
-          <v-chip v-if="item.sistemRolu" size="x-small" class="ml-1">Sistem</v-chip>
-        </template>
-        <template #[`item.islemler`]="{ item }">
-          <v-btn
-            v-if="item.ad !== 'SuperAdmin'"
-            :icon="PencilIcon"
-            variant="text"
-            size="small"
-            :aria-label="`${rolEtiketi(item.ad)} düzenle`"
-            @click="duzenle(item)"
-          />
-          <v-btn
-            v-if="!item.sistemRolu"
-            :icon="Trash2Icon"
-            variant="text"
-            size="small"
-            color="error"
-            :aria-label="`${rolEtiketi(item.ad)} sil`"
-            @click="silmeyiSor(item)"
-          />
-        </template>
-      </v-data-table>
-    </v-card>
+    <DataGrid
+      v-model:sirala="filtre.sort"
+      yerel
+      :kolonlar="kolonlar"
+      :satirlar="roller"
+      :filtre="filtre"
+      :sifirlanabilir="varsayilandanFarkli"
+      bos-metin="Rol yok."
+      @filtre-degisti="filtreyiAyarla"
+      @sifirla="filtreyiSifirla"
+    >
+      <template #[`item.ad`]="{ item }">
+        {{ rolEtiketi(item.ad) }}
+        <v-chip v-if="item.sistemRolu" size="x-small" class="ml-1">Sistem</v-chip>
+      </template>
+      <template #[`item.islemler`]="{ item }">
+        <v-btn
+          v-if="item.ad !== 'SuperAdmin'"
+          :icon="PencilIcon"
+          variant="text"
+          size="small"
+          :aria-label="`${rolEtiketi(item.ad)} düzenle`"
+          @click="duzenle(item)"
+        />
+        <v-btn
+          v-if="!item.sistemRolu"
+          :icon="Trash2Icon"
+          variant="text"
+          size="small"
+          color="error"
+          :aria-label="`${rolEtiketi(item.ad)} sil`"
+          @click="silmeyiSor(item)"
+        />
+      </template>
+    </DataGrid>
 
     <FormDialog
       v-model="acik"

@@ -416,11 +416,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Kapsamdaki aktif çalışanların bakiyelerini sayfalı listeler */
+        /** Kapsamdaki aktif çalışanların bakiyelerini ad, çoklu departman ve işe giriş aralığıyla süzer; seçilen alana göre sıralı ve sayfalı listeler */
         get: {
             parameters: {
                 query?: {
-                    DepartmanId?: number;
+                    Arama?: string;
+                    DepartmanId?: number[];
+                    IseGirisBaslangic?: string;
+                    IseGirisBitis?: string;
+                    Sort?: string;
                     Page?: number;
                     PageSize?: number;
                 };
@@ -458,11 +462,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Bakiye raporunu Excel dosyası olarak indirir */
+        /** Bakiye raporunu liste filtreleri ve sıralamasıyla Excel dosyası olarak indirir */
         get: {
             parameters: {
                 query?: {
-                    departmanId?: number;
+                    Arama?: string;
+                    DepartmanId?: number[];
+                    IseGirisBaslangic?: string;
+                    IseGirisBitis?: string;
+                    Sort?: string;
                 };
                 header?: never;
                 path?: never;
@@ -496,12 +504,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Kullanıcıları e-posta ya da çalışan adıyla arar, sayfalı listeler */
+        /** Kullanıcıları e-posta ya da çalışan adıyla arar, aktiflik ve çoklu rolle süzer; seçilen alana göre sıralı ve sayfalı listeler */
         get: {
             parameters: {
                 query?: {
                     Arama?: string;
                     Aktif?: boolean;
+                    Rol?: string[];
+                    Sort?: string;
                     Page?: number;
                     PageSize?: number;
                 };
@@ -930,17 +940,19 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Kapsamdaki izin taleplerini çalışan, durum, tür ve tarih aralığıyla sayfalı listeler */
+        /** Kapsamdaki izin taleplerini çalışan, çalışan adı, çoklu durum ve tür, tarih aralığıyla süzer; seçilen alana göre sıralı ve sayfalı listeler */
         get: {
             parameters: {
                 query?: {
                     Page?: number;
                     PageSize?: number;
                     CalisanId?: number;
-                    Durum?: components["schemas"]["IzinDurumu"];
-                    IzinTuruId?: number;
+                    CalisanArama?: string;
+                    Durum?: components["schemas"]["IzinDurumu"][];
+                    IzinTuruId?: number[];
                     Baslangic?: string;
                     Bitis?: string;
+                    Sort?: string;
                 };
                 header?: never;
                 path?: never;
@@ -1064,10 +1076,12 @@ export interface paths {
             parameters: {
                 query?: {
                     CalisanId?: number;
-                    Durum?: components["schemas"]["IzinDurumu"];
-                    IzinTuruId?: number;
+                    CalisanArama?: string;
+                    Durum?: components["schemas"]["IzinDurumu"][];
+                    IzinTuruId?: number[];
                     Baslangic?: string;
                     Bitis?: string;
+                    Sort?: string;
                 };
                 header?: never;
                 path?: never;
@@ -1433,15 +1447,18 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Yönetim işlemlerinin kaydını (kim, ne zaman, hangi kaydı nasıl değiştirdi) yeniden eskiye sayfalı listeler */
+        /** Yönetim işlemlerinin kaydını (kim, ne zaman, hangi kaydı nasıl değiştirdi) çoklu kayıt türü ve işlem, ilgili çalışan, tarih aralığıyla süzer; seçilen alana göre (varsayılan yeniden eskiye) sıralı ve sayfalı listeler */
         get: {
             parameters: {
                 query?: {
                     KullaniciId?: number;
                     CalisanId?: number;
-                    Tablo?: string;
+                    IlgiliArama?: string;
+                    Tablo?: string[];
+                    Islem?: string[];
                     Baslangic?: string;
                     Bitis?: string;
+                    Sort?: string;
                     SadeceKendiKaydi?: boolean;
                     Page?: number;
                     PageSize?: number;
@@ -1855,13 +1872,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Kapsamdaki çalışanları arama, departman ve aktiflik filtresiyle sayfalı listeler */
+        /** Kapsamdaki çalışanları arama, çoklu departman, aktiflik ve işe giriş aralığı filtresiyle, seçilen alana göre sıralı ve sayfalı listeler */
         get: {
             parameters: {
                 query?: {
                     Arama?: string;
-                    DepartmanId?: number;
+                    DepartmanId?: number[];
                     Aktif?: boolean;
+                    IseGirisBaslangic?: string;
+                    IseGirisBitis?: string;
+                    Sort?: string;
                     Page?: number;
                     PageSize?: number;
                 };

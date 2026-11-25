@@ -44,3 +44,35 @@ describe('filtreyiYaz', () => {
     expect(filtreyiYaz({ aktif: null }, { aktif: true })).toEqual({ aktif: '' })
   })
 })
+
+describe('dizi filtreleri', () => {
+  it('tekrarlanan adres değerlerini diziye okur', () => {
+    expect(
+      filtreyiOku({ departmanId: [] as number[] }, { departmanId: ['1', '3'] }, ['departmanId']),
+    ).toEqual({
+      departmanId: [1, 3],
+    })
+    expect(
+      filtreyiOku({ departmanId: [] as number[] }, { departmanId: '2' }, ['departmanId']),
+    ).toEqual({
+      departmanId: [2],
+    })
+  })
+
+  it('sayı listesi olarak verilmeyen dizide rakamdan oluşan değeri metin bırakır', () => {
+    expect(filtreyiOku({ tablo: [] as string[] }, { tablo: ['2024', 'Calisan'] })).toEqual({
+      tablo: ['2024', 'Calisan'],
+    })
+  })
+
+  it('adreste olmayan dizi filtresinde varsayılanı korur', () => {
+    expect(filtreyiOku({ departmanId: [] as number[] }, {})).toEqual({ departmanId: [] })
+  })
+
+  it('dolu diziyi tekrarlanan değer olarak yazar, boş diziyi yazmaz', () => {
+    expect(filtreyiYaz({ departmanId: [1, 3] }, { departmanId: [] })).toEqual({
+      departmanId: ['1', '3'],
+    })
+    expect(filtreyiYaz({ departmanId: [] }, { departmanId: [] })).toEqual({})
+  })
+})

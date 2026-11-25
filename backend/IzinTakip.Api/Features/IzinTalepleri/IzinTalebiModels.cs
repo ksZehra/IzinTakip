@@ -25,20 +25,24 @@ public sealed record IzinTalebiOlusturRequest(
 
 public record IzinTalebiFiltreRequest(
     int? CalisanId,
-    IzinDurumu? Durum,
-    int? IzinTuruId,
+    string? CalisanArama,
+    IzinDurumu[]? Durum,
+    int[]? IzinTuruId,
     DateOnly? Baslangic,
-    DateOnly? Bitis);
+    DateOnly? Bitis,
+    string? Sort);
 
 public sealed record IzinTalebiListeRequest(
     int? CalisanId,
-    IzinDurumu? Durum,
-    int? IzinTuruId,
+    string? CalisanArama,
+    IzinDurumu[]? Durum,
+    int[]? IzinTuruId,
     DateOnly? Baslangic,
     DateOnly? Bitis,
+    string? Sort,
     int Page = 1,
     int PageSize = 20)
-    : IzinTalebiFiltreRequest(CalisanId, Durum, IzinTuruId, Baslangic, Bitis);
+    : IzinTalebiFiltreRequest(CalisanId, CalisanArama, Durum, IzinTuruId, Baslangic, Bitis, Sort);
 
 public sealed record IzinTalebiKararRequest(string? Not);
 

@@ -11,10 +11,14 @@ import {
   type HakKuraliKaydetRequest,
 } from '@/api/tanimlarApi'
 import AktiflikSwitch from '@/common/components/AktiflikSwitch.vue'
+import DataGrid from '@/common/components/DataGrid.vue'
+import type { GridKolon } from '@/common/components/dataGridTipleri'
 import FormDialog from '@/common/components/FormDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
 import { useCrudForm } from '@/common/composables/useCrudForm'
 import { useToast } from '@/common/composables/useToast'
+import { useYerelFiltre } from '@/common/composables/useYerelFiltre'
+import { aktiflikSecenekleri } from '@/common/utils/etiketler'
 
 const toast = useToast()
 const kurallar = shallowRef<HakKurali[]>([])
@@ -56,17 +60,36 @@ async function aktiflikDegistir(kural: HakKurali, aktif: boolean) {
   await yukle()
 }
 
-const basliklar = [
-  { title: 'Ad', key: 'ad' },
+const { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla } = useYerelFiltre({
+  ad: '',
+  aktif: null as boolean | null,
+  sort: '',
+})
+
+const kolonlar: GridKolon<HakKurali>[] = [
+  { key: 'ad', title: 'Ad', sirala: true, filtre: { tur: 'metin', anahtar: 'ad' } },
   {
-    title: 'Kıdem',
     key: 'kidem',
-    value: (k: HakKurali) => aralik(k.minKidemYil, k.maxKidemYil, 'yıl'),
+    title: 'Kıdem',
+    deger: (k) => aralik(k.minKidemYil, k.maxKidemYil, 'yıl'),
+    ham: (k) => k.minKidemYil,
+    sirala: true,
   },
-  { title: 'Yaş', key: 'yas', value: (k: HakKurali) => aralik(k.minYas, k.maxYas, 'yaş') },
-  { title: 'Gün', key: 'gun' },
-  { title: 'Aktif', key: 'aktif', sortable: false },
-  { title: '', key: 'islemler', sortable: false, align: 'end' as const },
+  {
+    key: 'yas',
+    title: 'Yaş',
+    deger: (k) => aralik(k.minYas, k.maxYas, 'yaş'),
+    ham: (k) => k.minYas ?? k.maxYas,
+    sirala: true,
+  },
+  { key: 'gun', title: 'Gün', sirala: true },
+  {
+    key: 'aktif',
+    title: 'Aktif',
+    sirala: true,
+    filtre: { tur: 'tekliSecim', anahtar: 'aktif', secenekler: aktiflikSecenekleri },
+  },
+  { key: 'islemler', title: '', hizala: 'end' },
 ]
 
 onMounted(yukle)
@@ -81,26 +104,34 @@ onMounted(yukle)
       <v-btn color="primary" :prepend-icon="PlusIcon" @click="yeni">Yeni kural</v-btn>
     </PageHeader>
 
-    <v-card>
-      <v-data-table :headers="basliklar" :items="kurallar" items-per-page="-1" hide-default-footer>
-        <template #[`item.aktif`]="{ item }">
-          <AktiflikSwitch
-            :aktif="item.aktif"
-            :etiket="`${item.ad} aktif`"
-            :degistir="(aktif) => aktiflikDegistir(item, aktif)"
-          />
-        </template>
-        <template #[`item.islemler`]="{ item }">
-          <v-btn
-            :icon="PencilIcon"
-            variant="text"
-            size="small"
-            :aria-label="`${item.ad} düzenle`"
-            @click="duzenle(item)"
-          />
-        </template>
-      </v-data-table>
-    </v-card>
+    <DataGrid
+      v-model:sirala="filtre.sort"
+      yerel
+      :kolonlar="kolonlar"
+      :satirlar="kurallar"
+      :filtre="filtre"
+      :sifirlanabilir="varsayilandanFarkli"
+      bos-metin="Hak kuralı yok."
+      @filtre-degisti="filtreyiAyarla"
+      @sifirla="filtreyiSifirla"
+    >
+      <template #[`item.aktif`]="{ item }">
+        <AktiflikSwitch
+          :aktif="item.aktif"
+          :etiket="`${item.ad} aktif`"
+          :degistir="(aktif) => aktiflikDegistir(item, aktif)"
+        />
+      </template>
+      <template #[`item.islemler`]="{ item }">
+        <v-btn
+          :icon="PencilIcon"
+          variant="text"
+          size="small"
+          :aria-label="`${item.ad} düzenle`"
+          @click="duzenle(item)"
+        />
+      </template>
+    </DataGrid>
 
     <FormDialog
       v-model="acik"

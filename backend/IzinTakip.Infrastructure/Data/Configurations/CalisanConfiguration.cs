@@ -10,6 +10,8 @@ public sealed class CalisanConfiguration : IEntityTypeConfiguration<Calisan>
     {
         builder.Property(c => c.Ad).HasMaxLength(100);
         builder.Property(c => c.Soyad).HasMaxLength(100);
+        builder.Property(c => c.AdSoyad).HasMaxLength(201).HasComputedColumnSql("[Ad] + N' ' + [Soyad]", stored: true);
+        builder.HasIndex(c => c.AdSoyad);
         builder.HasOne(c => c.Departman).WithMany().HasForeignKey(c => c.DepartmanId).OnDelete(DeleteBehavior.Restrict);
     }
 }

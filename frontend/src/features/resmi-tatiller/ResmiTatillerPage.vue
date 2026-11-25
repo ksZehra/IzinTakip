@@ -11,11 +11,14 @@ import {
   type ResmiTatilKaydetRequest,
 } from '@/api/tanimlarApi'
 import ConfirmDialog from '@/common/components/ConfirmDialog.vue'
+import DataGrid from '@/common/components/DataGrid.vue'
+import type { GridKolon } from '@/common/components/dataGridTipleri'
 import FormDialog from '@/common/components/FormDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
 import { useFormSubmit } from '@/common/composables/useFormSubmit'
 import { useCrudForm } from '@/common/composables/useCrudForm'
 import { useToast } from '@/common/composables/useToast'
+import { useYerelFiltre } from '@/common/composables/useYerelFiltre'
 import { gunBasligi } from '@/common/utils/tarih'
 
 const toast = useToast()
@@ -60,15 +63,38 @@ async function sil() {
   await yukle()
 }
 
-const basliklar = [
-  { title: 'Tarih', key: 'tarih', value: (t: ResmiTatil) => gunBasligi(t.tarih) },
-  { title: 'Ad', key: 'ad' },
+const { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla } = useYerelFiltre({
+  ad: '',
+  baslangic: '',
+  bitis: '',
+  yarimGun: null as boolean | null,
+  sort: '',
+})
+
+const kolonlar: GridKolon<ResmiTatil>[] = [
   {
-    title: 'Süre',
-    key: 'yarimGun',
-    value: (t: ResmiTatil) => (t.yarimGun ? 'Yarım gün (arife)' : 'Tam gün'),
+    key: 'tarih',
+    title: 'Tarih',
+    deger: (t) => gunBasligi(t.tarih),
+    sirala: true,
+    filtre: { tur: 'tarih', baslangicAnahtari: 'baslangic', bitisAnahtari: 'bitis' },
   },
-  { title: '', key: 'islemler', sortable: false, align: 'end' as const },
+  { key: 'ad', title: 'Ad', sirala: true, filtre: { tur: 'metin', anahtar: 'ad' } },
+  {
+    key: 'yarimGun',
+    title: 'Süre',
+    deger: (t) => (t.yarimGun ? 'Yarım gün (arife)' : 'Tam gün'),
+    sirala: true,
+    filtre: {
+      tur: 'tekliSecim',
+      anahtar: 'yarimGun',
+      secenekler: [
+        { title: 'Tam gün', value: false },
+        { title: 'Yarım gün (arife)', value: true },
+      ],
+    },
+  },
+  { key: 'islemler', title: '', hizala: 'end' },
 ]
 
 watch(yil, yukle, { immediate: true })
@@ -88,33 +114,35 @@ watch(yil, yukle, { immediate: true })
       <v-btn color="primary" :prepend-icon="PlusIcon" @click="yeni">Yeni tatil</v-btn>
     </PageHeader>
 
-    <v-card>
-      <v-data-table
-        :headers="basliklar"
-        :items="tatiller"
-        items-per-page="-1"
-        hide-default-footer
-        no-data-text="Bu yıl için resmi tatil girilmemiş."
-      >
-        <template #[`item.islemler`]="{ item }">
-          <v-btn
-            :icon="PencilIcon"
-            variant="text"
-            size="small"
-            :aria-label="`${item.ad} düzenle`"
-            @click="duzenle(item)"
-          />
-          <v-btn
-            :icon="Trash2Icon"
-            variant="text"
-            size="small"
-            color="error"
-            :aria-label="`${item.ad} sil`"
-            @click="silmeyiSor(item)"
-          />
-        </template>
-      </v-data-table>
-    </v-card>
+    <DataGrid
+      v-model:sirala="filtre.sort"
+      yerel
+      :kolonlar="kolonlar"
+      :satirlar="tatiller"
+      :filtre="filtre"
+      :sifirlanabilir="varsayilandanFarkli"
+      bos-metin="Bu yıl için resmi tatil girilmemiş."
+      @filtre-degisti="filtreyiAyarla"
+      @sifirla="filtreyiSifirla"
+    >
+      <template #[`item.islemler`]="{ item }">
+        <v-btn
+          :icon="PencilIcon"
+          variant="text"
+          size="small"
+          :aria-label="`${item.ad} düzenle`"
+          @click="duzenle(item)"
+        />
+        <v-btn
+          :icon="Trash2Icon"
+          variant="text"
+          size="small"
+          color="error"
+          :aria-label="`${item.ad} sil`"
+          @click="silmeyiSor(item)"
+        />
+      </template>
+    </DataGrid>
 
     <FormDialog
       v-model="acik"

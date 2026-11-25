@@ -26,7 +26,7 @@ public sealed class IzinTalepleriController(IzinTalebiService service, IzinOnayS
         await service.SureHesaplaAsync(request, cancellationToken);
 
     [HttpGet]
-    [EndpointSummary("Kapsamdaki izin taleplerini çalışan, durum, tür ve tarih aralığıyla sayfalı listeler")]
+    [EndpointSummary("Kapsamdaki izin taleplerini çalışan, çalışan adı, çoklu durum ve tür, tarih aralığıyla süzer; seçilen alana göre sıralı ve sayfalı listeler")]
     public async Task<ActionResult<PagedResponse<IzinTalebiListeResponse>>> Listele(
         [FromQuery] IzinTalebiListeRequest request,
         CancellationToken cancellationToken) =>

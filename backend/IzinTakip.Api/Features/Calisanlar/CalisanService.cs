@@ -22,18 +22,29 @@ public sealed class CalisanService(
     SirketSaati sirketSaati,
     ILogger<CalisanService> logger)
 {
+    public static readonly IReadOnlyDictionary<string, Func<IQueryable<Calisan>, bool, IOrderedQueryable<Calisan>>> SiralamaAlanlari =
+        new Dictionary<string, Func<IQueryable<Calisan>, bool, IOrderedQueryable<Calisan>>>
+        {
+            ["adSoyad"] = (sorgu, azalan) => azalan
+                ? sorgu.OrderByDescending(c => c.AdSoyad)
+                : sorgu.OrderBy(c => c.AdSoyad),
+            ["departmanAdi"] = SiralamaExtensions.SiralamaAlani<Calisan, string>(c => c.Departman.Ad),
+            ["iseGirisTarihi"] = SiralamaExtensions.SiralamaAlani<Calisan, DateOnly>(c => c.IseGirisTarihi),
+            ["aktif"] = SiralamaExtensions.SiralamaAlani<Calisan, bool>(c => c.Aktif)
+        };
+
     public async Task<PagedResponse<CalisanListeResponse>> ListeleAsync(CalisanListeRequest request, CancellationToken cancellationToken)
     {
         var sorgu = (await kapsam.CalisanlarAsync(cancellationToken)).AsNoTracking();
         if (!string.IsNullOrWhiteSpace(request.Arama))
         {
             var arama = request.Arama.Trim();
-            sorgu = sorgu.Where(c => c.Ad.Contains(arama) || c.Soyad.Contains(arama));
+            sorgu = sorgu.Where(c => c.AdSoyad.Contains(arama));
         }
 
-        if (request.DepartmanId is not null)
+        if (request.DepartmanId is { Length: > 0 } departmanlar)
         {
-            sorgu = sorgu.Where(c => c.DepartmanId == request.DepartmanId);
+            sorgu = sorgu.Where(c => departmanlar.Contains(c.DepartmanId));
         }
 
         if (request.Aktif is not null)
@@ -41,8 +52,18 @@ public sealed class CalisanService(
             sorgu = sorgu.Where(c => c.Aktif == request.Aktif);
         }
 
+        if (request.IseGirisBaslangic is not null)
+        {
+            sorgu = sorgu.Where(c => c.IseGirisTarihi >= request.IseGirisBaslangic);
+        }
+
+        if (request.IseGirisBitis is not null)
+        {
+            sorgu = sorgu.Where(c => c.IseGirisTarihi <= request.IseGirisBitis);
+        }
+
         return await sorgu
-            .OrderBy(c => c.Ad).ThenBy(c => c.Soyad)
+            .Sirala(request.Sort, SiralamaAlanlari, q => q.OrderBy(c => c.AdSoyad).ThenBy(c => c.Id))
             .Select(c => new CalisanListeResponse(c.Id, c.Ad, c.Soyad, c.DepartmanId, c.Departman.Ad, c.IseGirisTarihi, c.Aktif))
             .SayfalaAsync(request.Page, request.PageSize, cancellationToken);
     }

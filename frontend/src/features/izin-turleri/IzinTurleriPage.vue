@@ -11,12 +11,15 @@ import {
   type IzinTuruKaydetRequest,
 } from '@/api/izinTurleriApi'
 import AktiflikSwitch from '@/common/components/AktiflikSwitch.vue'
+import DataGrid from '@/common/components/DataGrid.vue'
+import type { GridKolon } from '@/common/components/dataGridTipleri'
 import FormDialog from '@/common/components/FormDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
 import SureInput from '@/common/components/SureInput.vue'
 import { useCrudForm } from '@/common/composables/useCrudForm'
 import { useToast } from '@/common/composables/useToast'
-import { gunHesabiEtiketleri, secenekler } from '@/common/utils/etiketler'
+import { useYerelFiltre } from '@/common/composables/useYerelFiltre'
+import { aktiflikSecenekleri, gunHesabiEtiketleri, secenekler } from '@/common/utils/etiketler'
 
 const toast = useToast()
 const turler = shallowRef<IzinTuru[]>([])
@@ -62,31 +65,63 @@ async function aktiflikDegistir(tur: IzinTuru, aktif: boolean) {
   await yukle()
 }
 
-const basliklar = [
-  { title: 'Ad', key: 'ad' },
-  { title: 'Biçimler', key: 'bicimler', value: bicimler },
+const { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla } = useYerelFiltre({
+  ad: '',
+  bakiyedenDuser: null as boolean | null,
+  belgeZorunlu: null as boolean | null,
+  aktif: null as boolean | null,
+  sort: '',
+})
+const evetHayir = [
+  { title: 'Evet', value: true },
+  { title: 'Hayır', value: false },
+]
+
+const kolonlar: GridKolon<IzinTuru>[] = [
+  { key: 'ad', title: 'Ad', sirala: true, filtre: { tur: 'metin', anahtar: 'ad' } },
+  { key: 'bicimler', title: 'Biçimler', deger: bicimler },
   {
-    title: 'Bakiyeden Düşer',
     key: 'bakiyedenDuser',
-    value: (t: IzinTuru) => (t.bakiyedenDuser ? 'Evet' : 'Hayır'),
+    title: 'Bakiyeden Düşer',
+    deger: (t) => (t.bakiyedenDuser ? 'Evet' : 'Hayır'),
+    sirala: true,
+    filtre: { tur: 'tekliSecim', anahtar: 'bakiyedenDuser', secenekler: evetHayir },
   },
   {
-    title: 'Belge',
     key: 'belgeZorunlu',
-    value: (t: IzinTuru) => (t.belgeZorunlu ? 'Zorunlu' : '—'),
+    title: 'Belge',
+    deger: (t) => (t.belgeZorunlu ? 'Zorunlu' : '—'),
+    sirala: true,
+    filtre: {
+      tur: 'tekliSecim',
+      anahtar: 'belgeZorunlu',
+      secenekler: [
+        { title: 'Zorunlu', value: true },
+        { title: 'Zorunlu değil', value: false },
+      ],
+    },
   },
   {
-    title: 'Talep Başına En Çok',
     key: 'talepBasinaEnFazlaMetni',
-    value: (t: IzinTuru) => t.talepBasinaEnFazlaMetni ?? 'Sınırsız',
+    title: 'Talep Başına En Çok',
+    deger: (t) => t.talepBasinaEnFazlaMetni ?? 'Sınırsız',
+    ham: (t) => t.talepBasinaEnFazlaDakika,
+    sirala: true,
   },
   {
-    title: 'Yılda En Çok',
     key: 'yillikEnFazlaMetni',
-    value: (t: IzinTuru) => t.yillikEnFazlaMetni ?? 'Sınırsız',
+    title: 'Yılda En Çok',
+    deger: (t) => t.yillikEnFazlaMetni ?? 'Sınırsız',
+    ham: (t) => t.yillikEnFazlaDakika,
+    sirala: true,
   },
-  { title: 'Aktif', key: 'aktif', sortable: false },
-  { title: '', key: 'islemler', sortable: false, align: 'end' as const },
+  {
+    key: 'aktif',
+    title: 'Aktif',
+    sirala: true,
+    filtre: { tur: 'tekliSecim', anahtar: 'aktif', secenekler: aktiflikSecenekleri },
+  },
+  { key: 'islemler', title: '', hizala: 'end' },
 ]
 
 onMounted(yukle)
@@ -98,26 +133,34 @@ onMounted(yukle)
       <v-btn color="primary" :prepend-icon="PlusIcon" @click="yeni">Yeni izin türü</v-btn>
     </PageHeader>
 
-    <v-card>
-      <v-data-table :headers="basliklar" :items="turler" items-per-page="-1" hide-default-footer>
-        <template #[`item.aktif`]="{ item }">
-          <AktiflikSwitch
-            :aktif="item.aktif"
-            :etiket="`${item.ad} aktif`"
-            :degistir="(aktif) => aktiflikDegistir(item, aktif)"
-          />
-        </template>
-        <template #[`item.islemler`]="{ item }">
-          <v-btn
-            :icon="PencilIcon"
-            variant="text"
-            size="small"
-            :aria-label="`${item.ad} düzenle`"
-            @click="duzenle(item)"
-          />
-        </template>
-      </v-data-table>
-    </v-card>
+    <DataGrid
+      v-model:sirala="filtre.sort"
+      yerel
+      :kolonlar="kolonlar"
+      :satirlar="turler"
+      :filtre="filtre"
+      :sifirlanabilir="varsayilandanFarkli"
+      bos-metin="İzin türü yok."
+      @filtre-degisti="filtreyiAyarla"
+      @sifirla="filtreyiSifirla"
+    >
+      <template #[`item.aktif`]="{ item }">
+        <AktiflikSwitch
+          :aktif="item.aktif"
+          :etiket="`${item.ad} aktif`"
+          :degistir="(aktif) => aktiflikDegistir(item, aktif)"
+        />
+      </template>
+      <template #[`item.islemler`]="{ item }">
+        <v-btn
+          :icon="PencilIcon"
+          variant="text"
+          size="small"
+          :aria-label="`${item.ad} düzenle`"
+          @click="duzenle(item)"
+        />
+      </template>
+    </DataGrid>
 
     <FormDialog
       v-model="acik"
