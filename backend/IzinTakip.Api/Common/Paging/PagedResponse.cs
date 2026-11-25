@@ -14,10 +14,11 @@ public static class PagingExtensions
         int pageSize,
         CancellationToken cancellationToken)
     {
-        page = Math.Clamp(page, 1, int.MaxValue / EnFazlaSayfaBoyutu);
         pageSize = Math.Clamp(pageSize, 1, EnFazlaSayfaBoyutu);
 
         var toplam = await sorgu.CountAsync(cancellationToken);
+        var sonSayfa = Math.Max(1, (int)Math.Ceiling(toplam / (double)pageSize));
+        page = Math.Clamp(page, 1, sonSayfa);
         var kayitlar = await sorgu.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
         return new PagedResponse<T>(kayitlar, toplam, page, pageSize);
     }

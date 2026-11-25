@@ -43,7 +43,10 @@ const {
   varsayilandanFarkli,
   filtreyiAyarla,
   filtreyiSifirla,
-} = usePagedList(talepleriGetir, varsayilanFiltre, { sayiListeleri: ['izinTuruId'] })
+} = usePagedList(talepleriGetir, varsayilanFiltre, {
+  sayiListeleri: ['izinTuruId'],
+  gizliAlanlar: ['calisanArama'],
+})
 const izinTurleri = shallowRef<IzinTuru[]>([])
 
 const calisanKolonu: GridKolon<IzinTalebiSatiri> = {

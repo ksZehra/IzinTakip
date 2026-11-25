@@ -63,13 +63,16 @@ async function sil() {
   await yukle()
 }
 
-const { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla } = useYerelFiltre({
-  ad: '',
-  baslangic: '',
-  bitis: '',
-  yarimGun: null as boolean | null,
-  sort: '',
-})
+const { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla } = useYerelFiltre(
+  {
+    ad: '',
+    baslangic: '',
+    bitis: '',
+    yarimGun: null as boolean | null,
+    sort: '',
+  },
+  { gizliAlanlar: ['ad'] },
+)
 
 const kolonlar: GridKolon<ResmiTatil>[] = [
   {

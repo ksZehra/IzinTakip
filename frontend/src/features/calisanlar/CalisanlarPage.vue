@@ -45,7 +45,10 @@ const {
   yukle,
   filtreyiAyarla,
   filtreyiSifirla,
-} = usePagedList(calisanlariGetir, varsayilanFiltre, { sayiListeleri: ['departmanId'] })
+} = usePagedList(calisanlariGetir, varsayilanFiltre, {
+  sayiListeleri: ['departmanId'],
+  gizliAlanlar: ['arama'],
+})
 const departmanlar = shallowRef<Departman[]>([])
 const dialogAcik = shallowRef(false)
 const form = ref(bosCalisanFormu())

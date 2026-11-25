@@ -55,12 +55,15 @@ async function aktiflikDegistir(departman: Departman, aktif: boolean) {
   await yukle()
 }
 
-const { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla } = useYerelFiltre({
-  ad: '',
-  yonetici: '',
-  aktif: null as boolean | null,
-  sort: '',
-})
+const { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla } = useYerelFiltre(
+  {
+    ad: '',
+    yonetici: '',
+    aktif: null as boolean | null,
+    sort: '',
+  },
+  { gizliAlanlar: ['ad', 'yonetici'] },
+)
 
 const kolonlar: GridKolon<Departman>[] = [
   { key: 'ad', title: 'Ad', sirala: true, filtre: { tur: 'metin', anahtar: 'ad' } },

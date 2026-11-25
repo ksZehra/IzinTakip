@@ -65,13 +65,16 @@ async function aktiflikDegistir(tur: IzinTuru, aktif: boolean) {
   await yukle()
 }
 
-const { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla } = useYerelFiltre({
-  ad: '',
-  bakiyedenDuser: null as boolean | null,
-  belgeZorunlu: null as boolean | null,
-  aktif: null as boolean | null,
-  sort: '',
-})
+const { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla } = useYerelFiltre(
+  {
+    ad: '',
+    bakiyedenDuser: null as boolean | null,
+    belgeZorunlu: null as boolean | null,
+    aktif: null as boolean | null,
+    sort: '',
+  },
+  { gizliAlanlar: ['ad'] },
+)
 const evetHayir = [
   { title: 'Evet', value: true },
   { title: 'Hayır', value: false },

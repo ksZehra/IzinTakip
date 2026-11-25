@@ -45,7 +45,9 @@ const {
   yukle,
   filtreyiAyarla,
   filtreyiSifirla,
-} = usePagedList(kullanicilariGetir, varsayilanFiltre)
+} = usePagedList(kullanicilariGetir, varsayilanFiltre, {
+  gizliAlanlar: ['arama'],
+})
 const roller = shallowRef<Rol[]>([])
 const korumaliRolAtayabilir = auth.yetkiVar(Yetkiler.RolYonetimi)
 const korumaliRoller = computed(() =>

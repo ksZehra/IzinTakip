@@ -1,7 +1,9 @@
-import { computed, reactive, ref, shallowRef, watch, type Ref, type UnwrapRef } from 'vue'
-import { useRoute, useRouter, type LocationQuery } from 'vue-router'
+import { ref, shallowRef, watch, type Ref, type UnwrapRef } from 'vue'
+import type { LocationQuery } from 'vue-router'
 
 import { ApiError } from '@/common/http/ApiError'
+
+import { useFiltreDurumu, type FiltreSecenekleri } from './useFiltreDurumu'
 
 export type FilterValue = string | number | boolean | null | (string | number)[]
 export type Page<Satir> = { items: Satir[]; totalCount: number }
@@ -74,22 +76,17 @@ export function filtreyiYaz(
 export function usePagedList<Satir, Filtre extends Record<string, FilterValue>>(
   getir: (sorgu: ListQuery<Filtre>, signal: AbortSignal) => Promise<Page<Satir>>,
   varsayilanFiltre: Filtre,
-  // Boş varsayılan diziden eleman tipi anlaşılamaz; adresten sayı olarak okunacak listeler burada verilir.
-  { sayiListeleri = [] }: { sayiListeleri?: readonly (keyof Filtre & string)[] } = {},
+  secenekler: FiltreSecenekleri<Filtre> = {},
 ) {
-  const route = useRoute()
-  const router = useRouter()
-
-  const filtre = reactive(filtreyiOku(varsayilanFiltre, route.query, sayiListeleri))
+  const { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla, kaydet } = useFiltreDurumu(
+    varsayilanFiltre,
+    secenekler,
+  )
   const sayfa = ref(1)
   const sayfaBoyutu = ref(20)
   const satirlar = shallowRef<Satir[]>([]) as Ref<Satir[]>
   const toplam = ref(0)
   const yukleniyor = ref(false)
-  const varsayilandanFarkli = computed(
-    () =>
-      Object.keys(filtreyiYaz(filtre as Record<string, FilterValue>, varsayilanFiltre)).length > 0,
-  )
   let denetleyici: AbortController | undefined
   let bekleme: ReturnType<typeof setTimeout> | undefined
 
@@ -111,24 +108,14 @@ export function usePagedList<Satir, Filtre extends Record<string, FilterValue>>(
     }
   }
 
-  function filtreyiAyarla(anahtar: string, deger: FilterValue) {
-    ;(filtre as Record<string, FilterValue>)[anahtar] = deger
-  }
-
-  function filtreyiSifirla() {
-    for (const [alan, deger] of Object.entries(varsayilanFiltre)) {
-      filtreyiAyarla(alan, Array.isArray(deger) ? [...deger] : deger)
-    }
-  }
-
   watch(
     () => ({ ...filtre }) as UnwrapRef<Filtre>,
     () => {
       clearTimeout(bekleme)
       bekleme = setTimeout(() => {
-        sayfa.value = 1
-        void router.replace({ query: filtreyiYaz(filtre, varsayilanFiltre) })
-        void yukle()
+        kaydet()
+        if (sayfa.value === 1) void yukle()
+        else sayfa.value = 1
       }, BEKLEME_MS)
     },
     { deep: true },

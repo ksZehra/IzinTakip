@@ -91,13 +91,16 @@ const {
   varsayilandanFarkli: hakFiltresiDolu,
   filtreyiAyarla: hakFiltresiniAyarla,
   filtreyiSifirla: hakFiltresiniSifirla,
-} = useYerelFiltre({
-  hakBaslangic: '',
-  hakBitis: '',
-  kaynak: null as string | null,
-  aciklama: '',
-  sort: '',
-})
+} = useYerelFiltre(
+  {
+    hakBaslangic: '',
+    hakBitis: '',
+    kaynak: null as string | null,
+    aciklama: '',
+    sort: '',
+  },
+  { gizliAlanlar: ['aciklama'] },
+)
 
 const hakKolonlari: GridKolon<HakSatiri>[] = [
   {

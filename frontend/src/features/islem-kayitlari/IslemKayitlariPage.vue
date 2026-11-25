@@ -31,7 +31,9 @@ const {
   varsayilandanFarkli,
   filtreyiAyarla,
   filtreyiSifirla,
-} = usePagedList(islemKayitlariniGetir, varsayilanFiltre)
+} = usePagedList(islemKayitlariniGetir, varsayilanFiltre, {
+  gizliAlanlar: ['ilgiliArama'],
+})
 
 const islemEtiketleri: Record<string, string> = {
   Eklendi: 'Eklendi',

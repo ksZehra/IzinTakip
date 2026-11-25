@@ -107,6 +107,24 @@ public sealed class CalisanTests(DatabaseApiFactory factory) : IClassFixture<Dat
     }
 
     [Fact]
+    public async Task Liste_FazlaBuyukSayfaNumarasi_SonSayfayiDoner()
+    {
+        var admin = await SuperAdminAsync();
+        var departmanId = await TestData.DepartmanEkleAsync(admin, "Sayfalama Deneme");
+        await TestData.CalisanEkleAsync(admin, "Birinci", departmanId);
+        await TestData.CalisanEkleAsync(admin, "Ikinci", departmanId);
+        await TestData.CalisanEkleAsync(admin, "Ucuncu", departmanId);
+
+        var liste = await admin.GetFromJsonAsync<JsonElement>(
+            $"/api/calisanlar?departmanId={departmanId}&pageSize=2&page=999",
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, liste.GetProperty("page").GetInt32());
+        Assert.Equal(1, liste.GetProperty("items").GetArrayLength());
+        Assert.Equal(3, liste.GetProperty("totalCount").GetInt32());
+    }
+
+    [Fact]
     public async Task Detay_KapsamDisindakiCalisan_404Doner()
     {
         var admin = await SuperAdminAsync();

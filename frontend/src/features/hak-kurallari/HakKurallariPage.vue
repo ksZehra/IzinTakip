@@ -60,11 +60,14 @@ async function aktiflikDegistir(kural: HakKurali, aktif: boolean) {
   await yukle()
 }
 
-const { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla } = useYerelFiltre({
-  ad: '',
-  aktif: null as boolean | null,
-  sort: '',
-})
+const { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla } = useYerelFiltre(
+  {
+    ad: '',
+    aktif: null as boolean | null,
+    sort: '',
+  },
+  { gizliAlanlar: ['ad'] },
+)
 
 const kolonlar: GridKolon<HakKurali>[] = [
   { key: 'ad', title: 'Ad', sirala: true, filtre: { tur: 'metin', anahtar: 'ad' } },

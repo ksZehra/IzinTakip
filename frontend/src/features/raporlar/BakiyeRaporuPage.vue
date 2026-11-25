@@ -32,7 +32,10 @@ const {
   varsayilandanFarkli,
   filtreyiAyarla,
   filtreyiSifirla,
-} = usePagedList(bakiyeleriGetir, varsayilanFiltre, { sayiListeleri: ['departmanId'] })
+} = usePagedList(bakiyeleriGetir, varsayilanFiltre, {
+  sayiListeleri: ['departmanId'],
+  gizliAlanlar: ['arama'],
+})
 const departmanlar = shallowRef<Departman[]>([])
 
 const kolonlar = computed<GridKolon<BakiyeSatiri>[]>(() => [

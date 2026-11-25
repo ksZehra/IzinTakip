@@ -1,36 +1,18 @@
-import { computed, reactive, watch, type UnwrapRef } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { watch, type UnwrapRef } from 'vue'
 
-import { filtreyiOku, filtreyiYaz, type FilterValue } from './usePagedList'
+import { useFiltreDurumu, type FiltreSecenekleri } from './useFiltreDurumu'
+import type { FilterValue } from './usePagedList'
 
 export function useYerelFiltre<Filtre extends Record<string, FilterValue>>(
   varsayilanFiltre: Filtre,
-  { sayiListeleri = [] }: { sayiListeleri?: readonly (keyof Filtre & string)[] } = {},
+  secenekler: FiltreSecenekleri<Filtre> = {},
 ) {
-  const route = useRoute()
-  const router = useRouter()
-
-  const filtre = reactive(filtreyiOku(varsayilanFiltre, route.query, sayiListeleri))
-  const varsayilandanFarkli = computed(
-    () =>
-      Object.keys(filtreyiYaz(filtre as Record<string, FilterValue>, varsayilanFiltre)).length > 0,
+  const { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla, kaydet } = useFiltreDurumu(
+    varsayilanFiltre,
+    secenekler,
   )
 
-  function filtreyiAyarla(anahtar: string, deger: FilterValue) {
-    ;(filtre as Record<string, FilterValue>)[anahtar] = deger
-  }
-
-  function filtreyiSifirla() {
-    for (const [alan, deger] of Object.entries(varsayilanFiltre)) {
-      filtreyiAyarla(alan, Array.isArray(deger) ? [...deger] : deger)
-    }
-  }
-
-  watch(
-    () => ({ ...filtre }) as UnwrapRef<Filtre>,
-    () => void router.replace({ query: filtreyiYaz(filtre, varsayilanFiltre) }),
-    { deep: true },
-  )
+  watch(() => ({ ...filtre }) as UnwrapRef<Filtre>, kaydet, { deep: true })
 
   return { filtre, varsayilandanFarkli, filtreyiAyarla, filtreyiSifirla }
 }
