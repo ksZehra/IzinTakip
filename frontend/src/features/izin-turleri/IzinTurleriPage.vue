@@ -66,7 +66,7 @@ const basliklar = [
   { title: 'Ad', key: 'ad' },
   { title: 'Biçimler', key: 'bicimler', value: bicimler },
   {
-    title: 'Bakiyeden düşer',
+    title: 'Bakiyeden Düşer',
     key: 'bakiyedenDuser',
     value: (t: IzinTuru) => (t.bakiyedenDuser ? 'Evet' : 'Hayır'),
   },
@@ -76,12 +76,12 @@ const basliklar = [
     value: (t: IzinTuru) => (t.belgeZorunlu ? 'Zorunlu' : '—'),
   },
   {
-    title: 'Talep başına en çok',
+    title: 'Talep Başına En Çok',
     key: 'talepBasinaEnFazlaMetni',
     value: (t: IzinTuru) => t.talepBasinaEnFazlaMetni ?? 'Sınırsız',
   },
   {
-    title: 'Yılda en çok',
+    title: 'Yılda En Çok',
     key: 'yillikEnFazlaMetni',
     value: (t: IzinTuru) => t.yillikEnFazlaMetni ?? 'Sınırsız',
   },
@@ -121,16 +121,16 @@ onMounted(yukle)
 
     <FormDialog
       v-model="acik"
-      :baslik="yeniKayit ? 'Yeni izin türü' : 'İzin türünü düzenle'"
+      :baslik="yeniKayit ? 'Yeni İzin Türü' : 'İzin Türünü Düzenle'"
       :kaydediliyor="gonderiliyor"
       @kaydet="kaydet"
     >
-      <v-text-field v-model="form.ad" label="Ad" :error-messages="alanHatasi('ad')" />
+      <v-text-field v-model="form.ad" label="Ad" required :error-messages="alanHatasi('ad')" />
       <fieldset class="border-0 pa-0">
-        <legend class="text-body-medium">Alınabilir biçimler</legend>
+        <legend class="text-body-medium">Alınabilir Biçimler</legend>
         <div class="d-flex flex-wrap">
-          <v-checkbox v-model="form.tamGunAlinir" label="Tam gün" hide-details />
-          <v-checkbox v-model="form.yarimGunAlinir" label="Yarım gün" hide-details />
+          <v-checkbox v-model="form.tamGunAlinir" label="Tam Gün" hide-details />
+          <v-checkbox v-model="form.yarimGunAlinir" label="Yarım Gün" hide-details />
           <v-checkbox v-model="form.saatlikAlinir" label="Saatlik" hide-details />
         </div>
         <v-messages :messages="alanHatasi('tamGunAlinir')" active color="error" />
@@ -138,22 +138,23 @@ onMounted(yukle)
       <v-select
         v-model="form.gunHesabi"
         :items="secenekler(gunHesabiEtiketleri)"
-        label="Gün hesabı"
+        label="Gün Hesabı"
+        required
         :error-messages="alanHatasi('gunHesabi')"
       />
       <div class="d-flex flex-wrap">
-        <v-checkbox v-model="form.bakiyedenDuser" label="Bakiyeden düşer" hide-details />
-        <v-checkbox v-model="form.belgeZorunlu" label="Belge zorunlu" hide-details />
+        <v-checkbox v-model="form.bakiyedenDuser" label="Bakiyeden Düşer" hide-details />
+        <v-checkbox v-model="form.belgeZorunlu" label="Belge Zorunlu" hide-details />
       </div>
       <SureInput
         v-model="form.talepBasinaEnFazlaDakika"
-        etiket="Talep başına en çok"
+        etiket="Talep Başına En Çok"
         bos-olabilir
         :hatalar="alanHatasi('talepBasinaEnFazlaDakika')"
       />
       <SureInput
         v-model="form.yillikEnFazlaDakika"
-        etiket="Takvim yılında en çok"
+        etiket="Takvim Yılında En Çok"
         bos-olabilir
         :hatalar="alanHatasi('yillikEnFazlaDakika')"
       />

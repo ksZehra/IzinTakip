@@ -135,7 +135,7 @@ onMounted(async () => {
 
     <v-row density="compact" class="mb-2">
       <v-col cols="12" md="6">
-        <v-text-field v-model="filtre.arama" label="E-posta ya da ad ara" clearable hide-details />
+        <v-text-field v-model="filtre.arama" label="E-posta ya da Ad Ara" clearable hide-details />
       </v-col>
       <v-col cols="12" md="3">
         <v-select
@@ -199,7 +199,7 @@ onMounted(async () => {
 
     <FormDialog
       v-model="eklemeAcik"
-      baslik="Yeni kullanıcı"
+      baslik="Yeni Kullanıcı"
       :kaydediliyor="ekleme.gonderiliyor.value"
       @kaydet="ekle"
     >
@@ -207,17 +207,19 @@ onMounted(async () => {
         v-model="yeniKullanici.eposta"
         label="E-posta"
         type="email"
+        required
         :error-messages="ekleme.alanHatasi('eposta')"
       />
       <CalisanSelect
         v-model="yeniKullanici.calisanId"
-        etiket="Bağlı çalışan (isteğe bağlı)"
+        etiket="Bağlı Çalışan (İsteğe Bağlı)"
         :hatalar="ekleme.alanHatasi('calisanId')"
       />
       <v-select
         v-model="yeniKullanici.roller"
         :items="rolSecenekleri(atanabilirRoller)"
         label="Roller"
+        required
         multiple
         chips
         :error-messages="ekleme.alanHatasi('roller')"
@@ -234,6 +236,7 @@ onMounted(async () => {
         v-model="secilenRoller"
         :items="rolSecenekleri(atanabilirRoller)"
         label="Roller"
+        required
         multiple
         chips
         :error-messages="rolDuzenleme.alanHatasi('roller')"
@@ -242,7 +245,7 @@ onMounted(async () => {
 
     <ConfirmDialog
       v-model="sifirlamaAcik"
-      baslik="Parolayı sıfırla"
+      baslik="Parolayı Sıfırla"
       :metin="`${secilen?.eposta ?? ''} için geçici parola üretilip e-postayla gönderilecek; ilk girişte değiştirmesi istenecek.`"
       onay-metni="Sıfırla"
       onay-rengi="error"

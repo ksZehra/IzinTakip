@@ -19,11 +19,11 @@ const basliklar = [
   { title: 'Çalışan', key: 'calisanAdSoyad' },
   { title: 'Departman', key: 'departmanAdi' },
   {
-    title: 'İşe giriş',
+    title: 'İşe Giriş Tarihi',
     key: 'iseGirisTarihi',
     value: (s: { iseGirisTarihi: string }) => tarihGoster(s.iseGirisTarihi),
   },
-  { title: 'Toplam hak', key: 'hakMetni' },
+  { title: 'Toplam Hak', key: 'hakMetni' },
   { title: 'Kullanılan', key: 'kullanilanMetni' },
   { title: 'Bekleyen', key: 'bekleyenMetni' },
   { title: 'Kullanılabilir', key: 'kullanilabilirMetni' },

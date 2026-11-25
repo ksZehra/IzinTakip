@@ -40,7 +40,7 @@ const durumlar = secenekler(durumEtiketleri)
 
 const basliklar = [
   ...(ekibiGorur ? [{ title: 'Çalışan', key: 'calisanAdSoyad' }] : []),
-  { title: 'İzin türü', key: 'izinTuruAdi' },
+  { title: 'İzin Türü', key: 'izinTuruAdi' },
   { title: 'Tarih', key: 'aralik' },
   { title: 'Süre', key: 'sureMetni' },
   { title: 'Durum', key: 'durum' },
@@ -81,7 +81,7 @@ function detayaGit(_olay: unknown, { item }: { item: IzinTalebiSatiri }) {
           :items="izinTurleri"
           item-title="ad"
           item-value="id"
-          label="İzin türü"
+          label="İzin Türü"
           clearable
           hide-details
         />
@@ -89,7 +89,7 @@ function detayaGit(_olay: unknown, { item }: { item: IzinTalebiSatiri }) {
       <v-col cols="12" sm="6" md="3">
         <v-text-field
           v-model="filtre.baslangic"
-          label="Başlangıç (en erken)"
+          label="Başlangıç (En Erken)"
           type="date"
           clearable
           hide-details
@@ -98,7 +98,7 @@ function detayaGit(_olay: unknown, { item }: { item: IzinTalebiSatiri }) {
       <v-col cols="12" sm="6" md="3">
         <v-text-field
           v-model="filtre.bitis"
-          label="Bitiş (en geç)"
+          label="Bitiş (En Geç)"
           type="date"
           clearable
           hide-details

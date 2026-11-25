@@ -3,7 +3,9 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using IzinTakip.Api.Common;
 using IzinTakip.Domain;
+using IzinTakip.Domain.Entities;
 using IzinTakip.Domain.Izin;
+using IzinTakip.Infrastructure.Data;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace IzinTakip.Tests.Features.Calisanlar;
@@ -63,6 +65,25 @@ public sealed class CalisanTests(DatabaseApiFactory factory) : IClassFixture<Dat
 
         Assert.Equal(HttpStatusCode.BadRequest, yanit.StatusCode);
         Assert.Equal("Doğum tarihi işe giriş tarihinden önce olmalı.", govde.GetProperty("errors").GetProperty("dogumTarihi")[0].GetString());
+    }
+
+    [Fact]
+    public async Task Olustur_BosForm_ZorunluAlanlarinHepsiTekYanittaDoner()
+    {
+        var admin = await SuperAdminAsync();
+
+        var yanit = await admin.PostAsJsonAsync(
+            "/api/calisanlar",
+            new { ad = "", soyad = "", departmanId = 0, iseGirisTarihi = (string?)null, dogumTarihi = (string?)null },
+            TestContext.Current.CancellationToken);
+        var hatalar = (await yanit.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken)).GetProperty("errors");
+
+        Assert.Equal(HttpStatusCode.BadRequest, yanit.StatusCode);
+        Assert.Equal("Ad zorunludur.", hatalar.GetProperty("ad")[0].GetString());
+        Assert.Equal("Soyad zorunludur.", hatalar.GetProperty("soyad")[0].GetString());
+        Assert.Equal("Departman seçin.", hatalar.GetProperty("departmanId")[0].GetString());
+        Assert.Equal("İşe giriş tarihi zorunludur.", hatalar.GetProperty("iseGirisTarihi")[0].GetString());
+        Assert.Equal("Doğum tarihi zorunludur.", hatalar.GetProperty("dogumTarihi")[0].GetString());
     }
 
     [Fact]
@@ -175,6 +196,108 @@ public sealed class CalisanTests(DatabaseApiFactory factory) : IClassFixture<Dat
         Assert.Equal(HttpStatusCode.BadRequest, buyuk.StatusCode);
         Assert.Equal("Bir hak satırı en çok bir yıllık süre olabilir.", govde.GetProperty("errors").GetProperty("dakika")[0].GetString());
         Assert.Equal(HttpStatusCode.BadRequest, tarih.StatusCode);
+    }
+
+    [Fact]
+    public async Task HakGuncelle_ElleSatir_SureAciklamaVeToplamDegisir()
+    {
+        var admin = await SuperAdminAsync();
+        var calisanId = await TestData.CalisanEkleAsync(admin, "Düzelt Ece", await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}"));
+        var hakId = await HakEkleAsync(admin, calisanId, 20 * 480, "Yanlış giriş");
+
+        var yanit = await admin.PutAsJsonAsync(
+            $"/api/calisanlar/{calisanId}/haklar/{hakId}",
+            new { dakika = 14 * 480, aciklama = "Doğru giriş", kazanimTarihi = "2026-03-02" },
+            TestContext.Current.CancellationToken);
+        var govde = await yanit.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, yanit.StatusCode);
+        var satir = Assert.Single(govde.GetProperty("satirlar").EnumerateArray());
+        Assert.Equal("Doğru giriş", satir.GetProperty("aciklama").GetString());
+        Assert.Equal("2026-03-02", satir.GetProperty("kazanimTarihi").GetString());
+        Assert.Equal(14 * 480, govde.GetProperty("toplamDakika").GetInt32());
+    }
+
+    [Fact]
+    public async Task HakSil_ElleSatir_ToplamdanDuserVeIslemKaydinaYazilir()
+    {
+        var admin = await SuperAdminAsync();
+        var calisanId = await TestData.CalisanEkleAsync(admin, "Sil Selim", await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}"));
+        var kalan = await HakEkleAsync(admin, calisanId, 5 * 480, "Kalacak");
+        var silinecek = await HakEkleAsync(admin, calisanId, 20 * 480, "Yanlış");
+
+        var yanit = await admin.DeleteAsync($"/api/calisanlar/{calisanId}/haklar/{silinecek}", TestContext.Current.CancellationToken);
+        var haklar = await admin.GetFromJsonAsync<JsonElement>($"/api/calisanlar/{calisanId}/haklar", TestContext.Current.CancellationToken);
+        var kayitlar = await admin.GetFromJsonAsync<JsonElement>($"/api/islem-kayitlari?calisanId={calisanId}", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, yanit.StatusCode);
+        Assert.Equal(kalan, Assert.Single(haklar.GetProperty("satirlar").EnumerateArray()).GetProperty("id").GetInt32());
+        Assert.Equal(5 * 480, haklar.GetProperty("toplamDakika").GetInt32());
+        Assert.Contains(kayitlar.GetProperty("items").EnumerateArray(), k => k.GetProperty("tablo").GetString() == "IzinHakki" && k.GetProperty("islem").GetString() == "Silindi");
+    }
+
+    [Fact]
+    public async Task HakGuncelleVeSil_OtomatikSatir_422DonerSatirKorunur()
+    {
+        var admin = await SuperAdminAsync();
+        var calisanId = await TestData.CalisanEkleAsync(admin, "Otomatik Oya", await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}"));
+        int hakId;
+        using (var kapsam = factory.Services.CreateScope())
+        {
+            var db = kapsam.ServiceProvider.GetRequiredService<IzinTakipDbContext>();
+            var hak = IzinHakki.Kural(calisanId, 1, new DateOnly(2026, 1, 1), 14 * 480, "1. yıl hakkı");
+            db.IzinHaklari.Add(hak);
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+            hakId = hak.Id;
+        }
+
+        var guncelle = await admin.PutAsJsonAsync($"/api/calisanlar/{calisanId}/haklar/{hakId}", new { dakika = 480, aciklama = "Değişti" }, TestContext.Current.CancellationToken);
+        var sil = await admin.DeleteAsync($"/api/calisanlar/{calisanId}/haklar/{hakId}", TestContext.Current.CancellationToken);
+        var haklar = await admin.GetFromJsonAsync<JsonElement>($"/api/calisanlar/{calisanId}/haklar", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, guncelle.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, sil.StatusCode);
+        Assert.Equal(14 * 480, haklar.GetProperty("toplamDakika").GetInt32());
+    }
+
+    [Fact]
+    public async Task HakGuncelleVeSil_BaskaCalisaninSatiri_404Doner()
+    {
+        var admin = await SuperAdminAsync();
+        var departmanId = await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}");
+        var sahibi = await TestData.CalisanEkleAsync(admin, "Sahip Sema", departmanId);
+        var baskasi = await TestData.CalisanEkleAsync(admin, "Başka Baki", departmanId);
+        var hakId = await HakEkleAsync(admin, sahibi, 480, "Sema'nın hakkı");
+
+        var guncelle = await admin.PutAsJsonAsync($"/api/calisanlar/{baskasi}/haklar/{hakId}", new { dakika = 960, aciklama = "Deneme" }, TestContext.Current.CancellationToken);
+        var sil = await admin.DeleteAsync($"/api/calisanlar/{baskasi}/haklar/{hakId}", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, guncelle.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, sil.StatusCode);
+    }
+
+    [Fact]
+    public async Task HakGuncelleVeSil_CalisanRolu_403Doner()
+    {
+        var admin = await SuperAdminAsync();
+        var calisanId = await TestData.CalisanEkleAsync(admin, "Yetkisiz Yaren", await TestData.DepartmanEkleAsync(admin, $"Departman-{Guid.NewGuid():N}"));
+        var hakId = await HakEkleAsync(admin, calisanId, 480, "Korunan");
+        var eposta = $"yaren-{calisanId}@izintakip.test";
+        await TestAuth.KullaniciOlusturAsync(factory, eposta, SistemRolleri.Calisan, calisanId: calisanId);
+        var calisan = await TestAuth.OturumluClientAsync(factory, eposta);
+
+        var guncelle = await calisan.PutAsJsonAsync($"/api/calisanlar/{calisanId}/haklar/{hakId}", new { dakika = 99999, aciklama = "Sahte" }, TestContext.Current.CancellationToken);
+        var sil = await calisan.DeleteAsync($"/api/calisanlar/{calisanId}/haklar/{hakId}", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, guncelle.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, sil.StatusCode);
+    }
+
+    private static async Task<int> HakEkleAsync(HttpClient istemci, int calisanId, int dakika, string aciklama)
+    {
+        var yanit = await istemci.PostAsJsonAsync($"/api/calisanlar/{calisanId}/haklar", new { dakika, aciklama }, TestContext.Current.CancellationToken);
+        var govde = await yanit.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+        return govde.GetProperty("satirlar").EnumerateArray().Single(s => s.GetProperty("aciklama").GetString() == aciklama).GetProperty("id").GetInt32();
     }
 
     private Task<HttpClient> SuperAdminAsync() =>

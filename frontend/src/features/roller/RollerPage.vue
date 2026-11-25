@@ -112,12 +112,12 @@ onMounted(async () => {
 
     <FormDialog
       v-model="acik"
-      :baslik="yeniKayit ? 'Yeni rol' : 'Rolü düzenle'"
+      :baslik="yeniKayit ? 'Yeni Rol' : 'Rolü Düzenle'"
       :kaydediliyor="gonderiliyor"
       @kaydet="kaydet"
     >
-      <v-text-field v-model="form.ad" label="Ad" :error-messages="alanHatasi('ad')" />
-      <v-checkbox v-model="form.korumali" label="Korumalı (yalnız SuperAdmin atar)" hide-details />
+      <v-text-field v-model="form.ad" label="Ad" required :error-messages="alanHatasi('ad')" />
+      <v-checkbox v-model="form.korumali" label="Korumalı (Yalnız SuperAdmin Atar)" hide-details />
       <fieldset class="border-0 pa-0">
         <legend class="text-body-medium mb-1">Yetkiler</legend>
         <v-checkbox
@@ -135,7 +135,7 @@ onMounted(async () => {
 
     <ConfirmDialog
       v-model="silmeAcik"
-      baslik="Rolü sil"
+      baslik="Rolü Sil"
       :metin="`${rolEtiketi(silinecek?.ad ?? '')} rolü silinecek.`"
       onay-metni="Sil"
       onay-rengi="error"

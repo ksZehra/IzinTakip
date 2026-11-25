@@ -63,7 +63,7 @@ const basliklar = [
         <v-select
           v-model="filtre.tablo"
           :items="tablolar"
-          label="Kayıt türü"
+          label="Kayıt Türü"
           clearable
           hide-details
         />
@@ -83,7 +83,7 @@ const basliklar = [
       <v-col cols="12" sm="6" md="3">
         <v-switch
           v-model="filtre.sadeceKendiKaydi"
-          label="Yalnız kişinin kendi kaydı"
+          label="Yalnız Kişinin Kendi Kaydı"
           color="primary"
           hide-details
         />

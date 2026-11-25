@@ -33,10 +33,10 @@ const dialogAcik = shallowRef(false)
 const form = ref(bosCalisanFormu())
 
 const basliklar = [
-  { title: 'Ad soyad', key: 'adSoyad', value: (c: CalisanSatiri) => `${c.ad} ${c.soyad}` },
+  { title: 'Ad Soyad', key: 'adSoyad', value: (c: CalisanSatiri) => `${c.ad} ${c.soyad}` },
   { title: 'Departman', key: 'departmanAdi' },
   {
-    title: 'İşe giriş',
+    title: 'İşe Giriş Tarihi',
     key: 'iseGirisTarihi',
     value: (c: CalisanSatiri) => tarihGoster(c.iseGirisTarihi),
   },
@@ -77,7 +77,7 @@ onMounted(async () => {
 
     <v-row density="compact" class="mb-2">
       <v-col cols="12" md="4">
-        <v-text-field v-model="filtre.arama" label="Ad ya da soyad ara" clearable hide-details />
+        <v-text-field v-model="filtre.arama" label="Ad ya da Soyad Ara" clearable hide-details />
       </v-col>
       <v-col cols="12" sm="6" md="4">
         <v-select
@@ -126,7 +126,7 @@ onMounted(async () => {
     <CalisanForm
       v-model="dialogAcik"
       v-model:form="form"
-      baslik="Yeni çalışan"
+      baslik="Yeni Çalışan"
       :departmanlar="departmanlar"
       :kaydediliyor="gonderiliyor"
       :alan-hatasi="alanHatasi"

@@ -15,20 +15,28 @@ public sealed class CalisanKaydetRequestValidator : AbstractValidator<CalisanKay
             .MaximumLength(100).WithMessage("Soyad en çok 100 karakter olabilir.");
         RuleFor(r => r.DepartmanId).GreaterThan(0).WithMessage("Departman seçin.");
         RuleFor(r => r.DogumTarihi)
-            .GreaterThan(new DateOnly(1900, 1, 1)).WithMessage("Geçerli bir doğum tarihi girin.")
-            .LessThan(r => r.IseGirisTarihi).WithMessage("Doğum tarihi işe giriş tarihinden önce olmalı.");
-        RuleFor(r => r.IseGirisTarihi).GreaterThan(new DateOnly(1950, 1, 1)).WithMessage("Geçerli bir işe giriş tarihi girin.");
+            .Cascade(CascadeMode.Stop)
+            .NotNull().WithMessage("Doğum tarihi zorunludur.")
+            .GreaterThan(new DateOnly(1900, 1, 1)).WithMessage("Geçerli bir doğum tarihi girin.");
+        RuleFor(r => r.DogumTarihi)
+            .LessThan(r => r.IseGirisTarihi)
+            .When(r => r.DogumTarihi is not null && r.IseGirisTarihi is not null)
+            .WithMessage("Doğum tarihi işe giriş tarihinden önce olmalı.");
+        RuleFor(r => r.IseGirisTarihi)
+            .Cascade(CascadeMode.Stop)
+            .NotNull().WithMessage("İşe giriş tarihi zorunludur.")
+            .GreaterThan(new DateOnly(1950, 1, 1)).WithMessage("Geçerli bir işe giriş tarihi girin.");
         RuleFor(r => r.HakBaslangicKidemYili)
             .InclusiveBetween(1, 60).When(r => r.HakBaslangicKidemYili is not null)
             .WithMessage("Otomatik hak başlangıç yılı 1 ile 60 arasında olmalı.");
     }
 }
 
-public sealed class IzinHakkiEkleRequestValidator : AbstractValidator<IzinHakkiEkleRequest>
+public sealed class IzinHakkiKaydetRequestValidator : AbstractValidator<IzinHakkiKaydetRequest>
 {
     private const int BirYilinDakikasi = 366 * 24 * 60;
 
-    public IzinHakkiEkleRequestValidator()
+    public IzinHakkiKaydetRequestValidator()
     {
         RuleFor(r => r.Dakika)
             .NotEqual(0).WithMessage("Süre sıfır olamaz.")

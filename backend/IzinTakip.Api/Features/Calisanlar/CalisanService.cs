@@ -73,9 +73,9 @@ public sealed class CalisanService(
             request.Ad.Trim(),
             request.Soyad.Trim(),
             request.DepartmanId,
-            request.IseGirisTarihi,
-            request.DogumTarihi,
-            request.HakBaslangicKidemYili ?? IzinHakkiCalculator.IlkHakKidemYili(request.IseGirisTarihi, sirketSaati.Bugun()));
+            request.IseGirisTarihi!.Value,
+            request.DogumTarihi!.Value,
+            request.HakBaslangicKidemYili ?? IzinHakkiCalculator.IlkHakKidemYili(request.IseGirisTarihi.Value, sirketSaati.Bugun()));
         db.Calisanlar.Add(calisan);
         await db.SaveChangesAsync(cancellationToken);
 
@@ -95,8 +95,8 @@ public sealed class CalisanService(
             request.Ad.Trim(),
             request.Soyad.Trim(),
             request.DepartmanId,
-            request.IseGirisTarihi,
-            request.DogumTarihi,
+            request.IseGirisTarihi!.Value,
+            request.DogumTarihi!.Value,
             request.HakBaslangicKidemYili ?? calisan.HakBaslangicKidemYili);
         await db.SaveChangesAsync(cancellationToken);
 
@@ -157,7 +157,7 @@ public sealed class CalisanService(
             SureMetni.Olustur(toplam, gunluk));
     }
 
-    public async Task<IzinHaklariResponse> HakEkleAsync(int id, IzinHakkiEkleRequest request, CancellationToken cancellationToken)
+    public async Task<IzinHaklariResponse> HakEkleAsync(int id, IzinHakkiKaydetRequest request, CancellationToken cancellationToken)
     {
         await kapsam.BulAsync(id, cancellationToken);
         db.IzinHaklari.Add(IzinHakki.Elle(id, request.KazanimTarihi ?? sirketSaati.Bugun(), request.Dakika, request.Aciklama.Trim()));
@@ -165,6 +165,26 @@ public sealed class CalisanService(
 
         logger.LogInformation("Elle hak satiri eklendi {CalisanId} {Dakika}", id, request.Dakika);
         return await HaklariAsync(id, cancellationToken);
+    }
+
+    public async Task<IzinHaklariResponse> HakGuncelleAsync(int id, int hakId, IzinHakkiKaydetRequest request, CancellationToken cancellationToken)
+    {
+        var hak = await HakBulAsync(id, hakId, cancellationToken);
+        hak.Duzelt(request.KazanimTarihi ?? hak.KazanimTarihi, request.Dakika, request.Aciklama.Trim());
+        await db.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Elle hak satiri guncellendi {CalisanId} {HakId} {Dakika}", id, hakId, request.Dakika);
+        return await HaklariAsync(id, cancellationToken);
+    }
+
+    public async Task HakSilAsync(int id, int hakId, CancellationToken cancellationToken)
+    {
+        var hak = await HakBulAsync(id, hakId, cancellationToken);
+        hak.ElleOldugunuDogrula();
+        db.IzinHaklari.Remove(hak);
+        await db.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Elle hak satiri silindi {CalisanId} {HakId}", id, hakId);
     }
 
     public async Task<BakiyeResponse> BakiyeAsync(int id, CancellationToken cancellationToken)
@@ -177,6 +197,13 @@ public sealed class CalisanService(
             bakiye.KullanilanDakika, SureMetni.Olustur(bakiye.KullanilanDakika, gunluk),
             bakiye.BekleyenDakika, SureMetni.Olustur(bakiye.BekleyenDakika, gunluk),
             bakiye.KullanilabilirDakika, SureMetni.Olustur(bakiye.KullanilabilirDakika, gunluk));
+    }
+
+    private async Task<IzinHakki> HakBulAsync(int calisanId, int hakId, CancellationToken cancellationToken)
+    {
+        await kapsam.BulAsync(calisanId, cancellationToken);
+        return await db.IzinHaklari.SingleOrDefaultAsync(h => h.Id == hakId && h.CalisanId == calisanId, cancellationToken)
+            ?? throw new NotFoundException("Hak satırı bulunamadı.");
     }
 
     private async Task DepartmanAktifMiAsync(int departmanId, CancellationToken cancellationToken)

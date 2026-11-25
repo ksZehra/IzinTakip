@@ -7,6 +7,17 @@ const { mesajlar } = useToast()
 <template>
   <v-app>
     <RouterView />
-    <v-snackbar-queue v-model="mesajlar" closable close-text="Kapat" location="top right" />
+    <v-snackbar-queue v-model="mesajlar" location="top right">
+      <template #actions="{ props }">
+        <v-btn
+          v-bind="props"
+          icon="$close"
+          text=""
+          size="small"
+          variant="text"
+          aria-label="Kapat"
+        />
+      </template>
+    </v-snackbar-queue>
   </v-app>
 </template>

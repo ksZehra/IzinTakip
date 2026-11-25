@@ -5,8 +5,8 @@ export function bosCalisanFormu(): CalisanKaydetRequest {
     ad: '',
     soyad: '',
     departmanId: 0,
-    iseGirisTarihi: '',
-    dogumTarihi: '',
+    iseGirisTarihi: null,
+    dogumTarihi: null,
     hakBaslangicKidemYili: null,
   }
 }

@@ -62,6 +62,26 @@ public sealed class CalisanlarController(CalisanService service) : ControllerBas
     [HttpPost("{id:int}/haklar")]
     [Permission(Yetkiler.Calisan.Yonet)]
     [EndpointSummary("Çalışana elle hak satırı ekler (açılış bakiyesi ya da düzeltme; süre dakika, eksi olabilir)")]
-    public async Task<ActionResult<IzinHaklariResponse>> HakEkle(int id, IzinHakkiEkleRequest request, CancellationToken cancellationToken) =>
+    public async Task<ActionResult<IzinHaklariResponse>> HakEkle(int id, IzinHakkiKaydetRequest request, CancellationToken cancellationToken) =>
         await service.HakEkleAsync(id, request, cancellationToken);
+
+    [HttpPut("{id:int}/haklar/{hakId:int}")]
+    [Permission(Yetkiler.Calisan.Yonet)]
+    [EndpointSummary("Elle girilmiş hak satırını düzeltir; otomatik satır değiştirilemez")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<ActionResult<IzinHaklariResponse>> HakGuncelle(int id, int hakId, IzinHakkiKaydetRequest request, CancellationToken cancellationToken) =>
+        await service.HakGuncelleAsync(id, hakId, request, cancellationToken);
+
+    [HttpDelete("{id:int}/haklar/{hakId:int}")]
+    [Permission(Yetkiler.Calisan.Yonet)]
+    [EndpointSummary("Elle girilmiş hak satırını siler; eski değeri işlem kaydında kalır, otomatik satır silinemez")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> HakSil(int id, int hakId, CancellationToken cancellationToken)
+    {
+        await service.HakSilAsync(id, hakId, cancellationToken);
+        return NoContent();
+    }
 }

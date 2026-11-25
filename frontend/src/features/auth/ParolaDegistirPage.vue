@@ -58,14 +58,16 @@ async function cikisYap() {
         <v-form class="d-flex flex-column ga-4" @submit.prevent="kaydet">
           <v-text-field
             v-model="mevcutParola"
-            label="Mevcut parola"
+            label="Mevcut Parola"
+            required
             type="password"
             autocomplete="current-password"
             :error-messages="alanHatasi('mevcutParola')"
           />
           <v-text-field
             v-model="yeniParola"
-            label="Yeni parola"
+            label="Yeni Parola"
+            required
             type="password"
             autocomplete="new-password"
             hint="En az 8 karakter; büyük harf, küçük harf ve rakam."
@@ -74,7 +76,8 @@ async function cikisYap() {
           />
           <v-text-field
             v-model="yeniParolaTekrar"
-            label="Yeni parola (tekrar)"
+            label="Yeni Parola (Tekrar)"
+            required
             type="password"
             autocomplete="new-password"
             :error-messages="tekrarHatasi"
@@ -84,7 +87,7 @@ async function cikisYap() {
           </v-btn>
         </v-form>
         <v-btn v-if="zorunlu" variant="text" @click="cikisYap">Çıkış yap</v-btn>
-        <v-btn v-else variant="text" :to="{ name: 'ana-sayfa' }">Vazgeç</v-btn>
+        <v-btn v-else variant="tonal" :to="{ name: 'ana-sayfa' }">Vazgeç</v-btn>
       </v-card-text>
     </v-card>
   </CenteredLayout>

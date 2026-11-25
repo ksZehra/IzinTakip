@@ -36,6 +36,27 @@ public sealed class IzinHakki : Entity
         return new IzinHakki(calisanId, null, kazanimTarihi, dakika, HakKaynagi.Elle, aciklama);
     }
 
+    public void ElleOldugunuDogrula()
+    {
+        if (Kaynak != HakKaynagi.Elle)
+        {
+            throw new BusinessRuleException("Otomatik hak satırı değiştirilemez. Düzeltmek için yeni bir hak satırı ekleyin.");
+        }
+    }
+
+    public void Duzelt(DateOnly kazanimTarihi, int dakika, string aciklama)
+    {
+        ElleOldugunuDogrula();
+        if (dakika == 0)
+        {
+            throw new BusinessRuleException("Hak düzeltmesinin süresi sıfır olamaz.");
+        }
+
+        KazanimTarihi = kazanimTarihi;
+        Dakika = dakika;
+        Aciklama = aciklama;
+    }
+
     public static IzinHakki Kural(int calisanId, int kidemYili, DateOnly kazanimTarihi, int dakika, string aciklama) =>
         new(calisanId, kidemYili, kazanimTarihi, dakika, HakKaynagi.Kural, aciklama);
 }

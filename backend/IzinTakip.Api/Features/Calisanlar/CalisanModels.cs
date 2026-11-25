@@ -8,11 +8,11 @@ public sealed record CalisanKaydetRequest(
     string Ad,
     string Soyad,
     int DepartmanId,
-    DateOnly IseGirisTarihi,
-    DateOnly DogumTarihi,
+    DateOnly? IseGirisTarihi,
+    DateOnly? DogumTarihi,
     int? HakBaslangicKidemYili);
 
-public sealed record IzinHakkiEkleRequest(int Dakika, string Aciklama, DateOnly? KazanimTarihi);
+public sealed record IzinHakkiKaydetRequest(int Dakika, string Aciklama, DateOnly? KazanimTarihi);
 
 public sealed record CalisanListeResponse(
     int Id,

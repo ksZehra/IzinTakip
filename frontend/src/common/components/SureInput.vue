@@ -32,6 +32,7 @@ onMounted(() => void ayarlarStore.yukle())
       <v-number-input
         :model-value="dakika === null ? null : parcalar.gun"
         label="Gün"
+        :required="!bosOlabilir"
         :min="0"
         control-variant="stacked"
         class="sure-parcasi"
@@ -40,6 +41,7 @@ onMounted(() => void ayarlarStore.yukle())
       <v-number-input
         :model-value="dakika === null ? null : parcalar.saat"
         label="Saat"
+        :required="!bosOlabilir"
         :min="0"
         control-variant="stacked"
         class="sure-parcasi"
@@ -48,6 +50,7 @@ onMounted(() => void ayarlarStore.yukle())
       <v-number-input
         :model-value="dakika === null ? null : parcalar.dakika"
         label="Dakika"
+        :required="!bosOlabilir"
         :min="0"
         :max="59"
         control-variant="stacked"
@@ -57,7 +60,7 @@ onMounted(() => void ayarlarStore.yukle())
       <v-checkbox
         v-if="eksiOlabilir"
         :model-value="parcalar.eksi"
-        label="Eksi (düşülecek)"
+        label="Eksi (Düşülecek)"
         hide-details
         @update:model-value="guncelle('eksi', $event)"
       />

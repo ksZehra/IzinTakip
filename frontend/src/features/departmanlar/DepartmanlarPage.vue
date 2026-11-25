@@ -54,7 +54,7 @@ async function aktiflikDegistir(departman: Departman, aktif: boolean) {
 const basliklar = [
   { title: 'Ad', key: 'ad' },
   { title: 'Yönetici', key: 'yoneticiAdSoyad' },
-  { title: 'Aktif çalışan', key: 'aktifCalisanSayisi' },
+  { title: 'Aktif Çalışan', key: 'aktifCalisanSayisi' },
   { title: 'Aktif', key: 'aktif', sortable: false },
   { title: '', key: 'islemler', sortable: false, align: 'end' as const },
 ]
@@ -99,11 +99,11 @@ onMounted(yukle)
 
     <FormDialog
       v-model="acik"
-      :baslik="yeniKayit ? 'Yeni departman' : 'Departmanı düzenle'"
+      :baslik="yeniKayit ? 'Yeni Departman' : 'Departmanı Düzenle'"
       :kaydediliyor="gonderiliyor"
       @kaydet="kaydet"
     >
-      <v-text-field v-model="form.ad" label="Ad" :error-messages="alanHatasi('ad')" />
+      <v-text-field v-model="form.ad" label="Ad" required :error-messages="alanHatasi('ad')" />
       <CalisanSelect
         v-model="form.yoneticiId"
         etiket="Yönetici"

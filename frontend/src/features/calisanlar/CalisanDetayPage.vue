@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeftIcon, PencilIcon, PlusIcon } from '@lucide/vue'
+import { ArrowLeftIcon, PencilIcon, PlusIcon, Trash2Icon } from '@lucide/vue'
 import { ref, shallowRef, watch } from 'vue'
 
 import {
@@ -8,7 +8,9 @@ import {
   calisaniGetir,
   calisanGuncelle,
   hakEkle,
+  hakGuncelle,
   haklariGetir,
+  hakSil,
   type Bakiye,
   type Calisan,
   type IzinHaklari,
@@ -19,6 +21,7 @@ import FormDialog from '@/common/components/FormDialog.vue'
 import PageHeader from '@/common/components/PageHeader.vue'
 import { ApiError } from '@/common/http/ApiError'
 import SureInput from '@/common/components/SureInput.vue'
+import { useCrudForm } from '@/common/composables/useCrudForm'
 import { useFormSubmit } from '@/common/composables/useFormSubmit'
 import { useToast } from '@/common/composables/useToast'
 import { tarihGoster } from '@/common/utils/tarih'
@@ -30,8 +33,15 @@ const props = defineProps<{ id: number }>()
 
 const toast = useToast()
 const kayit = useFormSubmit()
-const hak = useFormSubmit()
 const aktiflik = useFormSubmit()
+const hakSilme = useFormSubmit()
+
+type HakSatiri = IzinHaklari['satirlar'][number]
+interface HakFormu {
+  dakika: number | null
+  aciklama: string
+  kazanimTarihi: string
+}
 
 const calisan = shallowRef<Calisan | null>(null)
 const bakiye = shallowRef<Bakiye | null>(null)
@@ -40,13 +50,38 @@ const departmanlar = shallowRef<Departman[]>([])
 
 const duzenlemeAcik = ref(false)
 const form = ref(bosCalisanFormu())
-const hakAcik = ref(false)
-const hakFormu = ref<{ dakika: number | null; aciklama: string; kazanimTarihi: string }>({
-  dakika: 0,
-  aciklama: '',
-  kazanimTarihi: '',
-})
 const aktiflikAcik = ref(false)
+const silinecekHak = ref<HakSatiri | null>(null)
+const hakSilmeAcik = ref(false)
+
+function hakIstegi(formu: HakFormu) {
+  return {
+    dakika: formu.dakika ?? 0,
+    aciklama: formu.aciklama,
+    kazanimTarihi: formu.kazanimTarihi || null,
+  }
+}
+
+const {
+  acik: hakAcik,
+  form: hakFormu,
+  yeniKayit: hakYeni,
+  yeni: hakEklemeyiAc,
+  duzenle: hakDuzenle,
+  kaydet: hakKaydet,
+  gonderiliyor: hakGonderiliyor,
+  alanHatasi: hakAlanHatasi,
+} = useCrudForm<HakSatiri, HakFormu>({
+  bosForm: () => ({ dakika: 0, aciklama: '', kazanimTarihi: '' }),
+  formaCevir: (satir) => ({
+    dakika: satir.dakika,
+    aciklama: satir.aciklama,
+    kazanimTarihi: satir.kazanimTarihi,
+  }),
+  ekle: (formu) => hakEkle(props.id, hakIstegi(formu)),
+  guncelle: (hakId, formu) => hakGuncelle(props.id, hakId, hakIstegi(formu)),
+  kaydedildi: () => yukle(),
+})
 
 const hakBasliklari = [
   {
@@ -61,6 +96,7 @@ const hakBasliklari = [
     value: (h: { kaynak: string }) => (h.kaynak === 'Kural' ? 'Otomatik' : 'Elle'),
   },
   { title: 'Açıklama', key: 'aciklama' },
+  { title: '', key: 'islemler', sortable: false, align: 'end' as const },
 ]
 
 const yuklenemedi = ref(false)
@@ -94,23 +130,21 @@ async function kaydet() {
   await yukle()
 }
 
-function hakEklemeyiAc() {
-  hakFormu.value = { dakika: 0, aciklama: '', kazanimTarihi: '' }
-  hakAcik.value = true
+function hakSilmeyiSor(satir: HakSatiri) {
+  silinecekHak.value = satir
+  hakSilmeAcik.value = true
 }
 
-async function hakKaydet() {
-  const basarili = await hak.gonder(async () => {
-    await hakEkle(props.id, {
-      dakika: hakFormu.value.dakika ?? 0,
-      aciklama: hakFormu.value.aciklama,
-      kazanimTarihi: hakFormu.value.kazanimTarihi || null,
-    })
+async function hakSilOnayla() {
+  const satir = silinecekHak.value
+  if (!satir) return
+  const basarili = await hakSilme.gonder(async () => {
+    await hakSil(props.id, satir.id)
     return true
   })
   if (!basarili) return
-  hakAcik.value = false
-  toast.basariGoster('Hak satırı eklendi.')
+  hakSilmeAcik.value = false
+  toast.basariGoster('Hak satırı silindi.')
   await yukle()
 }
 
@@ -204,7 +238,27 @@ watch(() => props.id, yukle, { immediate: true })
             items-per-page="-1"
             hide-default-footer
             no-data-text="Hak satırı yok."
-          />
+          >
+            <template #[`item.islemler`]="{ item }">
+              <template v-if="item.kaynak === 'Elle'">
+                <v-btn
+                  :icon="PencilIcon"
+                  variant="text"
+                  size="small"
+                  :aria-label="`${item.aciklama} düzenle`"
+                  @click="hakDuzenle(item)"
+                />
+                <v-btn
+                  :icon="Trash2Icon"
+                  variant="text"
+                  size="small"
+                  color="error"
+                  :aria-label="`${item.aciklama} sil`"
+                  @click="hakSilmeyiSor(item)"
+                />
+              </template>
+            </template>
+          </v-data-table>
         </v-card>
       </v-col>
     </v-row>
@@ -212,7 +266,7 @@ watch(() => props.id, yukle, { immediate: true })
     <CalisanForm
       v-model="duzenlemeAcik"
       v-model:form="form"
-      baslik="Çalışanı düzenle"
+      baslik="Çalışanı Düzenle"
       :departmanlar="departmanlar"
       :kaydediliyor="kayit.gonderiliyor.value"
       :alan-hatasi="kayit.alanHatasi"
@@ -221,34 +275,45 @@ watch(() => props.id, yukle, { immediate: true })
 
     <FormDialog
       v-model="hakAcik"
-      baslik="Hak satırı ekle"
-      :kaydediliyor="hak.gonderiliyor.value"
+      :baslik="hakYeni ? 'Hak Satırı Ekle' : 'Hak Satırını Düzenle'"
+      :kaydediliyor="hakGonderiliyor"
       @kaydet="hakKaydet"
     >
       <SureInput
         v-model="hakFormu.dakika"
         etiket="Süre"
         eksi-olabilir
-        :hatalar="hak.alanHatasi('dakika')"
+        :hatalar="hakAlanHatasi('dakika')"
       />
       <v-text-field
         v-model="hakFormu.aciklama"
         label="Açıklama"
+        required
         hint="Örn. devreden bakiye, düzeltme"
-        :error-messages="hak.alanHatasi('aciklama')"
+        :error-messages="hakAlanHatasi('aciklama')"
       />
       <v-text-field
         v-model="hakFormu.kazanimTarihi"
-        label="Tarih (boşsa bugün)"
+        label="Tarih (Boşsa Bugün)"
         type="date"
-        :error-messages="hak.alanHatasi('kazanimTarihi')"
+        :error-messages="hakAlanHatasi('kazanimTarihi')"
       />
     </FormDialog>
 
     <ConfirmDialog
+      v-model="hakSilmeAcik"
+      baslik="Hak Satırını Sil"
+      :metin="`${silinecekHak?.sureMetni ?? ''} süreli “${silinecekHak?.aciklama ?? ''}” satırı silinecek. Eski değeri işlem kayıtlarında kalır.`"
+      onay-metni="Sil"
+      onay-rengi="error"
+      :calisiyor="hakSilme.gonderiliyor.value"
+      @onay="hakSilOnayla"
+    />
+
+    <ConfirmDialog
       v-if="calisan"
       v-model="aktiflikAcik"
-      :baslik="calisan.aktif ? 'Çalışanı pasif yap' : 'Çalışanı aktif yap'"
+      :baslik="calisan.aktif ? 'Çalışanı Pasif Yap' : 'Çalışanı Aktif Yap'"
       :metin="
         calisan.aktif
           ? 'Pasif çalışan talep açamaz; bağlı kullanıcı hesabı da kapanır.'

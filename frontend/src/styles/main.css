@@ -45,6 +45,14 @@
   font-weight: 500;
 }
 
+.v-field:has(input[required], textarea[required]) {
+  --v-field-border-opacity: 1;
+}
+
+.v-field:has(input[required], textarea[required]) .v-field__outline {
+  color: rgb(var(--v-theme-error));
+}
+
 .lucide,
 .v-icon svg {
   stroke-width: 1.75;

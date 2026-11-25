@@ -104,22 +104,23 @@ onMounted(yukle)
 
     <FormDialog
       v-model="acik"
-      :baslik="yeniKayit ? 'Yeni hak kuralı' : 'Hak kuralını düzenle'"
+      :baslik="yeniKayit ? 'Yeni Hak Kuralı' : 'Hak Kuralını Düzenle'"
       :kaydediliyor="gonderiliyor"
       @kaydet="kaydet"
     >
-      <v-text-field v-model="form.ad" label="Ad" :error-messages="alanHatasi('ad')" />
+      <v-text-field v-model="form.ad" label="Ad" required :error-messages="alanHatasi('ad')" />
       <div class="d-flex flex-wrap ga-4">
         <v-number-input
           v-model="form.minKidemYil"
-          label="En az kıdem (yıl)"
+          label="En Az Kıdem (Yıl)"
+          required
           :min="0"
           class="flex-1-1"
           :error-messages="alanHatasi('minKidemYil')"
         />
         <v-number-input
           v-model="form.maxKidemYil"
-          label="En çok kıdem (boşsa sınırsız)"
+          label="En Çok Kıdem (Boşsa Sınırsız)"
           :min="0"
           class="flex-1-1"
           :error-messages="alanHatasi('maxKidemYil')"
@@ -128,14 +129,14 @@ onMounted(yukle)
       <div class="d-flex flex-wrap ga-4">
         <v-number-input
           v-model="form.minYas"
-          label="En az yaş (isteğe bağlı)"
+          label="En Az Yaş (İsteğe Bağlı)"
           :min="0"
           class="flex-1-1"
           :error-messages="alanHatasi('minYas')"
         />
         <v-number-input
           v-model="form.maxYas"
-          label="En çok yaş (isteğe bağlı)"
+          label="En Çok Yaş (İsteğe Bağlı)"
           :min="0"
           class="flex-1-1"
           :error-messages="alanHatasi('maxYas')"
@@ -143,7 +144,8 @@ onMounted(yukle)
       </div>
       <v-number-input
         v-model="form.gun"
-        label="Yıllık izin (gün)"
+        label="Yıllık İzin (Gün)"
+        required
         :min="0"
         :error-messages="alanHatasi('gun')"
       />

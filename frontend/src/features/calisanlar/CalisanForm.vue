@@ -20,43 +20,51 @@ const form = defineModel<CalisanKaydetRequest>('form', { required: true })
       <v-text-field
         v-model="form.ad"
         label="Ad"
+        required
         class="flex-1-1"
         :error-messages="alanHatasi('ad')"
       />
       <v-text-field
         v-model="form.soyad"
         label="Soyad"
+        required
         class="flex-1-1"
         :error-messages="alanHatasi('soyad')"
       />
     </div>
     <v-select
-      v-model="form.departmanId"
+      :model-value="form.departmanId || null"
       :items="departmanlar.filter((departman) => departman.aktif)"
       item-title="ad"
       item-value="id"
       label="Departman"
+      required
       :error-messages="alanHatasi('departmanId')"
+      @update:model-value="form.departmanId = $event ?? 0"
     />
     <div class="d-flex flex-wrap ga-4">
       <v-text-field
-        v-model="form.iseGirisTarihi"
-        label="İşe giriş tarihi"
+        :model-value="form.iseGirisTarihi"
+        label="İşe Giriş Tarihi"
         type="date"
+        required
         class="flex-1-1"
         :error-messages="alanHatasi('iseGirisTarihi')"
+        @update:model-value="form.iseGirisTarihi = $event || null"
       />
       <v-text-field
-        v-model="form.dogumTarihi"
-        label="Doğum tarihi"
+        :model-value="form.dogumTarihi"
+        label="Doğum Tarihi"
         type="date"
+        required
         class="flex-1-1"
         :error-messages="alanHatasi('dogumTarihi')"
+        @update:model-value="form.dogumTarihi = $event || null"
       />
     </div>
     <v-number-input
       v-model="form.hakBaslangicKidemYili"
-      label="Hak başlangıç kıdem yılı"
+      label="Hak Başlangıç Kıdem Yılı"
       hint="Boş bırakılırsa kayıt günündeki kıdemin bir fazlası alınır (yeni işe girende 1)."
       persistent-hint
       :min="1"

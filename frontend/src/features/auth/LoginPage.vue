@@ -105,6 +105,7 @@ async function girisYap() {
               <v-text-field
                 v-model="eposta"
                 label="E-posta"
+                required
                 type="email"
                 autocomplete="username"
                 :prepend-inner-icon="MailIcon"
@@ -113,6 +114,7 @@ async function girisYap() {
               <v-text-field
                 v-model="parola"
                 label="Parola"
+                required
                 :type="parolaGorunur ? 'text' : 'password'"
                 autocomplete="current-password"
                 :prepend-inner-icon="LockIcon"

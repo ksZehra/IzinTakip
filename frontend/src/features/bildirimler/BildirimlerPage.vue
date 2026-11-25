@@ -56,7 +56,7 @@ async function tumunuOku() {
 
     <v-switch
       v-model="filtre.sadeceOkunmamis"
-      label="Yalnız okunmamışlar"
+      label="Yalnız Okunmamışlar"
       color="primary"
       hide-details
       class="mb-4"

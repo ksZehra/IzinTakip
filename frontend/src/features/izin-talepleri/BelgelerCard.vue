@@ -103,7 +103,7 @@ onMounted(yukle)
       <v-form v-if="degistirilebilir" class="d-flex flex-wrap ga-2" @submit.prevent="dosyayiYukle">
         <v-file-input
           v-model="secilenDosya"
-          label="Belge (PDF, JPG, PNG; en çok 5 MB)"
+          label="Belge (PDF, JPG, PNG; En Çok 5 MB)"
           accept=".pdf,.jpg,.jpeg,.png"
           prepend-icon=""
           class="flex-1-1"
@@ -123,7 +123,7 @@ onMounted(yukle)
 
     <ConfirmDialog
       v-model="silmeAcik"
-      baslik="Belgeyi sil"
+      baslik="Belgeyi Sil"
       :metin="`${silinecek?.dosyaAdi ?? ''} kalıcı olarak silinecek.`"
       onay-metni="Sil"
       onay-rengi="error"

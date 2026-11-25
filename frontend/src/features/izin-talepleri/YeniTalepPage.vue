@@ -137,14 +137,15 @@ async function gonderTalep() {
             :items="izinTurleri"
             item-title="ad"
             item-value="id"
-            label="İzin türü"
+            label="İzin Türü"
+            required
             :error-messages="alanHatasi('izinTuruId')"
           />
 
           <v-radio-group
             v-if="izinliBicimler.length > 1"
             v-model="form.sureTipi"
-            label="Süre biçimi"
+            label="Süre Biçimi"
             inline
             hide-details="auto"
             :error-messages="alanHatasi('sureTipi')"
@@ -161,16 +162,18 @@ async function gonderTalep() {
             <div class="d-flex flex-wrap ga-4">
               <v-text-field
                 v-model="form.tarih"
-                :label="form.sureTipi === 'TamGun' ? 'Başlangıç tarihi' : 'Tarih'"
+                :label="form.sureTipi === 'TamGun' ? 'Başlangıç Tarihi' : 'Tarih'"
                 type="date"
+                required
                 class="flex-1-1"
                 :error-messages="alanHatasi('tarih')"
               />
               <v-text-field
                 v-if="form.sureTipi === 'TamGun'"
                 v-model="form.bitisTarihi"
-                label="Bitiş tarihi"
+                label="Bitiş Tarihi"
                 type="date"
+                required
                 :min="form.tarih || undefined"
                 class="flex-1-1"
                 :error-messages="alanHatasi('bitisTarihi')"
@@ -180,7 +183,7 @@ async function gonderTalep() {
             <v-radio-group
               v-if="form.sureTipi === 'YarimGun'"
               v-model="form.gunYarisi"
-              label="Günün hangi yarısı"
+              label="Günün Hangi Yarısı"
               inline
               hide-details="auto"
               :error-messages="alanHatasi('gunYarisi')"
@@ -196,8 +199,9 @@ async function gonderTalep() {
             <div v-if="form.sureTipi === 'Saatlik'" class="d-flex flex-wrap ga-4">
               <v-text-field
                 v-model="form.baslangicSaati"
-                label="Başlangıç saati"
+                label="Başlangıç Saati"
                 type="time"
+                required
                 :step="saatAdimiSaniye"
                 :min="ayarlar ? saatGoster(ayarlar.mesaiBaslangic) : undefined"
                 :max="ayarlar ? saatGoster(ayarlar.mesaiBitis) : undefined"
@@ -206,8 +210,9 @@ async function gonderTalep() {
               />
               <v-text-field
                 v-model="form.bitisSaati"
-                label="Bitiş saati"
+                label="Bitiş Saati"
                 type="time"
+                required
                 :step="saatAdimiSaniye"
                 :min="ayarlar ? saatGoster(ayarlar.mesaiBaslangic) : undefined"
                 :max="ayarlar ? saatGoster(ayarlar.mesaiBitis) : undefined"
@@ -228,7 +233,7 @@ async function gonderTalep() {
 
           <v-textarea
             v-model="form.aciklama"
-            label="Açıklama (isteğe bağlı)"
+            label="Açıklama (İsteğe Bağlı)"
             rows="2"
             auto-grow
             counter="500"
@@ -241,7 +246,7 @@ async function gonderTalep() {
           </v-textarea>
 
           <div class="d-flex justify-end ga-2">
-            <v-btn variant="text" :to="{ name: 'izin-talepleri' }">Vazgeç</v-btn>
+            <v-btn variant="tonal" :to="{ name: 'izin-talepleri' }">Vazgeç</v-btn>
             <v-btn type="submit" color="primary" :loading="gonderiliyor">Talebi gönder</v-btn>
           </div>
         </v-form>

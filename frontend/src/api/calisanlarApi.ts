@@ -8,7 +8,7 @@ export type CalisanSatiri = Schema<'CalisanListeResponse'>
 export type CalisanKaydetRequest = Schema<'CalisanKaydetRequest'>
 export type Bakiye = Schema<'BakiyeResponse'>
 export type IzinHaklari = Schema<'IzinHaklariResponse'>
-export type IzinHakkiEkleRequest = Schema<'IzinHakkiEkleRequest'>
+export type IzinHakkiKaydetRequest = Schema<'IzinHakkiKaydetRequest'>
 
 export interface CalisanFilter extends Record<string, string | number | boolean | null> {
   arama: string
@@ -56,6 +56,18 @@ export async function haklariGetir(calisanId: number): Promise<IzinHaklari> {
   return data
 }
 
-export async function hakEkle(calisanId: number, istek: IzinHakkiEkleRequest): Promise<void> {
+export async function hakEkle(calisanId: number, istek: IzinHakkiKaydetRequest): Promise<void> {
   await httpClient.post(`/api/calisanlar/${calisanId}/haklar`, istek)
+}
+
+export async function hakGuncelle(
+  calisanId: number,
+  hakId: number,
+  istek: IzinHakkiKaydetRequest,
+): Promise<void> {
+  await httpClient.put(`/api/calisanlar/${calisanId}/haklar/${hakId}`, istek)
+}
+
+export async function hakSil(calisanId: number, hakId: number): Promise<void> {
+  await httpClient.delete(`/api/calisanlar/${calisanId}/haklar/${hakId}`)
 }

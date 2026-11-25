@@ -118,27 +118,28 @@ watch(yil, yukle, { immediate: true })
 
     <FormDialog
       v-model="acik"
-      :baslik="yeniKayit ? 'Yeni resmi tatil' : 'Resmi tatili düzenle'"
+      :baslik="yeniKayit ? 'Yeni Resmi Tatil' : 'Resmi Tatili Düzenle'"
       :kaydediliyor="gonderiliyor"
       @kaydet="kaydet"
     >
       <v-text-field
         v-model="form.tarih"
         label="Tarih"
+        required
         type="date"
         :error-messages="alanHatasi('tarih')"
       />
-      <v-text-field v-model="form.ad" label="Ad" :error-messages="alanHatasi('ad')" />
+      <v-text-field v-model="form.ad" label="Ad" required :error-messages="alanHatasi('ad')" />
       <v-checkbox
         v-model="form.yarimGun"
-        label="Yarım gün (arife: öğleden sonrası tatil)"
+        label="Yarım Gün (Arife: Öğleden Sonrası Tatil)"
         hide-details
       />
     </FormDialog>
 
     <ConfirmDialog
       v-model="silmeAcik"
-      baslik="Resmi tatili sil"
+      baslik="Resmi Tatili Sil"
       :metin="`${silinecek?.ad ?? ''} silinecek.`"
       onay-metni="Sil"
       onay-rengi="error"

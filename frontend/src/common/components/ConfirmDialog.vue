@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { XIcon } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 
 import { useFocusReturn } from '@/common/composables/useFocusReturn'
@@ -32,12 +33,23 @@ function onayla() {
 <template>
   <v-dialog v-model="acik" max-width="480" @after-leave="odagiGeriVer">
     <v-card :title="baslik">
+      <template #append>
+        <v-btn
+          :icon="XIcon"
+          variant="text"
+          size="small"
+          density="comfortable"
+          aria-label="Kapat"
+          @click="acik = false"
+        />
+      </template>
       <v-card-text class="d-flex flex-column ga-4">
         <p>{{ metin }}</p>
         <v-textarea
           v-if="notEtiketi"
           v-model="not"
-          :label="notZorunlu ? `${notEtiketi} (zorunlu)` : notEtiketi"
+          :label="notZorunlu ? `${notEtiketi} (Zorunlu)` : notEtiketi"
+          :required="notZorunlu"
           rows="3"
           auto-grow
           counter="500"
@@ -50,7 +62,7 @@ function onayla() {
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn variant="text" @click="acik = false">Vazgeç</v-btn>
+        <v-btn variant="tonal" @click="acik = false">Vazgeç</v-btn>
         <v-btn
           :color="onayRengi ?? 'primary'"
           variant="flat"

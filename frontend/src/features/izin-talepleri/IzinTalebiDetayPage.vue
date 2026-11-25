@@ -60,7 +60,7 @@ const islemler: Record<
   }
 > = {
   onayla: {
-    baslik: 'Talebi onayla',
+    baslik: 'Talebi Onayla',
     metin: 'Talep onaylanacak ve talep sahibine bildirim gidecek.',
     onayMetni: 'Onayla',
     renk: 'success',
@@ -70,17 +70,17 @@ const islemler: Record<
     basari: 'Talep onaylandı.',
   },
   reddet: {
-    baslik: 'Talebi reddet',
+    baslik: 'Talebi Reddet',
     metin: 'Red gerekçesi talep sahibine iletilecek.',
     onayMetni: 'Reddet',
     renk: 'error',
-    notEtiketi: 'Red gerekçesi',
+    notEtiketi: 'Red Gerekçesi',
     notZorunlu: true,
     calistir: (id, not) => talebiReddet(id, not ?? ''),
     basari: 'Talep reddedildi.',
   },
   iptal: {
-    baslik: 'Talebi iptal et',
+    baslik: 'Talebi İptal Et',
     metin: 'İptal edilen talebin süresi bakiyeye geri döner.',
     onayMetni: 'İptal et',
     renk: 'error',

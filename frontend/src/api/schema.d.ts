@@ -2081,9 +2081,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["IzinHakkiEkleRequest"];
-                    "text/json": components["schemas"]["IzinHakkiEkleRequest"];
-                    "application/*+json": components["schemas"]["IzinHakkiEkleRequest"];
+                    "application/json": components["schemas"]["IzinHakkiKaydetRequest"];
+                    "text/json": components["schemas"]["IzinHakkiKaydetRequest"];
+                    "application/*+json": components["schemas"]["IzinHakkiKaydetRequest"];
                 };
             };
             responses: {
@@ -2101,6 +2101,118 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calisanlar/{id}/haklar/{hakId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Elle girilmiş hak satırını düzeltir; otomatik satır değiştirilemez */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                    hakId: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["IzinHakkiKaydetRequest"];
+                    "text/json": components["schemas"]["IzinHakkiKaydetRequest"];
+                    "application/*+json": components["schemas"]["IzinHakkiKaydetRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["IzinHaklariResponse"];
+                        "application/json": components["schemas"]["IzinHaklariResponse"];
+                        "text/json": components["schemas"]["IzinHaklariResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Elle girilmiş hak satırını siler; eski değeri işlem kaydında kalır, otomatik satır silinemez */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                    hakId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Content */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -2649,9 +2761,9 @@ export interface components {
             /** Format: int32 */
             departmanId: number;
             /** Format: date */
-            iseGirisTarihi: string;
+            iseGirisTarihi: null | string;
             /** Format: date */
-            dogumTarihi: string;
+            dogumTarihi: null | string;
             /** Format: int32 */
             hakBaslangicKidemYili: null | number;
         };
@@ -2791,7 +2903,7 @@ export interface components {
         };
         /** @enum {unknown} */
         IzinDurumu: "Beklemede" | "Onaylandi" | "Reddedildi" | "IptalEdildi";
-        IzinHakkiEkleRequest: {
+        IzinHakkiKaydetRequest: {
             /** Format: int32 */
             dakika: number;
             aciklama: string;
